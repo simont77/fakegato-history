@@ -1,5 +1,6 @@
 # fakegato-history
-Module to emulate Elgato Eve history in homebridge accessories.
+Module to emulate Elgato Eve history in homebridge accessories. Still work in progress. Use at your own risk, no guarantee is provided.
+
 Import module into your plugin module export with:
 
     var FakeGatoHistoryService = require('./fakegato-history')(homebridge);
