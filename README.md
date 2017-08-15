@@ -24,3 +24,9 @@ Add entries to history of accessory emulating Eve Energy using something like th
     this.loggingService.addEntry({time: moment().unix(), power: this.power}); 
     
 Power should be the average power in W over 10 minutes period.
+
+###TODO
+
+* Support for rolling-over of the history 
+* Add other accessory types
+* Make history persistent 
