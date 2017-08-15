@@ -18,7 +18,7 @@ Add entries to history of accessory emulating Eve Weather using something like t
 
 AiPressure is in mbar, Temperature in Celsius, Humidity in %.
 
-Add entries to history of accessory emulating Eve Energy using something like: 
+Add entries to history of accessory emulating Eve Energy using something like this every 10 minutes:
 
     this.loggingService.addEntry({time: moment().unix(), power: this.power}); 
     
