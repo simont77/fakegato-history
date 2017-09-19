@@ -1,0 +1,19 @@
+{
+  "name": "fakegato-history",
+  "version": "0.0.1",
+  "description": "Module emulating Elgato Eve history for homebridge plugins",
+  "main": "fakegato-history.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simont77/fakegato-history.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/simont77/fakegato-history/issues"
+  },
+  "homepage": "https://github.com/simont77/fakegato-history#readme"
+}
