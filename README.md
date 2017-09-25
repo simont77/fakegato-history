@@ -31,12 +31,9 @@ History length is set to 100 entries for testing purposes, but can be increased 
 
 ### TODO
 
-~~* Support for rolling-over of the history~~
+ ~~* Support for rolling-over of the history~~
 * Aggregate transmission of several entries into a single Characteristic update in order to speed up transfer when not on local network.
 * Add other accessory types. Help from people with access to real Eve accessory is needed. Dump of custom Characteristics during data transfer is required.
 * Make history persistent 
 * Adjustable history length
 * Periodic sending of reference time stamp
-
-### Known issues
-* When using multiple iOS clients there may be some inconsistencies in time stamps if few entries are acquired by Eve.app and then Homebridge is restarted. Due to the way the reference time stamp is delivered at present (only at startup or when Eve.app asks entry 0x00): must be improved.
