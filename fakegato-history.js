@@ -172,6 +172,7 @@ module.exports = function(pHomebridge) {
                                         break;
                                 }
                                 this.currentEntry++;
+                                this.memoryAddress = entry2address (this.currentEntry);
                                 if (this.currentEntry==this.lastEntry)
                                 {
                                     break;
