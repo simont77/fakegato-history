@@ -35,6 +35,7 @@ module.exports = function(pHomebridge) {
             return ('0000000000000' + s).slice(-1 * len);
         }
     return s;
+
 }
 
     class S2R1Characteristic extends Characteristic {
@@ -86,8 +87,15 @@ module.exports = function(pHomebridge) {
     }
 
     class FakeGatoHistoryService extends homebridge.hap.Service {
-        constructor(accessoryType) {
-            super("History", 'E863F007-079E-48FF-8F27-9C2605A29F52');
+        constructor(accessoryType, accessory) {
+            super(accessory.name + " History", 'E863F007-079E-48FF-8F27-9C2605A29F52');
+
+            var entry2address = function(val) {
+                var temp = val % this.memorySize;
+                return temp;
+            }.bind(this);
+
+            this.log = accessory.log;
             switch (accessoryType)
             {
                 case "weather":
@@ -106,26 +114,30 @@ module.exports = function(pHomebridge) {
             
             
             this.accessoryType=accessoryType;
-            this.nextAvailableEntry = 1;
+            this.firstEntry = 0;
+            this.lastEntry = 0;
             this.history = [];
-            this.maxHistory = 100;
+            this.memorySize = 60;
+            this.usedMemory=0;
             this.currentEntry = 1;
             this.transfer=false;
             this.setTime=true;
             this.refTime=0;
+            this.memoryAddress=0;
 
             this.addCharacteristic(S2R1Characteristic);
                 
             this.addCharacteristic(S2R2Characteristic)
                 .on('get', (callback) => {
-                    if ((this.currentEntry<this.nextAvailableEntry) && (this.transfer==true))
+                    if ((this.currentEntry<this.lastEntry) && (this.transfer==true))
                     {
-                        
-                        if ((this.history[this.currentEntry].temp==0 &&
-                            this.history[this.currentEntry].pressure==0 &&
-                            this.history[this.currentEntry].humidity==0) || (this.history[this.currentEntry].power==0xFFFF) || (this.setTime==true))
+                        this.memoryAddress = entry2address (this.currentEntry);
+
+                        if ((this.history[this.memoryAddress].temp==0 &&
+                            this.history[this.memoryAddress].pressure==0 &&
+                            this.history[this.memoryAddress].humidity==0) || (this.history[this.memoryAddress].power==0xFFFF) || (this.setTime==true))
                         {	
-                            console.log("Data "+ this.accessoryType + ": 15" + numToHex(swap16(this.currentEntry),4) + "0000 0000 0000 81" + numToHex(swap32(this.refTime),8) +"0000 0000 00 0000");
+                            this.log.debug("Data "+ this.accessoryType + ": 15" + numToHex(swap16(this.currentEntry),4) + "0000 0000 0000 81" + numToHex(swap32(this.refTime),8) +"0000 0000 00 0000");
                             callback(null,hexToBase64('15' + numToHex(swap16(this.currentEntry),4) +' 0000 0000 0000 81' + numToHex(swap32(this.refTime),8) + '0000 0000 00 0000'));
                             this.setTime=false;
                         }
@@ -133,31 +145,33 @@ module.exports = function(pHomebridge) {
                             switch (this.accessoryType)
                             {
                                 case "weather":
-                            	    console.log("Data "+ this.accessoryType + ": 10 " + numToHex(swap16(this.currentEntry),4) + " 0000 "
-                                            + numToHex(swap32(this.history[this.currentEntry].time-this.refTime-978307200),8)
+                                    this.log.debug(this.accessoryType + " Entry: " + this.currentEntry + ", Address: " + this.memoryAddress);
+                                    this.log.debug("Data "+ this.accessoryType + ": 10 " + numToHex(swap16(this.currentEntry),4) + " 0000 "
+                                            + numToHex(swap32(this.history[this.memoryAddress].time-this.refTime-978307200),8)
                                             + this.accessoryType117
-                                            + numToHex(swap16(this.history[this.currentEntry].temp*100),4) 
-                                            + numToHex(swap16(this.history[this.currentEntry].humidity*100),4) 
-                                            + numToHex(swap16(this.history[this.currentEntry].pressure*10),4));
+                                            + numToHex(swap16(this.history[this.memoryAddress].temp*100),4) 
+                                            + numToHex(swap16(this.history[this.memoryAddress].humidity*100),4) 
+                                            + numToHex(swap16(this.history[this.memoryAddress].pressure*10),4));
                                     callback(null,hexToBase64('10' + numToHex(swap16(this.currentEntry),4)+ ' 0000 ' 
-                                            + numToHex(swap32(this.history[this.currentEntry].time-this.refTime-978307200),8) 
+                                            + numToHex(swap32(this.history[this.memoryAddress].time-this.refTime-978307200),8) 
                                             + this.accessoryType117
-                                            + numToHex(swap16(this.history[this.currentEntry].temp*100),4) 
-                                            + numToHex(swap16(this.history[this.currentEntry].humidity*100),4) 
-                                            + numToHex(swap16(this.history[this.currentEntry].pressure*10),4)));
+                                            + numToHex(swap16(this.history[this.memoryAddress].temp*100),4) 
+                                            + numToHex(swap16(this.history[this.memoryAddress].humidity*100),4) 
+                                            + numToHex(swap16(this.history[this.memoryAddress].pressure*10),4)));
                                     break;
                                 case "energy":
-                            	    console.log("Data "+ this.accessoryType + ": 14 " + numToHex(swap16(this.currentEntry),4) + " 0000 "
-                                            + numToHex(swap32(this.history[this.currentEntry].time-this.refTime-978307200),8)
+                                    this.log.debug(this.accessoryType + " Entry: " + this.currentEntry + ", Address: " + this.memoryAddress);
+                                    this.log.debug("Data "+ this.accessoryType + ": 14 " + numToHex(swap16(this.currentEntry),4) + " 0000 "
+                                            + numToHex(swap32(this.history[this.memoryAddress].time-this.refTime-978307200),8)
                                             + this.accessoryType117
                                             + "0000 0000" 
-                                            + numToHex(swap16(this.history[this.currentEntry].power*10),4) 
+                                            + numToHex(swap16(this.history[this.memoryAddress].power*10),4) 
                                             + "0000 0000");
                                     callback(null,hexToBase64('14' + numToHex(swap16(this.currentEntry),4)+ ' 0000 ' 
-                                            + numToHex(swap32(this.history[this.currentEntry].time-this.refTime-978307200),8) 
+                                            + numToHex(swap32(this.history[this.memoryAddress].time-this.refTime-978307200),8) 
                                             + this.accessoryType117
                                             + "0000 0000" 
-                                            + numToHex(swap16(this.history[this.currentEntry].power*10),4) 
+                                            + numToHex(swap16(this.history[this.memoryAddress].power*10),4) 
                                             + "0000 0000"));
                                     break;
                             }
@@ -192,49 +206,61 @@ module.exports = function(pHomebridge) {
         
         //in order to be consistent with Eve, entry address start from 1
         addEntry(entry){
-            if (this.nextAvailableEntry<this.maxHistory)
+
+            var entry2address = function(val) {
+                return val % this.memorySize;
+            }.bind(this);   
+
+            if (this.usedMemory<this.memorySize)
             {
-                if (this.refTime==0)
+                this.usedMemory++;
+                this.firstEntry=0;
+                this.lastEntry=this.usedMemory;
+            } 
+            else
+            {
+                this.firstEntry++;
+                this.lastEntry = this.firstEntry+this.usedMemory;
+            }
+            
+            if (this.refTime==0)
                 {
                     this.refTime=entry.time-978307200;
                     switch (this.accessoryType)
                         {
                             case "weather":
-                                this.history[this.nextAvailableEntry]= {time: entry.time, temp:0, pressure:0, humidity:0};
+                                this.history[this.lastEntry]= {time: entry.time, temp:0, pressure:0, humidity:0};
                                 break;
                             case "energy":
-                                this.history[this.nextAvailableEntry]= {time: entry.time, power:0xFFFF};
+                                this.history[this.lastEntry]= {time: entry.time, power:0xFFFF};
                                 break;
                         }
-                    this.nextAvailableEntry++;
+                    this.lastEntry++;
+                    this.usedMemory++;
                 }
-                this.history[this.nextAvailableEntry] = (entry);
-                this.nextAvailableEntry++;
-            }
-            else
-            {
-                this.history[1] = (entry);
-                this.nextAvailableEntry = 2;
-            }
+            
+            this.history[entry2address(this.lastEntry)] = (entry);
 
             this.getCharacteristic(S2R1Characteristic)
-                .setValue(hexToBase64(numToHex(swap32(entry.time-this.refTime-978307200),8) + '00000000' + numToHex(swap32(this.refTime),8) + '0401020202' + this.accessoryType116 +'020f03' + numToHex(swap16(this.nextAvailableEntry),4) +'ed0f00000000000000000101'));
-            console.log("Next available entry " + this.accessoryType + ": " + this.nextAvailableEntry.toString(16));
-            console.log("116 " + this.accessoryType + ": " + numToHex(swap32(entry.time-this.refTime-978307200),8) + '00000000' + numToHex(swap32(this.refTime),8) + '0401020202' + this.accessoryType116 +'020f03' + numToHex(swap16(this.nextAvailableEntry),4) +'ed0f00000000000000000101');
+                .setValue(hexToBase64(numToHex(swap32(entry.time-this.refTime-978307200),8) + '00000000' + numToHex(swap32(this.refTime),8) + '0401020202' + this.accessoryType116 +'020f03' + numToHex(swap16(this.usedMemory),4) + numToHex(swap16(this.memorySize),4) + numToHex(swap32(this.firstEntry),8) + '000000000101'));
+            this.log.debug("First entry " + this.accessoryType + ": " + this.firstEntry.toString(16));
+            this.log.debug("Last entry " + this.accessoryType + ": " + this.lastEntry.toString(16));
+            this.log.debug("Used memory " + this.accessoryType + ": " + this.usedMemory.toString(16));
+            this.log.debug("116 " + this.accessoryType + ": " + numToHex(swap32(entry.time-this.refTime-978307200),8) + '00000000' + numToHex(swap32(this.refTime),8) + '0401020202' + this.accessoryType116 +'020f03 ' + numToHex(swap16(this.usedMemory),4) + numToHex(swap16(this.memorySize),4) + numToHex(swap32(this.firstEntry),8) + '000000000101');
 
         }
         
         setCurrentS2W1(val, callback) {
             callback(null,val);
-            console.log("Data request " + this.accessoryType + ": "+ base64ToHex(val));
+            this.log.debug("Data request " + this.accessoryType + ": "+ base64ToHex(val));
             var valHex = base64ToHex(val);
             var substring = valHex.substring(4,12);
             var valInt = parseInt(substring,16);
             var address = swap32(valInt);
             var hexAddress= address.toString('16');
 
-            console.log("Address requested " + this.accessoryType + ": "+ hexAddress);
-            if (this.transfer==false)
+            this.log.debug("Address requested " + this.accessoryType + ": "+ hexAddress);
+            //if (this.transfer==false)
             {
                 //this.transfer=true;
                 this.sendHistory(address);
@@ -242,7 +268,7 @@ module.exports = function(pHomebridge) {
         }
         
         setCurrentS2W2(val, callback) {
-            console.log("Clock adjust: "+ base64ToHex(val));
+            this.log.debug("Clock adjust: "+ base64ToHex(val));
             callback(null,val);
         }
 
