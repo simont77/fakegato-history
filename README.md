@@ -31,7 +31,7 @@ History length is set to 100 entries for testing purposes, but can be increased 
 
 ### TODO
 
-* Support for rolling-over of the history
+~~* Support for rolling-over of the history~~
 * Aggregate transmission of several entries into a single Characteristic update in order to speed up transfer when not on local network.
 * Add other accessory types. Help from people with access to real Eve accessory is needed. Dump of custom Characteristics during data transfer is required.
 * Make history persistent 
