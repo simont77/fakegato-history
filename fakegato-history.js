@@ -44,7 +44,7 @@ module.exports = function(pHomebridge) {
             this.setProps({
                 format: Characteristic.Formats.DATA,
                 perms: [
-                    Characteristic.Perms.READ, Characteristic.Perms.NOTIFY
+                    Characteristic.Perms.READ, Characteristic.Perms.NOTIFY, Characteristic.Perms.HIDDEN
                 ]
             });
         }
@@ -56,7 +56,7 @@ module.exports = function(pHomebridge) {
             this.setProps({
                 format: Characteristic.Formats.DATA,
                 perms: [
-                    Characteristic.Perms.READ, Characteristic.Perms.NOTIFY
+                    Characteristic.Perms.READ, Characteristic.Perms.NOTIFY, Characteristic.Perms.HIDDEN
                 ]
             });
         }
@@ -68,7 +68,7 @@ module.exports = function(pHomebridge) {
             this.setProps({
                 format: Characteristic.Formats.DATA,
                 perms: [
-                    Characteristic.Perms.WRITE
+                    Characteristic.Perms.WRITE, Characteristic.Perms.HIDDEN
                 ]
             });
         }
@@ -80,14 +80,16 @@ module.exports = function(pHomebridge) {
             this.setProps({
                 format: Characteristic.Formats.DATA,
                 perms: [
-                    Characteristic.Perms.WRITE
+                    Characteristic.Perms.WRITE, Characteristic.Perms.HIDDEN
                 ]
             });
         }
     }
 
     class FakeGatoHistoryService extends homebridge.hap.Service {
-        constructor(accessoryType, accessory) {
+        constructor(accessoryType, accessory, size) {
+            if (typeof size === 'undefined') { size = 60; }
+            
             super(accessory.name + " History", 'E863F007-079E-48FF-8F27-9C2605A29F52');
 
             var entry2address = function(val) {
@@ -113,17 +115,19 @@ module.exports = function(pHomebridge) {
             }
             
             
+
             this.accessoryType=accessoryType;
             this.firstEntry = 0;
             this.lastEntry = 0;
             this.history = [];
-            this.memorySize = 60;
+            this.memorySize = size;
             this.usedMemory=0;
             this.currentEntry = 1;
             this.transfer=false;
             this.setTime=true;
             this.refTime=0;
             this.memoryAddress=0;
+            this.dataStream='';
 
             this.addCharacteristic(S2R1Characteristic);
                 
@@ -140,42 +144,44 @@ module.exports = function(pHomebridge) {
                             this.log.debug("Data "+ this.accessoryType + ": 15" + numToHex(swap16(this.currentEntry),4) + "0000 0000 0000 81" + numToHex(swap32(this.refTime),8) +"0000 0000 00 0000");
                             callback(null,hexToBase64('15' + numToHex(swap16(this.currentEntry),4) +' 0000 0000 0000 81' + numToHex(swap32(this.refTime),8) + '0000 0000 00 0000'));
                             this.setTime=false;
+                            this.currentEntry++;
                         }
                         else
-                            switch (this.accessoryType)
-                            {
-                                case "weather":
-                                    this.log.debug(this.accessoryType + " Entry: " + this.currentEntry + ", Address: " + this.memoryAddress);
-                                    this.log.debug("Data "+ this.accessoryType + ": 10 " + numToHex(swap16(this.currentEntry),4) + " 0000 "
+                        {    
+                            for (var i=0;i<11;i++)
+                            { 
+                                switch (this.accessoryType)
+                                {
+                                    case "weather":
+                                        this.log.debug(this.accessoryType + " Entry: " + this.currentEntry + ", Address: " + this.memoryAddress);
+                                        this.dataStream = this.dataStream + " 10 " + numToHex(swap16(this.currentEntry),4) + " 0000 "
                                             + numToHex(swap32(this.history[this.memoryAddress].time-this.refTime-978307200),8)
                                             + this.accessoryType117
                                             + numToHex(swap16(this.history[this.memoryAddress].temp*100),4) 
                                             + numToHex(swap16(this.history[this.memoryAddress].humidity*100),4) 
-                                            + numToHex(swap16(this.history[this.memoryAddress].pressure*10),4));
-                                    callback(null,hexToBase64('10' + numToHex(swap16(this.currentEntry),4)+ ' 0000 ' 
-                                            + numToHex(swap32(this.history[this.memoryAddress].time-this.refTime-978307200),8) 
-                                            + this.accessoryType117
-                                            + numToHex(swap16(this.history[this.memoryAddress].temp*100),4) 
-                                            + numToHex(swap16(this.history[this.memoryAddress].humidity*100),4) 
-                                            + numToHex(swap16(this.history[this.memoryAddress].pressure*10),4)));
+                                            + numToHex(swap16(this.history[this.memoryAddress].pressure*10),4);
+                                        break;
+                                    case "energy":
+                                        this.log.debug(this.accessoryType + " Entry: " + this.currentEntry + ", Address: " + this.memoryAddress);
+                                        this.dataStream = this.dataStream + " 14 " + numToHex(swap16(this.currentEntry),4) + " 0000 "
+                                                + numToHex(swap32(this.history[this.memoryAddress].time-this.refTime-978307200),8)
+                                                + this.accessoryType117
+                                                + "0000 0000" 
+                                                + numToHex(swap16(this.history[this.memoryAddress].power*10),4) 
+                                                + "0000 0000";
+                                        break;
+                                }
+                                this.currentEntry++;
+                                this.memoryAddress = entry2address (this.currentEntry);
+                                if (this.currentEntry==this.lastEntry)
+                                {
                                     break;
-                                case "energy":
-                                    this.log.debug(this.accessoryType + " Entry: " + this.currentEntry + ", Address: " + this.memoryAddress);
-                                    this.log.debug("Data "+ this.accessoryType + ": 14 " + numToHex(swap16(this.currentEntry),4) + " 0000 "
-                                            + numToHex(swap32(this.history[this.memoryAddress].time-this.refTime-978307200),8)
-                                            + this.accessoryType117
-                                            + "0000 0000" 
-                                            + numToHex(swap16(this.history[this.memoryAddress].power*10),4) 
-                                            + "0000 0000");
-                                    callback(null,hexToBase64('14' + numToHex(swap16(this.currentEntry),4)+ ' 0000 ' 
-                                            + numToHex(swap32(this.history[this.memoryAddress].time-this.refTime-978307200),8) 
-                                            + this.accessoryType117
-                                            + "0000 0000" 
-                                            + numToHex(swap16(this.history[this.memoryAddress].power*10),4) 
-                                            + "0000 0000"));
-                                    break;
+                                }
                             }
-                        this.currentEntry++;
+                            this.log.debug("Data " + this.accessoryType + ": " + this.dataStream);
+                            callback(null,hexToBase64(this.dataStream));
+                            this.dataStream='';
+                        }                        
                     }
                     else
                     {
