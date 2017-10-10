@@ -88,7 +88,7 @@ module.exports = function(pHomebridge) {
 
     class FakeGatoHistoryService extends homebridge.hap.Service {
         constructor(accessoryType, accessory, size) {
-            if (typeof size === 'undefined') { size = 60; }
+            if (typeof size === 'undefined') { size = 4032; }
             
             super(accessory.name + " History", 'E863F007-079E-48FF-8F27-9C2605A29F52');
 
