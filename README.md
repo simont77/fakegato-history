@@ -1,5 +1,5 @@
 # fakegato-history
-Module to emulate Elgato Eve history service in Homebridge accessories. Still work in progress. Use at your own risk, no guarantee is provided.
+Module to emulate Elgato Eve history service in Homebridge accessories, so that it will show in Eve.app (Home.app does not support it). Still work in progress. Use at your own risk, no guarantee is provided.
 
 More details on communication protocol and custom Characteristics here: https://gist.github.com/simont77/3f4d4330fa55b83f8ca96388d9004e7d
 
@@ -12,7 +12,8 @@ Add your service using:
     this.loggingService = new FakeGatoHistoryService(accessoryType);
        
 where accessoryType can be "weather" or "energy".
-        
+
+Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js
         
 Add entries to history of accessory emulating Eve Weather using something like this every 10 minutes:
 
@@ -27,7 +28,7 @@ Add entries to history of accessory emulating Eve Energy using something like th
     
 Power should be the average power in W over 10 minutes period.
 
-History length is set to 100 entries for testing purposes, but can be increased modifying the constructor.
+History length can be adjusted modifying the constructor.
 
 ### TODO
 
