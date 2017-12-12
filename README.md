@@ -9,9 +9,14 @@ Import module into your plugin module export with:
 
 Add your service using:
 
-    this.loggingService = new FakeGatoHistoryService(accessoryType);
+    this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, length);
        
-where accessoryType can be "weather" or "energy".
+where
+
+- accessoryType can be "weather" or "energy"
+- Accessory should be the accessory using the service, in order to correctly set the service name and pass the log to the parent object
+- length is the history length; if no value is given length is set to 4032 samples
+
 
 Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js
         
@@ -27,8 +32,6 @@ Add entries to history of accessory emulating Eve Energy using something like th
     this.loggingService.addEntry({time: moment().unix(), power: this.power}); 
     
 Power should be the average power in W over 10 minutes period.
-
-History length can be adjusted modifying the constructor.
 
 ### TODO
 
