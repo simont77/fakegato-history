@@ -3,7 +3,7 @@ Module to emulate Elgato Eve history service in Homebridge accessories, so that 
 
 More details on communication protocol and custom Characteristics here: https://gist.github.com/simont77/3f4d4330fa55b83f8ca96388d9004e7d
 
-Import module into your plugin module export with:
+Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter class). Then import module into your plugin module export with:
 
     var FakeGatoHistoryService = require('./fakegato-history')(homebridge);
 
@@ -16,14 +16,10 @@ where
 - accessoryType can be "weather" or "energy"
 - Accessory should be the accessory using the service, in order to correctly set the service name and pass the log to the parent object
 - length is the history length; if no value is given length is set to 4032 samples
-
-
-Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter class)
         
 Add entries to history of accessory emulating Eve Weather using something like this every 10 minutes:
 
-	this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, pressure:this.airPressure, humidity:this.humidity});
-	
+	this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, pressure:this.airPressure, humidity:this.humidity});	
 
 AiPressure is in mbar, Temperature in Celsius, Humidity in %.
 
@@ -31,7 +27,9 @@ Add entries to history of accessory emulating Eve Energy using something like th
 
     this.loggingService.addEntry({time: moment().unix(), power: this.power}); 
     
-Power should be the average power in W over 10 minutes period.
+Power should be the average power in W over 10 minutes period. To have good accuracy, it his strongly advised not to use a single instantaneous measurement, but to average many few seconds measurements over 10 minutes.
+
+For Energy accessories it is also worth to add the custom characteristic E863F112 for resetting the Total Consumption accumulated value (not the history). See the gist above. The value of this characteristic is changed whenever the reset button is tapped on Eve, so it can be used to reset the locally stored value. The meaning of the exact value is still unknown. I left this characteristics out of fakegato-history because it is not part if the common  history service, up to know I found it only on Eve Energy
 
 ### TODO
 
@@ -40,7 +38,10 @@ Power should be the average power in W over 10 minutes period.
 - [ ] Add other accessory types. Help from people with access to real Eve accessory is needed. Dump of custom Characteristics during data transfer is required.
 - [ ] Make history persistent 
 - [x] Adjustable history length
-- [ ] Periodic sending of reference time stamp
+- [ ] Periodic sending of reference time stamp (seems not really needed if the time of your homebridge machine is correct)
+
+### Known bugs
+- There is a delay of one entry between the history and the upload to Eve.app, i.e. entry n will be uploaded only when entry n+1 is added to the history
 
 ### How to contribute
 
