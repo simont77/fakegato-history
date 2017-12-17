@@ -3,9 +3,8 @@
   "version": "0.3.1",
   "description": "Module emulating Elgato Eve history for homebridge plugins",
   "main": "fakegato-history.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/simont77/fakegato-history.git"
+  "dependencies": {
+    "debug": "^2.2.0"
   },
   "engines": {
     "node": ">=0.12.0",
@@ -18,5 +17,3 @@
   },
   "homepage": "https://github.com/simont77/fakegato-history#readme"
 }
-
-
