@@ -5,7 +5,7 @@
   "main": "fakegato-history.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/simont77/fakegato-history.git"
+    "url": "git+https://github.com/NorthernMan54/fakegato-history.git"
   },
   "dependencies": {
     "debug": "^2.2.0"
