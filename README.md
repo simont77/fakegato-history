@@ -14,7 +14,7 @@ Add your service using:
 where
 
 - accessoryType can be "weather" or "energy"
-- Accessory should be the accessory using the service, in order to correctly set the service name and pass the log to the parent object
+- Accessory should be the accessory using the service, in order to correctly set the service name and pass the log to the parent object. Your Accessory should have a `this.name` variable and a `this.log` variable pointing to the homebridge logger passed to the plugin constructor (add a line `this.log=log;` to your plugin). Debug messages will be shown if homebridge is launched with -D option.
 - length is the history length; if no value is given length is set to 4032 samples
         
 Add entries to history of accessory emulating Eve Weather using something like this every 10 minutes:
