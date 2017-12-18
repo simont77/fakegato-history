@@ -27,7 +27,7 @@ Add entries to history of accessory emulating Eve Energy using something like th
 
     this.loggingService.addEntry({time: moment().unix(), power: this.power}); 
     
-Power should be the average power in W over 10 minutes period. To have good accuracy, it his strongly advised not to use a single instantaneous measurement, but to average many few seconds measurements over 10 minutes.
+Power should be the average power in W over 10 minutes period. To have good accuracy, it is strongly advised not to use a single instantaneous measurement, but to average many few seconds measurements over 10 minutes.
 
 For Energy accessories it is also worth to add the custom characteristic E863F112 for resetting the Total Consumption accumulated value (not the history). See the gist above. The value of this characteristic is changed whenever the reset button is tapped on Eve, so it can be used to reset the locally stored value. The meaning of the exact value is still unknown. I left this characteristics out of fakegato-history because it is not part if the common  history service, up to know I found it only on Eve Energy
 
