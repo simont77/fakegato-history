@@ -8,8 +8,8 @@
     "url": "git+https://github.com/simont77/fakegato-history.git"
   },
   "engines": {
-    "node": ">=0.12.0",
-    "homebridge": ">=0.2.0"
+    "node": ">=4.3.2",
+    "homebridge": ">=0.4.0"
   },
   "author": "simont77",
   "license": "MIT",
