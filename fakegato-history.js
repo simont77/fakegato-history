@@ -1,5 +1,9 @@
 'use strict';
 
+const TYPE_ENERGY  = 'energy',
+      TYPE_ROOM    = 'room',
+      TYPE_WEATHER = 'weather';
+
 var homebridge;
 var Characteristic, Service;
 
@@ -108,15 +112,15 @@ module.exports = function(pHomebridge) {
             this.log = accessory.log;
             switch (accessoryType)
             {
-                case "weather":
+                case TYPE_WEATHER:
                     this.accessoryType116 = "03";
                     this.accessoryType117 = "07";
                     break;
-                case "energy":
+                case TYPE_ENERGY:
                     this.accessoryType116 = "07";
                     this.accessoryType117 = "1f";
                     break;
-                case "room":
+                case TYPE_ROOM:
                     this.accessoryType116 = "04";
                     this.accessoryType117 = "0f";
                     break;
@@ -158,7 +162,7 @@ module.exports = function(pHomebridge) {
                             { 
                                 switch (this.accessoryType)
                                 {
-                                    case "weather":
+                                    case TYPE_WEATHER:
                                         this.log.debug(this.accessoryType + " Entry: " + this.currentEntry + ", Address: " + this.memoryAddress);
                                         this.dataStream = this.dataStream + " 10 " + numToHex(swap16(this.currentEntry),4) + " 0000 "
                                             + numToHex(swap32(this.history[this.memoryAddress].time-this.refTime-978307200),8)
@@ -167,7 +171,7 @@ module.exports = function(pHomebridge) {
                                             + numToHex(swap16(this.history[this.memoryAddress].humidity*100),4) 
                                             + numToHex(swap16(this.history[this.memoryAddress].pressure*10),4);
                                         break;
-                                    case "energy":
+                                    case TYPE_ENERGY:
                                         this.log.debug(this.accessoryType + " Entry: " + this.currentEntry + ", Address: " + this.memoryAddress);
                                         this.dataStream = this.dataStream + " 14 " + numToHex(swap16(this.currentEntry),4) + " 0000 "
                                                 + numToHex(swap32(this.history[this.memoryAddress].time-this.refTime-978307200),8)
@@ -237,10 +241,10 @@ module.exports = function(pHomebridge) {
                     this.refTime=entry.time-978307200;
                     switch (this.accessoryType)
                         {
-                            case "weather":
+                            case TYPE_WEATHER:
                                 this.history[this.lastEntry]= {time: entry.time, temp:0, pressure:0, humidity:0};
                                 break;
-                            case "energy":
+                            case TYPE_ENERGY:
                                 this.history[this.lastEntry]= {time: entry.time, power:0xFFFF};
                                 break;
                         }
