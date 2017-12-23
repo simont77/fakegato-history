@@ -1,12 +1,13 @@
 'use strict';
 
 var homebridge;
-var Characteristic;
+var Characteristic, Service;
 
 module.exports = function(pHomebridge) {
 	if (pHomebridge && !homebridge) {
 		homebridge = pHomebridge;
 		Characteristic = homebridge.hap.Characteristic;
+		Service = homebridge.hap.Service;
     }
     
     var hexToBase64 = function(val) {
@@ -50,6 +51,8 @@ module.exports = function(pHomebridge) {
         }
     }
 
+    S2R1Characteristic.UUID = 'E863F116-079E-48FF-8F27-9C2605A29F52';
+
     class S2R2Characteristic extends Characteristic {
         constructor() {
             super('S2R2', 'E863F117-079E-48FF-8F27-9C2605A29F52');
@@ -61,6 +64,8 @@ module.exports = function(pHomebridge) {
             });
         }
     }
+
+    S2R2Characteristic.UUID = 'E863F117-079E-48FF-8F27-9C2605A29F52';
 
     class S2W1Characteristic extends Characteristic {
         constructor() {
@@ -74,6 +79,8 @@ module.exports = function(pHomebridge) {
         }
     }
 
+    S2W1Characteristic.UUID = 'E863F11C-079E-48FF-8F27-9C2605A29F52';
+
     class S2W2Characteristic extends Characteristic {
         constructor() {
             super('S2W2', 'E863F121-079E-48FF-8F27-9C2605A29F52');
@@ -86,7 +93,9 @@ module.exports = function(pHomebridge) {
         }
     }
 
-    class FakeGatoHistoryService extends homebridge.hap.Service {
+    S2W2Characteristic.UUID = 'E863F121-079E-48FF-8F27-9C2605A29F52';
+
+    class FakeGatoHistoryService extends Service {
         constructor(accessoryType, accessory, size) {
             if (typeof size === 'undefined') { size = 4032; }
             
@@ -280,6 +289,8 @@ module.exports = function(pHomebridge) {
 
         
     }
+
+    FakeGatoHistoryService = 'E863F007-079E-48FF-8F27-9C2605A29F52';
 
     return FakeGatoHistoryService;
 }
