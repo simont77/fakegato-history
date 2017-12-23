@@ -300,7 +300,7 @@ module.exports = function(pHomebridge) {
 
     }
 
-    FakeGatoHistoryService = 'E863F007-079E-48FF-8F27-9C2605A29F52';
+    FakeGatoHistoryService.UUID = 'E863F007-079E-48FF-8F27-9C2605A29F52';
 
     return FakeGatoHistoryService;
 }
