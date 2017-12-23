@@ -192,7 +192,7 @@ module.exports = function(pHomebridge) {
                                 }
                                 this.currentEntry++;
                                 this.memoryAddress = entry2address(this.currentEntry);
-                                if (this.currentEntry == this.lastEntry) {
+                                if (this.currentEntry > this.lastEntry) {
                                     break;
                                 }
                             }
