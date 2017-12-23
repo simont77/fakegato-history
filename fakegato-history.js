@@ -36,7 +36,6 @@ module.exports = function(pHomebridge) {
             return ('0000000000000' + s).slice(-1 * len);
         }
     return s;
-
 }
 
     class S2R1Characteristic extends Characteristic {
@@ -122,8 +121,6 @@ module.exports = function(pHomebridge) {
                     this.accessoryType117 = "0f";
                     break;
             }
-            
-            
 
             this.accessoryType=accessoryType;
             this.firstEntry = 0;
@@ -139,7 +136,7 @@ module.exports = function(pHomebridge) {
             this.dataStream='';
 
             this.addCharacteristic(S2R1Characteristic);
-                
+
             this.addCharacteristic(S2R2Characteristic)
                 .on('get', (callback) => {
                     if ((this.currentEntry<this.lastEntry) && (this.transfer==true))
@@ -197,17 +194,14 @@ module.exports = function(pHomebridge) {
                         this.transfer=false;
                         callback(null,hexToBase64('00'));
                     }
-                    
             });	
-            
-                
+
             this.addCharacteristic(S2W1Characteristic)
                 .on('set', this.setCurrentS2W1.bind(this));
-                
+
             this.addCharacteristic(S2W2Characteristic)
                 .on('set', this.setCurrentS2W2.bind(this));
 
-            
         }
 
         sendHistory(address){
@@ -218,7 +212,7 @@ module.exports = function(pHomebridge) {
                 this.currentEntry = 1;
             this.transfer=true;
         }
-        
+
         //in order to be consistent with Eve, entry address start from 1
         addEntry(entry){
 
@@ -237,7 +231,7 @@ module.exports = function(pHomebridge) {
                 this.firstEntry++;
                 this.lastEntry = this.firstEntry+this.usedMemory;
             }
-            
+
             if (this.refTime==0)
                 {
                     this.refTime=entry.time-978307200;
@@ -253,7 +247,7 @@ module.exports = function(pHomebridge) {
                     this.lastEntry++;
                     this.usedMemory++;
                 }
-            
+
             this.history[entry2address(this.lastEntry)] = (entry);
 
             this.getCharacteristic(S2R1Characteristic)
@@ -264,7 +258,7 @@ module.exports = function(pHomebridge) {
             this.log.debug("116 " + this.accessoryType + ": " + numToHex(swap32(entry.time-this.refTime-978307200),8) + '00000000' + numToHex(swap32(this.refTime),8) + '0401020202' + this.accessoryType116 +'020f03 ' + numToHex(swap16(this.usedMemory),4) + numToHex(swap16(this.memorySize),4) + numToHex(swap32(this.firstEntry),8) + '000000000101');
 
         }
-        
+
         setCurrentS2W1(val, callback) {
             callback(null,val);
             this.log.debug("Data request " + this.accessoryType + ": "+ base64ToHex(val));
@@ -281,13 +275,12 @@ module.exports = function(pHomebridge) {
                 this.sendHistory(address);
             }
         }
-        
+
         setCurrentS2W2(val, callback) {
             this.log.debug("Clock adjust: "+ base64ToHex(val));
             callback(null,val);
         }
 
-        
     }
 
     FakeGatoHistoryService = 'E863F007-079E-48FF-8F27-9C2605A29F52';
