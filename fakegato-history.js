@@ -48,7 +48,7 @@ module.exports = function(pHomebridge) {
 
     class S2R1Characteristic extends Characteristic {
         constructor() {
-            super('S2R1', 'E863F116-079E-48FF-8F27-9C2605A29F52');
+            super('S2R1', S2R1Characteristic.UUID);
             this.setProps({
                 format: Characteristic.Formats.DATA,
                 perms: [
@@ -62,7 +62,7 @@ module.exports = function(pHomebridge) {
 
     class S2R2Characteristic extends Characteristic {
         constructor() {
-            super('S2R2', 'E863F117-079E-48FF-8F27-9C2605A29F52');
+            super('S2R2', S2R2Characteristic.UUID);
             this.setProps({
                 format: Characteristic.Formats.DATA,
                 perms: [
@@ -76,7 +76,7 @@ module.exports = function(pHomebridge) {
 
     class S2W1Characteristic extends Characteristic {
         constructor() {
-            super('S2W1', 'E863F11C-079E-48FF-8F27-9C2605A29F52');
+            super('S2W1', S2W1Characteristic.UUID);
             this.setProps({
                 format: Characteristic.Formats.DATA,
                 perms: [
@@ -90,7 +90,7 @@ module.exports = function(pHomebridge) {
 
     class S2W2Characteristic extends Characteristic {
         constructor() {
-            super('S2W2', 'E863F121-079E-48FF-8F27-9C2605A29F52');
+            super('S2W2', S2W2Characteristic.UUID);
             this.setProps({
                 format: Characteristic.Formats.DATA,
                 perms: [
@@ -106,7 +106,7 @@ module.exports = function(pHomebridge) {
         constructor(accessoryType, accessory, size) {
             if (typeof size === 'undefined') { size = 4032; }
             
-            super(accessory.displayName + " History", 'E863F007-079E-48FF-8F27-9C2605A29F52');
+            super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
 
             var entry2address = function(val) {
                 var temp = val % this.memorySize;
