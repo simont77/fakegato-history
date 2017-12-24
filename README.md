@@ -41,7 +41,7 @@ For Energy accessories it is also worth to add the custom characteristic E863F11
 - [ ] Periodic sending of reference time stamp (seems not really needed if the time of your homebridge machine is correct)
 
 ### Known bugs
-- There is a delay of one entry between the history and the upload to Eve.app, i.e. entry n will be uploaded only when entry n+1 is added to the history
+- ~~There is a delay of one entry between the history and the upload to Eve.app, i.e. entry n will be uploaded only when entry n+1 is added to the history~~
 
 ### How to contribute
 
