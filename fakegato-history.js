@@ -154,8 +154,8 @@ module.exports = function(pHomebridge) {
                             this.history[this.memoryAddress].humidity == 0) || (this.history[this.memoryAddress].power == 0xFFFF) || (this.setTime == true)) {
 
                             var val = Format(
-                                '15%s0000 0000 0000 81%s0000 0000 00 0000',
-                                numToHex(swap16(this.currentEntry),4),
+                                '15%s 0000 0000 81%s0000 0000 00 0000',
+                                numToHex(swap32(this.currentEntry),8),
                                 numToHex(swap32(this.refTime),8)
                             );
 
@@ -170,8 +170,8 @@ module.exports = function(pHomebridge) {
                                     case TYPE_WEATHER:
                                         this.log.debug("%s Entry: %s, Address: %s", this.accessoryType, this.currentEntry, this.memoryAddress);
                                         this.dataStream += Format(
-                                            " 10 %s 0000 %s%s%s%s%s",
-                                            numToHex(swap16(this.currentEntry), 4),
+                                            " 10 %s%s%s%s%s%s",
+                                            numToHex(swap32(this.currentEntry), 8),
                                             numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
                                             this.accessoryType117,
                                             numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
@@ -182,8 +182,8 @@ module.exports = function(pHomebridge) {
                                     case TYPE_ENERGY:
                                         this.log.debug("%s Entry: %s, Address: %s", this.accessoryType, this.currentEntry, this.memoryAddress);
                                         this.dataStream += Format(
-                                            " 14 %s 0000 %s%s0000 0000%s0000 0000",
-                                            numToHex(swap16(this.currentEntry),4),
+                                            " 14 %s%s%s0000 0000%s0000 0000",
+                                            numToHex(swap32(this.currentEntry),8),
                                             numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
                                             this.accessoryType117,
                                             numToHex(swap16(this.history[this.memoryAddress].power * 10), 4)
