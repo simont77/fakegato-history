@@ -123,8 +123,8 @@ module.exports = function(pHomebridge) {
                     this.accessoryType117 = "07";
                     break;
                 case TYPE_ENERGY:
-                    this.accessoryType116 = "05 0502 0b02 0c02 0d02 0702";
-                    this.accessoryType117 = "1e";
+                    this.accessoryType116 = "04 0102 0202 0702 0f03";
+                    this.accessoryType117 = "1f";
                     break;
                 case TYPE_ROOM:
                     this.accessoryType116 = "04 0102 0202 0402 0f03";
@@ -199,7 +199,7 @@ module.exports = function(pHomebridge) {
                                         break;
                                     case TYPE_ENERGY:
                                         this.dataStream += Format(
-                                            " 12 %s%s%s%s0000 0000 0000",
+                                            " 14 %s%s%s0000 0000%s0000 0000",
                                             numToHex(swap32(this.currentEntry),8),
                                             numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
                                             this.accessoryType117,
