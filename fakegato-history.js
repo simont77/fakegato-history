@@ -164,9 +164,12 @@ module.exports = function(pHomebridge) {
                     if ((this.currentEntry < this.lastEntry) && (this.transfer == true)) {
                         this.memoryAddress = entry2address(this.currentEntry);
 
-                        if ((this.history[this.memoryAddress].temp == 0 &&
-                            this.history[this.memoryAddress].pressure == 0 &&
-                            this.history[this.memoryAddress].humidity == 0) || (this.history[this.memoryAddress].power == 0xFFFF) || (this.setTime == true)) {
+                        /*if ((this.history[this.memoryAddress].temp == 0 && this.history[this.memoryAddress].pressure == 0 && this.history[this.memoryAddress].humidity == 0)  //weather
+                            || (this.history[this.memoryAddress].power == 0xFFFF) //energy
+                            || (this.history[this.memoryAddress].temp == 0 && this.history[this.memoryAddress].pressure == 0 && this.history[this.memoryAddress].ppm == 0)  //room
+                            || (this.history[this.memoryAddress].status == -1) //door and motion
+                            || (this.history[this.memoryAddress].currentTemp == 0 && this.history[this.memoryAddress].setTemp == 0 && this.history[this.memoryAddress].valvePosition == -1)  //thermo*/
+                        if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) { //new time set
 
                             var val = Format(
                                 '15%s 0000 0000 81%s0000 0000 00 0000',
@@ -290,7 +293,7 @@ module.exports = function(pHomebridge) {
 
             if (this.refTime == 0) {
                 this.refTime = entry.time - EPOCH_OFFSET;
-                switch (this.accessoryType)
+                /*switch (this.accessoryType)
                     {
                         case TYPE_WEATHER:
                             this.history[this.lastEntry]= {time: entry.time, temp: 0, pressure: 0, humidity: 0};
@@ -303,12 +306,13 @@ module.exports = function(pHomebridge) {
                             break;
                         case TYPE_DOOR:
                         case TYPE_MOTION:
-                            this.history[this.lastEntry]= {time: entry.time, status: 'undefined'};
+                            this.history[this.lastEntry]= {time: entry.time, status: -1};
                             break;
                         case TYPE_THERMO:
                             this.history[this.lastEntry]= {time: entry.time, currentTemp: 0, setTemp: 0, valvePosition: -1};
                             break;
-                    }
+                    }*/
+                this.history[this.lastEntry]= {time: entry.time, setRefTime: 1};
                 this.lastEntry++;
                 this.usedMemory++;
             }
