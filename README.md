@@ -4,7 +4,9 @@ Module to emulate Elgato Eve history service in Homebridge accessories, so that 
 More details on communication protocol and custom Characteristics here: https://gist.github.com/simont77/3f4d4330fa55b83f8ca96388d9004e7d
 
 Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter class). For other types see the gist above.
-Then import module into your plugin module export with:
+Note that if your Eve.app is controlling more than one accessory for each type, the serial number should be different, otherwise Eve.app will merge the histories.
+
+Import module into your plugin module export with:
 
     var FakeGatoHistoryService = require('fakegato-history')(homebridge);
 
