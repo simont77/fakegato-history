@@ -2,6 +2,7 @@
 
 const Format = require('util').format;
 const timedData = require('./timedData').timedData;
+const moment = require('moment');
 
 const EPOCH_OFFSET = 978307200;
 
@@ -114,9 +115,7 @@ module.exports = function(pHomebridge) {
 			
             super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
 			
-			var selfService=this;
-			globalTimedData.subscribe(selfService,function(history){
-				var timer = this;
+			globalTimedData.subscribe(this,function(history,timer){
 				
 				var average = {};
 				var total = {};
@@ -125,12 +124,12 @@ module.exports = function(pHomebridge) {
 					if (history.hasOwnProperty(h)) {
 					
 					// average all history[h].temp together, all .humidity together
-					console.log('historyList',history[h])
+					this.log.debug('historyList',history[h])
 					
-					//timer._addEntry(entry);
+					//this._addEntry(entry);
 					}
 				}
-				//timer.emptyData(selfService);
+				//timer.emptyData(this);
 			});			
 
             var entry2address = function(val) {
@@ -292,14 +291,22 @@ module.exports = function(pHomebridge) {
         }
 
 		addEntry(entry) {
+			var selfService = this;
 			switch(this.accessoryType) {
 				case TYPE_DOOR:
 				case TYPE_MOTION:
-					// minutes is 10 by default so may be not needed
 					if(this.IntervalID) this.IntervalID.stop();
-					this.IntervalID = new timedData({minutes:10,initialPush:true,lastValue:entry.status,callback:function(lastValue){
-						console.log('adding entry',lastValue,'to the timer',this.IntervalID);
-						this._addEntry({time:moment().unix(),status:lastValue});
+					this.log.debug('addEntry DOOR/MOTION received with',entry);
+					
+					this.IntervalID = new timedData({
+										minutes:1, // minutes is 10 by default so may not be needed
+										initialPush:true, // push Immediate then set timer
+										lastEntry:entry, // the entry to repeat
+										callback:function(lastEntry,initialPush){ // every $minutes execute this :
+
+						if(!initialPush) lastEntry.time=moment().unix(); // updating the time to the new time
+						selfService.log.debug('HEARTBEAT',selfService.accessoryType,lastEntry,((!initialPush)?'(time updated)':'first'));
+						selfService._addEntry(lastEntry);						
 					}});
 				break;
 				case TYPE_WEATHER:
