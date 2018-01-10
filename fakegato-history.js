@@ -309,10 +309,10 @@ module.exports = function(pHomebridge) {
 						selfService._addEntry(lastEntry);						
 					}});
 				break;
-				case TYPE_WEATHER:
+				/*case TYPE_WEATHER:
 				case TYPE_ROOM:
 					globalTimedData.addData(entry,this);
-				break;
+				break;*/
 				default:
 					this._addEntry(entry);
 				break;
