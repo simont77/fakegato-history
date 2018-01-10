@@ -25,7 +25,7 @@ function timedData(params) {
 	// Subscription management
 timedData.prototype.subscribe=function(service,callback) {
 		if(typeof(callback) == 'function') {
-			callback = callback.bind(this);
+			callback = callback/*.bind(this)*/;
 		}
 		let newService = {
 			'service'   : service,
@@ -79,7 +79,7 @@ timedData.prototype.historicalDatas=function(initial) {
 				if (this.subscribedServices.hasOwnProperty(s)) {
 					let service = this.subscribedServices[s];
 					console.log('calling back subscribers',service.history);
-					if(typeof(service.callback) == 'function') service.callback(service.history);
+					if(typeof(service.callback) == 'function') service.callback(service.history,this);
 				}
 			}	
 		}
