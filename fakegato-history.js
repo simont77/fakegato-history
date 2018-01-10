@@ -1,6 +1,7 @@
 'use strict';
 
 const Format = require('util').format;
+const timedData = require('./timedData').timedData;
 
 const EPOCH_OFFSET = 978307200;
 
@@ -15,6 +16,8 @@ var homebridge;
 var Characteristic, Service;
 
 module.exports = function(pHomebridge) {
+	var globalTimedData = new timedData();
+	
     if (pHomebridge && !homebridge) {
         homebridge = pHomebridge;
         Characteristic = homebridge.hap.Characteristic;
@@ -46,8 +49,8 @@ module.exports = function(pHomebridge) {
         if(len) {
             return ('0000000000000' + s).slice(-1 * len);
         }
-    return s;
-}
+		return s;
+	}
 
     class S2R1Characteristic extends Characteristic {
         constructor() {
@@ -109,6 +112,22 @@ module.exports = function(pHomebridge) {
         constructor(accessoryType, accessory, size) {
             if (typeof size === 'undefined') { size = 4032; }
             
+			var selfService=this;
+			globalTimedData.subscribe(selfService,function(history){
+				var timer = this;
+				
+				
+				for(var h in history) {
+					if (history.hasOwnProperty(h)) {
+					
+					
+					
+					//timer._addEntry(entry);
+					}
+				}
+				//timer.emptyData(selfService);
+			});
+			
             super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
 
             var entry2address = function(val) {
@@ -156,6 +175,7 @@ module.exports = function(pHomebridge) {
             this.refTime = 0;
             this.memoryAddress = 0;
             this.dataStream = '';
+			this.IntervalID = null;
 
             this.addCharacteristic(S2R1Characteristic);
 
@@ -268,8 +288,27 @@ module.exports = function(pHomebridge) {
             this.transfer=true;
         }
 
+		addEntry(entry) {
+			switch(this.accessoryType) {
+				case TYPE_DOOR:
+				case TYPE_MOTION:
+					// minutes is 10 by default so may be not needed
+					this.IntervalID = new timedData({minutes:10,initialPush:true,lastValue:entry.status,callback:function(lastValue){
+						this._addEntry({time:moment().unix(),status:lastValue});
+					}});
+				break;
+				case TYPE_WEATHER:
+				case TYPE_ROOM:
+					globalTimedData.addData(entry,this);
+				break;
+				default:
+					this._addEntry(entry);
+				break;
+			}
+		}
+		
         //in order to be consistent with Eve, entry address start from 1
-        addEntry(entry){
+        _addEntry(entry){
 
             var entry2address = function(val) {
                 return val % this.memorySize;
