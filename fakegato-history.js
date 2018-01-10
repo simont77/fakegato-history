@@ -111,24 +111,27 @@ module.exports = function(pHomebridge) {
     class FakeGatoHistoryService extends Service {
         constructor(accessoryType, accessory, size) {
             if (typeof size === 'undefined') { size = 4032; }
-            
+			
+            super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
+			
 			var selfService=this;
 			globalTimedData.subscribe(selfService,function(history){
 				var timer = this;
 				
+				var average = {};
+				var total = {};
 				
 				for(var h in history) {
 					if (history.hasOwnProperty(h)) {
 					
-					
+					// average all history[h].temp together, all .humidity together
+					console.log('historyList',history[h])
 					
 					//timer._addEntry(entry);
 					}
 				}
 				//timer.emptyData(selfService);
-			});
-			
-            super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
+			});			
 
             var entry2address = function(val) {
                 var temp = val % this.memorySize;
@@ -293,7 +296,9 @@ module.exports = function(pHomebridge) {
 				case TYPE_DOOR:
 				case TYPE_MOTION:
 					// minutes is 10 by default so may be not needed
+					if(this.IntervalID) this.IntervalID.stop();
 					this.IntervalID = new timedData({minutes:10,initialPush:true,lastValue:entry.status,callback:function(lastValue){
+						console.log('adding entry',lastValue,'to the timer',this.IntervalID);
 						this._addEntry({time:moment().unix(),status:lastValue});
 					}});
 				break;
