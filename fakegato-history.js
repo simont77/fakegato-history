@@ -1,7 +1,7 @@
 'use strict';
 
 const Format = require('util').format;
-const timedData = require('./timedData').timedData;
+const FakeGatoTimer = require('./fakegato-timer').FakeGatoTimer;
 const moment = require('moment');
 
 const EPOCH_OFFSET = 978307200;
@@ -9,15 +9,15 @@ const EPOCH_OFFSET = 978307200;
 const TYPE_ENERGY  = 'energy',
       TYPE_ROOM    = 'room',
       TYPE_WEATHER = 'weather',
-      TYPE_DOOR = 'door',
-      TYPE_MOTION = 'motion',
-      TYPE_THERMO = 'thermo';
+      TYPE_DOOR    = 'door',
+      TYPE_MOTION  = 'motion',
+      TYPE_THERMO  = 'thermo';
 
 var homebridge;
 var Characteristic, Service;
 
 module.exports = function(pHomebridge) {
-	var globalTimedData = new timedData();
+	var globalFakeGatoTimer = new FakeGatoTimer({minutes:2});
 	
     if (pHomebridge && !homebridge) {
         homebridge = pHomebridge;
@@ -115,21 +115,26 @@ module.exports = function(pHomebridge) {
 			
             super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
 			
-			globalTimedData.subscribe(this,function(history,timer){
-				
-				var average = {};
-				var total = {};
+			globalFakeGatoTimer.subscribe(this,function(history,timer){
+				var fakegato = this.service;
+				var calc = {sum:{},num:{},avrg:{}};
 				
 				for(var h in history) {
-					if (history.hasOwnProperty(h)) {
-					
-					// average all history[h].temp together, all .humidity together
-					this.log.debug('historyList',history[h])
-					
-					//this._addEntry(entry);
+					if (history.hasOwnProperty(h)) { // only valid keys
+						for(var key in history[h]) { // each record
+							if (history[h].hasOwnProperty(key) && key!='time') { // except time
+								if(!calc.sum[key]) calc.sum[key]=0;
+								if(!calc.num[key]) calc.num[key]=0;
+								calc.sum[key]+=history[h][key];
+								calc.num[key]++;
+								calc.avrg[key]=calc.sum[key]/calc.num[key];
+							}
+						}
 					}
 				}
-				//timer.emptyData(this);
+				calc.avrg.time=moment().unix(); // set the time of the avrg
+				fakegato._addEntry(calc.avrg);
+				timer.emptyData(fakegato);
 			});			
 
             var entry2address = function(val) {
@@ -209,7 +214,7 @@ module.exports = function(pHomebridge) {
                                             numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
                                             this.accessoryType117,
                                             numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
-                                           numToHex(swap16(this.history[this.memoryAddress].humidity*100), 4),
+                                            numToHex(swap16(this.history[this.memoryAddress].humidity*100), 4),
                                             numToHex(swap16(this.history[this.memoryAddress].pressure*10), 4)
                                         );
                                         break;
@@ -250,7 +255,7 @@ module.exports = function(pHomebridge) {
                                             numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
                                             this.accessoryType117,
                                             numToHex(swap16(this.history[this.memoryAddress].currentTemp * 100), 4),
-                                           numToHex(swap16(this.history[this.memoryAddress].setTemp*100), 4),
+                                            numToHex(swap16(this.history[this.memoryAddress].setTemp*100), 4),
                                             numToHex(this.history[this.memoryAddress].valvePosition, 2)
                                         );
                                         break;
@@ -298,21 +303,22 @@ module.exports = function(pHomebridge) {
 					if(this.IntervalID) this.IntervalID.stop();
 					this.log.debug('addEntry DOOR/MOTION received with',entry);
 					
-					this.IntervalID = new timedData({
+					this.IntervalID = new FakeGatoTimer({
 										minutes:1, // minutes is 10 by default so may not be needed
 										initialPush:true, // push Immediate then set timer
 										lastEntry:entry, // the entry to repeat
+										log:this.log,
 										callback:function(lastEntry,initialPush){ // every $minutes execute this :
 
 						if(!initialPush) lastEntry.time=moment().unix(); // updating the time to the new time
-						selfService.log.debug('HEARTBEAT',selfService.accessoryType,lastEntry,((!initialPush)?'(time updated)':'first'));
+						selfService.log.debug(((!initialPush)?'HEARTBEAT':'FIRST'),selfService.accessoryType,lastEntry,((!initialPush)?'(time updated)':'first'));
 						selfService._addEntry(lastEntry);						
 					}});
 				break;
-				/*case TYPE_WEATHER:
+				case TYPE_WEATHER:
 				case TYPE_ROOM:
-					globalTimedData.addData(entry,this);
-				break;*/
+					globalFakeGatoTimer.addData(entry,this);
+				break;
 				default:
 					this._addEntry(entry);
 				break;
