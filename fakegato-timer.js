@@ -26,9 +26,6 @@ class FakeGatoTimer {
 	
 	// Subscription management
 	subscribe(service,callback) {
-		if(typeof(callback) == 'function') {
-			callback = callback;
-		}
 		let newService = {
 			'service'   : service,
 			'callback'  : callback,
