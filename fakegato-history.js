@@ -17,7 +17,7 @@ var homebridge;
 var Characteristic, Service;
 
 module.exports = function(pHomebridge) {
-	var globalFakeGatoTimer = new FakeGatoTimer({minutes:2});
+	var globalFakeGatoTimer = new FakeGatoTimer({minutes:10});
 	
     if (pHomebridge && !homebridge) {
         homebridge = pHomebridge;
@@ -304,7 +304,7 @@ module.exports = function(pHomebridge) {
 					this.log.debug('addEntry DOOR/MOTION received with',entry);
 					
 					this.IntervalID = new FakeGatoTimer({
-										minutes:1, // minutes is 10 by default so may not be needed
+										minutes:10, // minutes is 10 by default so may not be needed
 										initialPush:true, // push Immediate then set timer
 										lastEntry:entry, // the entry to repeat
 										log:this.log,
