@@ -1,3 +1,4 @@
+/*jshint esversion: 6,node: true,-W041: false */
 'use strict';
 
 const Format = require('util').format;
@@ -38,9 +39,9 @@ module.exports = function(pHomebridge) {
            | ((val & 0xFF00) << 8)
            | ((val >>> 8) & 0xFF00)
            | ((val >>> 24) & 0xFF);
-    }, hexToHPA = function(val) {
+    }, hexToHPA = function(val) { //unused
         return parseInt(swap16(val), 10);
-    }, hPAtoHex = function(val) {
+    }, hPAtoHex = function(val) { //unused
         return swap16(Math.round(val)).toString(16);
     }, numToHex = function(val, len) {
         var s = Number(val >>> 0).toString(16);
@@ -51,7 +52,7 @@ module.exports = function(pHomebridge) {
             return ('0000000000000' + s).slice(-1 * len);
         }
 		return s;
-	}
+	};
 
     class S2R1Characteristic extends Characteristic {
         constructor() {
@@ -285,7 +286,7 @@ module.exports = function(pHomebridge) {
         }
 
         sendHistory(address){
-            var hexAddress= address.toString('16');
+            var hexAddress= address.toString('16');// unused
             if (address != 0) {
                 this.currentEntry = address;
             }
@@ -393,4 +394,4 @@ module.exports = function(pHomebridge) {
     FakeGatoHistoryService.UUID = 'E863F007-079E-48FF-8F27-9C2605A29F52';
 
     return FakeGatoHistoryService;
-}
+};
