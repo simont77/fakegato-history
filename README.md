@@ -65,6 +65,12 @@ For Energy and Door accessories it is also worth to add the custom characteristi
 Weather and Room datas need to be sent every 10min (the 4032 entry buffer will last 28 days). So if you addEntry in that service, data's will be kept and averaged, then every 10 min, it's sent to the buffer.
 Room and Motion are event based, but if there is no new data, there is another timer repeating the last value every 10min (without that trick, there is sometime big "no data" holes in history)
 
+if your plugin don't send addEntry for "weather" and "room" for a short time (supposedly less than 1h (need feedback)), the graph behaviour seems to draw a straight line from the last data received to the new data received.
+if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours (need feedback)), the graph behaviour seems to indicate "no data for the period".
+
+if your Sensor is quite lazy (just send new data's if the data have changed more than x%) that might be good, if it's too long, you may resend the last data you have to fill the holes.
+if your Sensor is defect or batteryless just don't send, the "no data for the period" make sense.
+
 ### TODO
 
 - [x] Support for rolling-over of the history
