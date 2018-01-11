@@ -22,7 +22,7 @@ where
 
 Depending on your accessory type:
         
-* Add entries to history of accessory emulating Eve Weather using something like this every 10 minutes:
+* Add entries to history of accessory emulating Eve Weather using something like this:
 
 		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, pressure:this.airPressure, humidity:this.humidity});
 
@@ -34,7 +34,7 @@ Depending on your accessory type:
     
 	Power should be the average power in W over 10 minutes period. To have good accuracy, it is strongly advised not to use a single instantaneous measurement, but to average many few seconds measurements over 10 minutes.
 
-* Add entries to history of accessory emulating Eve Room using something like this every 10 minutes:
+* Add entries to history of accessory emulating Eve Room using something like this:
 
 		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, humidity:this.humidity, ppm:this.ppm}); 
 	
