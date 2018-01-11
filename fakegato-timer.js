@@ -1,3 +1,4 @@
+/*jshint esversion: 6,node: true,-W041: false */
 'use strict';
 
 class FakeGatoTimer {
@@ -92,7 +93,7 @@ class FakeGatoTimer {
 		else history = this.history;
 		
 		history.push(data);
-		if(this.running === false) this.start()
+		if(this.running === false) this.start();
 	}
 	emptyData(service) {
 		var source;
@@ -105,11 +106,6 @@ class FakeGatoTimer {
 		source.history=[];
 	}
 
-}
-
-function isEmpty(obj) {
-   for (var x in obj) { if (obj.hasOwnProperty(x))  return false; }
-   return true;
 }
 
 module.exports = {
