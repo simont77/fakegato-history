@@ -115,7 +115,7 @@ module.exports = function(pHomebridge) {
 			
             super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
 			
-			globalFakeGatoTimer.subscribe(this,function(history,timer){
+			globalFakeGatoTimer.subscribe(this,function(history,timer){ // callback
 				var fakegato = this.service;
 				var calc = {sum:{},num:{},avrg:{}};
 				
