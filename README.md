@@ -81,7 +81,7 @@ if your Sensor is defect or batteryless just don't send, the "no data for the pe
 - [ ] Periodic sending of reference time stamp (seems not really needed if the time of your homebridge machine is correct)
 
 ### Known bugs
-- ~~There is a delay of one entry between the history and the upload to Eve.app, i.e. entry n will be uploaded only when entry n+1 is added to the history~~
+- Currently valve position history in thermo is not working
 - Currenly not fully compatible with Platforms using Homebridge API v2 format.
 
 ### How to contribute
