@@ -9,6 +9,7 @@ class FakeGatoTimer {
 		this.initialPush= params.initialPush || false;
 		this.intervalID = null;
 		this.running    = false;
+		this.isGlobal	= params.global || false;
 		this.lastEntry  = params.lastEntry || {};
 		this.callback   = (typeof(params.callback)=='function')?params.callback.bind(this):undefined;
 		this.log		= params.log || {};
@@ -22,7 +23,7 @@ class FakeGatoTimer {
 		if(this.initialPush) {
 			setTimeout(this.executeCallback.bind(this),0,true);
 		}
-		this.start();
+		if(!this.isGlobal) this.start();
 	}
 	
 	// Subscription management
