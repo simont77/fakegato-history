@@ -16,13 +16,11 @@ const TYPE_ENERGY  = 'energy',
 
 var homebridge;
 var Characteristic, Service;
+var globalFakeGatoTimer = new FakeGatoTimer({
+		minutes: 2
+	});
 
 module.exports = function (pHomebridge) {
-	var globalFakeGatoTimer = new FakeGatoTimer({
-			global: true,
-			minutes: 10
-		});
-
 	if (pHomebridge && !homebridge) {
 		homebridge = pHomebridge;
 		Characteristic = homebridge.hap.Characteristic;
@@ -128,68 +126,115 @@ module.exports = function (pHomebridge) {
 
 			super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
 
-			if (accessoryType == TYPE_WEATHER || accessoryType == TYPE_ROOM) {
-				globalFakeGatoTimer.subscribe(this, function (backLog, timer) { // callback
-					var fakegato = this.service;
-					var calc = {
-						sum: {},
-						num: {},
-						avrg: {}
-					};
-
-					for (var h in backLog) {
-						if (backLog.hasOwnProperty(h)) { // only valid keys
-							for (var key in backLog[h]) { // each record
-								if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
-									if (!calc.sum[key])
-										calc.sum[key] = 0;
-									if (!calc.num[key])
-										calc.num[key] = 0;
-									calc.sum[key] += backLog[h][key];
-									calc.num[key]++;
-									calc.avrg[key] = calc.sum[key] / calc.num[key];
-								}
-							}
-						}
-					}
-					calc.avrg.time = moment().unix(); // set the time of the avrg
-					fakegato._addEntry(calc.avrg);
-					timer.emptyData(fakegato);
-				});
-			}
-
 			var entry2address = function (val) {
 				var temp = val % this.memorySize;
 				return temp;
-			}
-			.bind(this);
+			}.bind(this);
 			this.accessoryName = accessory.displayName;
 			this.log = accessory.log;
 			switch (accessoryType) {
-			case TYPE_WEATHER:
-				this.accessoryType116 = "03 0102 0202 0302";
-				this.accessoryType117 = "07";
-				break;
-			case TYPE_ENERGY:
-				this.accessoryType116 = "04 0102 0202 0702 0f03";
-				this.accessoryType117 = "1f";
-				break;
-			case TYPE_ROOM:
-				this.accessoryType116 = "04 0102 0202 0402 0f03";
-				this.accessoryType117 = "0f";
-				break;
-			case TYPE_DOOR:
-				this.accessoryType116 = "01 0601";
-				this.accessoryType117 = "01";
-				break;
-			case TYPE_MOTION:
-				this.accessoryType116 = "02 1301 1c01";
-				this.accessoryType117 = "02";
-				break;
-			case TYPE_THERMO:
-				this.accessoryType116 = "05 0102 1102 1001 1201 1d01";
-				this.accessoryType117 = "1f";
-				break;
+				case TYPE_WEATHER:
+					this.accessoryType116 = "03 0102 0202 0302";
+					this.accessoryType117 = "07";
+					
+					globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
+						var fakegato = this.service;
+						var calc = {
+							sum: {},
+							num: {},
+							avrg: {}
+						};
+
+						for (var h in backLog) {
+							if (backLog.hasOwnProperty(h)) { // only valid keys
+								for (var key in backLog[h]) { // each record
+									if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
+										if (!calc.sum[key])
+											calc.sum[key] = 0;
+										if (!calc.num[key])
+											calc.num[key] = 0;
+										calc.sum[key] += backLog[h][key];
+										calc.num[key]++;
+										calc.avrg[key] = calc.sum[key] / calc.num[key];
+									}
+								}
+							}
+						}
+						calc.avrg.time = moment().unix(); // set the time of the avrg
+						fakegato._addEntry(calc.avrg);
+						timer.emptyData(fakegato);// should i ? or repeat the last datas ?
+					});
+					break;
+				case TYPE_ENERGY:
+					this.accessoryType116 = "04 0102 0202 0702 0f03";
+					this.accessoryType117 = "1f";
+					break;
+				case TYPE_ROOM:
+					this.accessoryType116 = "04 0102 0202 0402 0f03";
+					this.accessoryType117 = "0f";
+					
+					globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
+						var fakegato = this.service;
+						var calc = {
+							sum: {},
+							num: {},
+							avrg: {}
+						};
+
+						for (var h in backLog) {
+							if (backLog.hasOwnProperty(h)) { // only valid keys
+								for (var key in backLog[h]) { // each record
+									if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
+										if (!calc.sum[key])
+											calc.sum[key] = 0;
+										if (!calc.num[key])
+											calc.num[key] = 0;
+										calc.sum[key] += backLog[h][key];
+										calc.num[key]++;
+										calc.avrg[key] = calc.sum[key] / calc.num[key];
+									}
+								}
+							}
+						}
+						calc.avrg.time = moment().unix(); // set the time of the avrg
+						fakegato._addEntry(calc.avrg);
+						timer.emptyData(fakegato); // should i ? or repeat the last datas ?
+					});
+					break;
+				case TYPE_DOOR:
+					this.accessoryType116 = "01 0601";
+					this.accessoryType117 = "01";
+					
+					globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
+						var fakegato = this.service;
+						var lastEntryIndex = backLog.length-1;
+						
+						if(!immediate) backLog[lastEntryIndex].time = moment().unix();
+						
+						console.log('callbackDoor',immediate,backLog);
+						
+						fakegato._addEntry(backLog[lastEntryIndex]);
+					});
+					break;
+				case TYPE_MOTION:
+					this.accessoryType116 = "02 1301 1c01";
+					this.accessoryType117 = "02";
+					
+					globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
+						var fakegato = this.service;
+						var lastEntryIndex = backLog.length-1;
+						
+						if(!immediate) backLog[lastEntryIndex].time = moment().unix();	
+						
+						console.log('callbackMotion',immediate,backLog);
+						
+						fakegato._addEntry(backLog[lastEntryIndex]);
+					});
+					break;
+				case TYPE_THERMO:
+					this.accessoryType116 = "05 0102 1102 1001 1201 1d01";
+					this.accessoryType117 = "1f";
+					break;
 			}
 
 			this.accessoryType = accessoryType;
@@ -227,53 +272,53 @@ module.exports = function (pHomebridge) {
 						for (var i = 0; i < 11; i++) {
 							this.log.debug("%s Entry: %s, Address: %s", this.accessoryName, this.currentEntry, this.memoryAddress);
 							switch (this.accessoryType) {
-							case TYPE_WEATHER:
-								this.dataStream += Format(
-									" 10 %s%s%s%s%s%s",
-									numToHex(swap32(this.currentEntry), 8),
-									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-									this.accessoryType117,
-									numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
-									numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
-									numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
-								break;
-							case TYPE_ENERGY:
-								this.dataStream += Format(
-									" 14 %s%s%s0000 0000%s0000 0000",
-									numToHex(swap32(this.currentEntry), 8),
-									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-									this.accessoryType117,
-									numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
-								break;
-							case TYPE_ROOM:
-								this.dataStream += Format(
-									" 13 %s%s%s%s%s%s0000 00",
-									numToHex(swap32(this.currentEntry), 8),
-									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-									this.accessoryType117,
-									numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
-									numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
-									numToHex(swap16(this.history[this.memoryAddress].ppm), 4));
-								break;
-							case TYPE_DOOR:
-							case TYPE_MOTION:
-								this.dataStream += Format(
-									" 0b %s%s%s%s",
-									numToHex(swap32(this.currentEntry), 8),
-									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-									this.accessoryType117,
-									numToHex(this.history[this.memoryAddress].status, 2));
-								break;
-							case TYPE_THERMO:
-								this.dataStream += Format(
-									" 11 %s%s%s%s%s%s 0000",
-									numToHex(swap32(this.currentEntry), 8),
-									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-									this.accessoryType117,
-									numToHex(swap16(this.history[this.memoryAddress].currentTemp * 100), 4),
-									numToHex(swap16(this.history[this.memoryAddress].setTemp * 100), 4),
-									numToHex(this.history[this.memoryAddress].valvePosition, 2));
-								break;
+								case TYPE_WEATHER:
+									this.dataStream += Format(
+										" 10 %s%s%s%s%s%s",
+										numToHex(swap32(this.currentEntry), 8),
+										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+										this.accessoryType117,
+										numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
+										numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
+										numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
+									break;
+								case TYPE_ENERGY:
+									this.dataStream += Format(
+										" 14 %s%s%s0000 0000%s0000 0000",
+										numToHex(swap32(this.currentEntry), 8),
+										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+										this.accessoryType117,
+										numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
+									break;
+								case TYPE_ROOM:
+									this.dataStream += Format(
+										" 13 %s%s%s%s%s%s0000 00",
+										numToHex(swap32(this.currentEntry), 8),
+										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+										this.accessoryType117,
+										numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
+										numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
+										numToHex(swap16(this.history[this.memoryAddress].ppm), 4));
+									break;
+								case TYPE_DOOR:
+								case TYPE_MOTION:
+									this.dataStream += Format(
+										" 0b %s%s%s%s",
+										numToHex(swap32(this.currentEntry), 8),
+										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+										this.accessoryType117,
+										numToHex(this.history[this.memoryAddress].status, 2));
+									break;
+								case TYPE_THERMO:
+									this.dataStream += Format(
+										" 11 %s%s%s%s%s%s 0000",
+										numToHex(swap32(this.currentEntry), 8),
+										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+										this.accessoryType117,
+										numToHex(swap16(this.history[this.memoryAddress].currentTemp * 100), 4),
+										numToHex(swap16(this.history[this.memoryAddress].setTemp * 100), 4),
+										numToHex(this.history[this.memoryAddress].valvePosition, 2));
+									break;
 							}
 							this.currentEntry++;
 							this.memoryAddress = entry2address(this.currentEntry);
@@ -311,32 +356,17 @@ module.exports = function (pHomebridge) {
 		addEntry(entry) {
 			var selfService = this;
 			switch (this.accessoryType) {
-			case TYPE_DOOR:
-			case TYPE_MOTION:
-				if (this.IntervalID)
-					this.IntervalID.stop();
-				this.log.debug('addEntry DOOR/MOTION received with', entry);
-
-				this.IntervalID = new FakeGatoTimer({
-						minutes: 10, // minutes is 10 by default so may not be needed
-						initialPush: true, // push Immediate then set timer
-						lastEntry: entry, // the entry to repeat
-						log: this.log,
-						callback: function (lastEntry, initialPush) { // every $minutes execute this :
-							if (!initialPush)
-								lastEntry.time = moment().unix(); // updating the time to the new time
-							selfService.log.debug(((!initialPush) ? 'HEARTBEAT' : 'FIRST'), selfService.accessoryType, lastEntry, ((!initialPush) ? '(time updated)' : 'first'));
-							selfService._addEntry(lastEntry);
-						}
-					});
-				break;
-			case TYPE_WEATHER:
-			case TYPE_ROOM:
-				globalFakeGatoTimer.addData(entry, this);
-				break;
-			default:
-				this._addEntry(entry);
-				break;
+				case TYPE_DOOR:
+				case TYPE_MOTION:
+					globalFakeGatoTimer.addData({entry: entry, service: this, immediateCallback: true});
+					break;
+				case TYPE_WEATHER:
+				case TYPE_ROOM:
+					globalFakeGatoTimer.addData({entry: entry, service: this});
+					break;
+				default:
+					this._addEntry(entry);
+					break;
 			}
 		}
 
