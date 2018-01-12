@@ -18,7 +18,7 @@ var homebridge;
 var Characteristic, Service;
 
 module.exports = function(pHomebridge) {
-    var globalFakeGatoTimer = new FakeGatoTimer({minutes:10});
+    var globalFakeGatoTimer = new FakeGatoTimer({global:true,minutes:10});
 	
     if (pHomebridge && !homebridge) {
         homebridge = pHomebridge;
