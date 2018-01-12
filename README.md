@@ -81,6 +81,7 @@ if your Sensor is defect or batteryless just don't send, the "no data for the pe
 - [ ] Periodic sending of reference time stamp (seems not really needed if the time of your homebridge machine is correct)
 
 ### Known bugs
+- Currenly not fully compatible with Platforms using Homebridge API v2 format.
 - Currently valve position history in thermo is not working
 
 ### How to contribute
