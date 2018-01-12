@@ -3,45 +3,76 @@ Module to emulate Elgato Eve history service in Homebridge accessories, so that 
 
 More details on communication protocol and custom Characteristics here: https://gist.github.com/simont77/3f4d4330fa55b83f8ca96388d9004e7d
 
-Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter class). Then import module into your plugin module export with:
+Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter class). For other types see the gist above.
+Note that if your Eve.app is controlling more than one accessory for each type, the serial number should be different, otherwise Eve.app will merge the histories.
 
-    var FakeGatoHistoryService = require('./fakegato-history')(homebridge);
+Import module into your plugin module export with:
 
-Add your service using:
+    var FakeGatoHistoryService = require('fakegato-history')(homebridge);
+
+Add the service to your Accessory using:
 
     this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, length);
        
 where
 
-- accessoryType can be "weather" or "energy"
+- accessoryType can be "weather", "energy", "room", "door", motion" or "thermo"
 - Accessory should be the accessory using the service, in order to correctly set the service name and pass the log to the parent object. Your Accessory should have a `this.log` variable pointing to the homebridge logger passed to the plugin constructor (add a line `this.log=log;` to your plugin). Debug messages will be shown if homebridge is launched with -D option.
 - length is the history length; if no value is given length is set to 4032 samples
+
+Depending on your accessory type:
         
-Add entries to history of accessory emulating Eve Weather using something like this every 10 minutes:
+* Add entries to history of accessory emulating Eve Weather using something like this every 10 minutes:
 
-	this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, pressure:this.airPressure, humidity:this.humidity});	
+		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, pressure:this.airPressure, humidity:this.humidity});
 
-AiPressure is in mbar, Temperature in Celsius, Humidity in %.
+	AiPressure is in mbar, Temperature in Celsius, Humidity in %.
 
-Add entries to history of accessory emulating Eve Energy using something like this every 10 minutes:
+* Add entries to history of accessory emulating Eve Energy using something like this every 10 minutes:
 
-    this.loggingService.addEntry({time: moment().unix(), power: this.power}); 
+		this.loggingService.addEntry({time: moment().unix(), power: this.power}); 
     
-Power should be the average power in W over 10 minutes period. To have good accuracy, it is strongly advised not to use a single instantaneous measurement, but to average many few seconds measurements over 10 minutes.
+	Power should be the average power in W over 10 minutes period. To have good accuracy, it is strongly advised not to use a single instantaneous measurement, but to average many few seconds measurements over 10 minutes.
 
-For Energy accessories it is also worth to add the custom characteristic E863F112 for resetting the Total Consumption accumulated value (not the history). See the gist above. The value of this characteristic is changed whenever the reset button is tapped on Eve, so it can be used to reset the locally stored value. The meaning of the exact value is still unknown. I left this characteristics out of fakegato-history because it is not part if the common  history service, up to know I found it only on Eve Energy
+* Add entries to history of accessory emulating Eve Room using something like this every 10 minutes:
+
+		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, humidity:this.humidity, ppm:this.ppm}); 
+	
+	Temperature in Celsius, Humidity in %.
+	
+* Add entries to history of accessory emulating Eve Door using something like this on every status change:
+
+		this.loggingService.addEntry({time: moment().unix(), status: this.status});
+	
+	Status can be 1 for ‘open’ or 0 for ‘close’.
+
+* Add entries to history of accessory emulating Eve Motion using something like this on every status change:
+
+		this.loggingService.addEntry({time: moment().unix(), status: this.status});
+	
+	Status can be 1 for ‘detected’ or 0 for ‘cleared’.
+
+* Add entries to history of accessory emulating Eve Thermo using something like this every 10 minutes:
+
+		this.loggingService.addEntry({time: moment().unix(), currentTemp:this.currentTemp, setTemp:this.setTemp, valvePosition:this.valvePosition}); 
+	
+	currentTemp and setTemp in Celsius, valvePosition in %.
+
+
+For Energy and Door accessories it is also worth to add the custom characteristic E863F112 for resetting, respectively, the Total Consumption accumulated value or the Aperture Counter (not the history). See the gist above. The value of this characteristic is changed whenever the reset button is tapped on Eve, so it can be used to reset the locally stored value. The meaning of the exact value is still unknown. I left this characteristics out of fakegato-history because it is not part of the common  history service.
 
 ### TODO
 
 - [x] Support for rolling-over of the history
 - [x] Aggregate transmission of several entries into a single Characteristic update in order to speed up transfer when not on local network.
-- [ ] Add other accessory types. Help from people with access to real Eve accessory is needed. Dump of custom Characteristics during data transfer is required.
+- [x] Add other accessory types. Help from people with access to real Eve accessory is needed. Dump of custom Characteristics during data transfer is required.
 - [ ] Make history persistent 
 - [x] Adjustable history length
 - [ ] Periodic sending of reference time stamp (seems not really needed if the time of your homebridge machine is correct)
 
 ### Known bugs
-- ~~There is a delay of one entry between the history and the upload to Eve.app, i.e. entry n will be uploaded only when entry n+1 is added to the history~~
+- Currenly not fully compatible with Platforms using Homebridge API v2 format.
+- Currently valve position history in thermo is not working
 
 ### How to contribute
 

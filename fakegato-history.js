@@ -6,7 +6,10 @@ const EPOCH_OFFSET = 978307200;
 
 const TYPE_ENERGY  = 'energy',
       TYPE_ROOM    = 'room',
-      TYPE_WEATHER = 'weather';
+      TYPE_WEATHER = 'weather',
+      TYPE_DOOR = 'door',
+      TYPE_MOTION = 'motion',
+      TYPE_THERMO = 'thermo';
 
 var homebridge;
 var Characteristic, Service;
@@ -112,20 +115,32 @@ module.exports = function(pHomebridge) {
                 var temp = val % this.memorySize;
                 return temp;
             }.bind(this);
-
+            this.accessoryName = accessory.displayName;
             this.log = accessory.log;
             switch (accessoryType) {
                 case TYPE_WEATHER:
-                    this.accessoryType116 = "03";
+                    this.accessoryType116 = "03 0102 0202 0302";
                     this.accessoryType117 = "07";
                     break;
                 case TYPE_ENERGY:
-                    this.accessoryType116 = "07";
+                    this.accessoryType116 = "04 0102 0202 0702 0f03";
                     this.accessoryType117 = "1f";
                     break;
                 case TYPE_ROOM:
-                    this.accessoryType116 = "04";
+                    this.accessoryType116 = "04 0102 0202 0402 0f03";
                     this.accessoryType117 = "0f";
+                    break;
+                case TYPE_DOOR:
+                    this.accessoryType116 = "01 0601";
+                    this.accessoryType117 = "01";
+                    break;
+                case TYPE_MOTION:
+                    this.accessoryType116 = "02 1301 1c01";
+                    this.accessoryType117 = "02";
+                    break;
+                case TYPE_THERMO:
+                    this.accessoryType116 = "05 0102 1102 1001 1201 1d01";
+                    this.accessoryType117 = "1f";
                     break;
             }
 
@@ -148,45 +163,73 @@ module.exports = function(pHomebridge) {
                 .on('get', (callback) => {
                     if ((this.currentEntry < this.lastEntry) && (this.transfer == true)) {
                         this.memoryAddress = entry2address(this.currentEntry);
-
-                        if ((this.history[this.memoryAddress].temp == 0 &&
-                            this.history[this.memoryAddress].pressure == 0 &&
-                            this.history[this.memoryAddress].humidity == 0) || (this.history[this.memoryAddress].power == 0xFFFF) || (this.setTime == true)) {
+                        if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) { 
 
                             var val = Format(
-                                '15%s0000 0000 0000 81%s0000 0000 00 0000',
-                                numToHex(swap16(this.currentEntry),4),
+                                '15%s 0000 0000 81%s0000 0000 00 0000',
+                                numToHex(swap32(this.currentEntry),8),
                                 numToHex(swap32(this.refTime),8)
                             );
 
-                            this.log.debug("Data %s: %s", this.accessoryType, val);
+                            this.log.debug("Data %s: %s", this.accessoryName, val);
                             callback(null, hexToBase64(val));
                             this.setTime=false;
                             this.currentEntry++;
                         }
                         else {
                             for (var i = 0;i < 11;i++) {
+                                this.log.debug("%s Entry: %s, Address: %s", this.accessoryName, this.currentEntry, this.memoryAddress);
                                 switch (this.accessoryType) {
                                     case TYPE_WEATHER:
-                                        this.log.debug("%s Entry: %s, Address: %s", this.accessoryType, this.currentEntry, this.memoryAddress);
                                         this.dataStream += Format(
-                                            " 10 %s 0000 %s%s%s%s%s",
-                                            numToHex(swap16(this.currentEntry), 4),
+                                            " 10 %s%s%s%s%s%s",
+                                            numToHex(swap32(this.currentEntry), 8),
                                             numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
                                             this.accessoryType117,
                                             numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
-                                            numToHex(swap16(this.history[this.memoryAddress].humidity*100), 4),
+                                           numToHex(swap16(this.history[this.memoryAddress].humidity*100), 4),
                                             numToHex(swap16(this.history[this.memoryAddress].pressure*10), 4)
                                         );
                                         break;
                                     case TYPE_ENERGY:
-                                        this.log.debug("%s Entry: %s, Address: %s", this.accessoryType, this.currentEntry, this.memoryAddress);
                                         this.dataStream += Format(
-                                            " 14 %s 0000 %s%s0000 0000%s0000 0000",
-                                            numToHex(swap16(this.currentEntry),4),
+                                            " 14 %s%s%s0000 0000%s0000 0000",
+                                            numToHex(swap32(this.currentEntry),8),
                                             numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
                                             this.accessoryType117,
                                             numToHex(swap16(this.history[this.memoryAddress].power * 10), 4)
+                                        );
+                                        break;
+                                    case TYPE_ROOM:
+                                        this.dataStream += Format(
+                                            " 13 %s%s%s%s%s%s0000 00",
+                                            numToHex(swap32(this.currentEntry), 8),
+                                            numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+                                            this.accessoryType117,
+                                            numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
+                                            numToHex(swap16(this.history[this.memoryAddress].humidity*100), 4),
+                                            numToHex(swap16(this.history[this.memoryAddress].ppm), 4)
+                                        );
+                                        break;
+                                    case TYPE_DOOR:
+                                    case TYPE_MOTION:
+                                        this.dataStream += Format(
+                                            " 0b %s%s%s%s",
+                                            numToHex(swap32(this.currentEntry), 8),
+                                            numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+                                            this.accessoryType117,
+                                            numToHex(this.history[this.memoryAddress].status, 2)
+                                        );
+                                        break;
+                                    case TYPE_THERMO:
+                                        this.dataStream += Format(
+                                            " 11 %s%s%s%s%s%s 0000",
+                                            numToHex(swap32(this.currentEntry), 8),
+                                            numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+                                            this.accessoryType117,
+                                            numToHex(swap16(this.history[this.memoryAddress].currentTemp * 100), 4),
+                                           numToHex(swap16(this.history[this.memoryAddress].setTemp*100), 4),
+                                            numToHex(this.history[this.memoryAddress].valvePosition, 2)
                                         );
                                         break;
                                 }
@@ -196,7 +239,7 @@ module.exports = function(pHomebridge) {
                                     break;
                                 }
                             }
-                            this.log.debug("Data %s: %s", this.accessoryType, this.dataStream);
+                            this.log.debug("Data %s: %s", this.accessoryName, this.dataStream);
                             callback(null, hexToBase64(this.dataStream));
                             this.dataStream = '';
                         }
@@ -244,15 +287,7 @@ module.exports = function(pHomebridge) {
 
             if (this.refTime == 0) {
                 this.refTime = entry.time - EPOCH_OFFSET;
-                switch (this.accessoryType)
-                    {
-                        case TYPE_WEATHER:
-                            this.history[this.lastEntry]= {time: entry.time, temp: 0, pressure: 0, humidity: 0};
-                            break;
-                        case TYPE_ENERGY:
-                            this.history[this.lastEntry]= {time: entry.time, power: 0xFFFF};
-                            break;
-                    }
+                this.history[this.lastEntry]= {time: entry.time, setRefTime: 1};
                 this.lastEntry++;
                 this.usedMemory++;
             }
@@ -260,9 +295,10 @@ module.exports = function(pHomebridge) {
             this.history[entry2address(this.lastEntry)] = (entry);
 
             var val = Format(
-                '%s00000000%s0401020202%s020f03%s%s%s000000000101',
+                '%s00000000%s%s%s%s%s000000000101',
                 numToHex(swap32(entry.time - this.refTime - EPOCH_OFFSET), 8),
-                numToHex(swap32(this.refTime), 8), this.accessoryType116,
+                numToHex(swap32(this.refTime), 8),
+                this.accessoryType116,
                 numToHex(swap16(this.usedMemory), 4),
                 numToHex(swap16(this.memorySize), 4),
                 numToHex(swap32(this.firstEntry), 8)
@@ -270,31 +306,28 @@ module.exports = function(pHomebridge) {
 
             this.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
 
-            this.log.debug("First entry %s: %s", this.accessoryType, this.firstEntry.toString(16));
-            this.log.debug("Last entry %s: %s", this.accessoryType, this.lastEntry.toString(16));
-            this.log.debug("Used memory %s: %s", this.accessoryType, this.usedMemory.toString(16));
-            this.log.debug("116 %s: %s", this.accessoryType, val);
+            this.log.debug("First entry %s: %s", this.accessoryName, this.firstEntry.toString(16));
+            this.log.debug("Last entry %s: %s", this.accessoryName, this.lastEntry.toString(16));
+            this.log.debug("Used memory %s: %s", this.accessoryName, this.usedMemory.toString(16));
+            this.log.debug("116 %s: %s", this.accessoryName, val);
         }
 
         setCurrentS2W1(val, callback) {
             callback(null,val);
-            this.log.debug("Data request %s: %s", this.accessoryType, base64ToHex(val));
+            this.log.debug("Data request %s: %s", this.accessoryName, base64ToHex(val));
             var valHex = base64ToHex(val);
             var substring = valHex.substring(4, 12);
             var valInt = parseInt(substring, 16);
             var address = swap32(valInt);
             var hexAddress= address.toString('16');
 
-            this.log.debug("Address requested %s: %s", this.accessoryType, hexAddress);
-            //if (this.transfer==false)
-            //{
-                //this.transfer=true;
-                this.sendHistory(address);
-            //}
+            this.log.debug("Address requested %s: %s", this.accessoryName, hexAddress);
+            this.sendHistory(address);
+            
         }
 
         setCurrentS2W2(val, callback) {
-            this.log.debug("Clock adjust: %s", base64ToHex(val));
+            this.log.debug("Clock adjust %s: %s", this.accessoryName, base64ToHex(val));
             callback(null, val);
         }
 
