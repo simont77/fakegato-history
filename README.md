@@ -82,7 +82,6 @@ if your Sensor is defect or batteryless just don't send, the "no data for the pe
 
 ### Known bugs
 - Currently valve position history in thermo is not working
-- Currenly not fully compatible with Platforms using Homebridge API v2 format.
 
 ### How to contribute
 
