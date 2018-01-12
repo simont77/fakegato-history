@@ -17,7 +17,7 @@ const TYPE_ENERGY  = 'energy',
 var homebridge;
 var Characteristic, Service;
 var globalFakeGatoTimer = new FakeGatoTimer({
-		minutes: 2
+		minutes: 10
 	});
 
 module.exports = function (pHomebridge) {
