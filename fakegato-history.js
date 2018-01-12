@@ -18,7 +18,7 @@ var homebridge;
 var Characteristic, Service;
 
 module.exports = function(pHomebridge) {
-	var globalFakeGatoTimer = new FakeGatoTimer({minutes:10});
+    var globalFakeGatoTimer = new FakeGatoTimer({minutes:10});
 	
     if (pHomebridge && !homebridge) {
         homebridge = pHomebridge;
@@ -296,35 +296,34 @@ module.exports = function(pHomebridge) {
             this.transfer=true;
         }
 
-		addEntry(entry) {
-			var selfService = this;
-			switch(this.accessoryType) {
-				case TYPE_DOOR:
-				case TYPE_MOTION:
-					if(this.IntervalID) this.IntervalID.stop();
-					this.log.debug('addEntry DOOR/MOTION received with',entry);
-					
-					this.IntervalID = new FakeGatoTimer({
-										minutes:10, // minutes is 10 by default so may not be needed
-										initialPush:true, // push Immediate then set timer
-										lastEntry:entry, // the entry to repeat
-										log:this.log,
-										callback:function(lastEntry,initialPush){ // every $minutes execute this :
-
-						if(!initialPush) lastEntry.time=moment().unix(); // updating the time to the new time
-						selfService.log.debug(((!initialPush)?'HEARTBEAT':'FIRST'),selfService.accessoryType,lastEntry,((!initialPush)?'(time updated)':'first'));
-						selfService._addEntry(lastEntry);						
-					}});
-				break;
-				case TYPE_WEATHER:
-				case TYPE_ROOM:
-					globalFakeGatoTimer.addData(entry,this);
-				break;
-				default:
-					this._addEntry(entry);
-				break;
-			}
+	addEntry(entry) {
+		var selfService = this;
+		switch(this.accessoryType) {
+			case TYPE_DOOR:
+			case TYPE_MOTION:
+				if(this.IntervalID) this.IntervalID.stop();
+				this.log.debug('addEntry DOOR/MOTION received with',entry);
+				
+				this.IntervalID = new FakeGatoTimer({
+									minutes:10, // minutes is 10 by default so may not be needed
+									initialPush:true, // push Immediate then set timer
+									lastEntry:entry, // the entry to repeat
+									log:this.log,
+									callback:function(lastEntry,initialPush){ // every $minutes execute this :
+					if(!initialPush) lastEntry.time=moment().unix(); // updating the time to the new time
+					selfService.log.debug(((!initialPush)?'HEARTBEAT':'FIRST'),selfService.accessoryType,lastEntry,((!initialPush)?'(time updated)':'first'));
+					selfService._addEntry(lastEntry);						
+				}});
+			break;
+			case TYPE_WEATHER:
+			case TYPE_ROOM:
+				globalFakeGatoTimer.addData(entry,this);
+			break;
+			default:
+				this._addEntry(entry);
+			break;
 		}
+	}
 		
         //in order to be consistent with Eve, entry address start from 1
         _addEntry(entry){
