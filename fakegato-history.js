@@ -8,11 +8,11 @@ const moment = require('moment');
 const EPOCH_OFFSET = 978307200;
 
 const TYPE_ENERGY = 'energy',
-	  TYPE_ROOM = 'room',
-	  TYPE_WEATHER = 'weather',
-	  TYPE_DOOR = 'door',
-	  TYPE_MOTION = 'motion',
-	  TYPE_THERMO = 'thermo';
+      TYPE_ROOM = 'room',
+      TYPE_WEATHER = 'weather',
+      TYPE_DOOR = 'door',
+      TYPE_MOTION = 'motion',
+      TYPE_THERMO = 'thermo';
 
 var homebridge;
 var Characteristic, Service;
