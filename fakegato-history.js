@@ -1,20 +1,25 @@
+/*jshint esversion: 6,node: true,-W041: false */
 'use strict';
 
 const Format = require('util').format;
+const FakeGatoTimer = require('./fakegato-timer').FakeGatoTimer;
+const moment = require('moment');
 
 const EPOCH_OFFSET = 978307200;
 
 const TYPE_ENERGY  = 'energy',
       TYPE_ROOM    = 'room',
       TYPE_WEATHER = 'weather',
-      TYPE_DOOR = 'door',
-      TYPE_MOTION = 'motion',
-      TYPE_THERMO = 'thermo';
+      TYPE_DOOR    = 'door',
+      TYPE_MOTION  = 'motion',
+      TYPE_THERMO  = 'thermo';
 
 var homebridge;
 var Characteristic, Service;
 
 module.exports = function(pHomebridge) {
+    var globalFakeGatoTimer = new FakeGatoTimer({minutes:10});
+	
     if (pHomebridge && !homebridge) {
         homebridge = pHomebridge;
         Characteristic = homebridge.hap.Characteristic;
@@ -34,9 +39,9 @@ module.exports = function(pHomebridge) {
            | ((val & 0xFF00) << 8)
            | ((val >>> 8) & 0xFF00)
            | ((val >>> 24) & 0xFF);
-    }, hexToHPA = function(val) {
+    }, hexToHPA = function(val) { //unused
         return parseInt(swap16(val), 10);
-    }, hPAtoHex = function(val) {
+    }, hPAtoHex = function(val) { //unused
         return swap16(Math.round(val)).toString(16);
     }, numToHex = function(val, len) {
         var s = Number(val >>> 0).toString(16);
@@ -46,8 +51,8 @@ module.exports = function(pHomebridge) {
         if(len) {
             return ('0000000000000' + s).slice(-1 * len);
         }
-    return s;
-}
+		return s;
+	};
 
     class S2R1Characteristic extends Characteristic {
         constructor() {
@@ -108,8 +113,30 @@ module.exports = function(pHomebridge) {
     class FakeGatoHistoryService extends Service {
         constructor(accessoryType, accessory, size) {
             if (typeof size === 'undefined') { size = 4032; }
-            
+			
             super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
+			
+			globalFakeGatoTimer.subscribe(this,function(history,timer){ // callback
+				var fakegato = this.service;
+				var calc = {sum:{},num:{},avrg:{}};
+				
+				for(var h in history) {
+					if (history.hasOwnProperty(h)) { // only valid keys
+						for(var key in history[h]) { // each record
+							if (history[h].hasOwnProperty(key) && key!='time') { // except time
+								if(!calc.sum[key]) calc.sum[key]=0;
+								if(!calc.num[key]) calc.num[key]=0;
+								calc.sum[key]+=history[h][key];
+								calc.num[key]++;
+								calc.avrg[key]=calc.sum[key]/calc.num[key];
+							}
+						}
+					}
+				}
+				calc.avrg.time=moment().unix(); // set the time of the avrg
+				fakegato._addEntry(calc.avrg);
+				timer.emptyData(fakegato);
+			});			
 
             var entry2address = function(val) {
                 var temp = val % this.memorySize;
@@ -156,6 +183,7 @@ module.exports = function(pHomebridge) {
             this.refTime = 0;
             this.memoryAddress = 0;
             this.dataStream = '';
+			this.IntervalID = null;
 
             this.addCharacteristic(S2R1Characteristic);
 
@@ -187,7 +215,7 @@ module.exports = function(pHomebridge) {
                                             numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
                                             this.accessoryType117,
                                             numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
-                                           numToHex(swap16(this.history[this.memoryAddress].humidity*100), 4),
+                                            numToHex(swap16(this.history[this.memoryAddress].humidity*100), 4),
                                             numToHex(swap16(this.history[this.memoryAddress].pressure*10), 4)
                                         );
                                         break;
@@ -228,7 +256,7 @@ module.exports = function(pHomebridge) {
                                             numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
                                             this.accessoryType117,
                                             numToHex(swap16(this.history[this.memoryAddress].currentTemp * 100), 4),
-                                           numToHex(swap16(this.history[this.memoryAddress].setTemp*100), 4),
+                                            numToHex(swap16(this.history[this.memoryAddress].setTemp*100), 4),
                                             numToHex(this.history[this.memoryAddress].valvePosition, 2)
                                         );
                                         break;
@@ -258,7 +286,7 @@ module.exports = function(pHomebridge) {
         }
 
         sendHistory(address){
-            var hexAddress= address.toString('16');
+            var hexAddress= address.toString('16');// unused
             if (address != 0) {
                 this.currentEntry = address;
             }
@@ -268,8 +296,37 @@ module.exports = function(pHomebridge) {
             this.transfer=true;
         }
 
+	addEntry(entry) {
+		var selfService = this;
+		switch(this.accessoryType) {
+			case TYPE_DOOR:
+			case TYPE_MOTION:
+				if(this.IntervalID) this.IntervalID.stop();
+				this.log.debug('addEntry DOOR/MOTION received with',entry);
+				
+				this.IntervalID = new FakeGatoTimer({
+									minutes:10, // minutes is 10 by default so may not be needed
+									initialPush:true, // push Immediate then set timer
+									lastEntry:entry, // the entry to repeat
+									log:this.log,
+									callback:function(lastEntry,initialPush){ // every $minutes execute this :
+					if(!initialPush) lastEntry.time=moment().unix(); // updating the time to the new time
+					selfService.log.debug(((!initialPush)?'HEARTBEAT':'FIRST'),selfService.accessoryType,lastEntry,((!initialPush)?'(time updated)':'first'));
+					selfService._addEntry(lastEntry);						
+				}});
+			break;
+			case TYPE_WEATHER:
+			case TYPE_ROOM:
+				globalFakeGatoTimer.addData(entry,this);
+			break;
+			default:
+				this._addEntry(entry);
+			break;
+		}
+	}
+		
         //in order to be consistent with Eve, entry address start from 1
-        addEntry(entry){
+        _addEntry(entry){
 
             var entry2address = function(val) {
                 return val % this.memorySize;
@@ -336,4 +393,4 @@ module.exports = function(pHomebridge) {
     FakeGatoHistoryService.UUID = 'E863F007-079E-48FF-8F27-9C2605A29F52';
 
     return FakeGatoHistoryService;
-}
+};

@@ -22,7 +22,7 @@ where
 
 Depending on your accessory type:
         
-* Add entries to history of accessory emulating Eve Weather using something like this every 10 minutes:
+* Add entries to history of accessory emulating Eve Weather using something like this:
 
 		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, pressure:this.airPressure, humidity:this.humidity});
 
@@ -34,11 +34,11 @@ Depending on your accessory type:
     
 	Power should be the average power in W over 10 minutes period. To have good accuracy, it is strongly advised not to use a single instantaneous measurement, but to average many few seconds measurements over 10 minutes.
 
-* Add entries to history of accessory emulating Eve Room using something like this every 10 minutes:
+* Add entries to history of accessory emulating Eve Room using something like this:
 
 		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, humidity:this.humidity, ppm:this.ppm}); 
 	
-	Temperature in Celsius, Humidity in %.
+	Temperature in Celsius, Humidity in %. (the addEntry is valid with only one property (only temp or 2 of them or ...))
 	
 * Add entries to history of accessory emulating Eve Door using something like this on every status change:
 
@@ -60,6 +60,16 @@ Depending on your accessory type:
 
 
 For Energy and Door accessories it is also worth to add the custom characteristic E863F112 for resetting, respectively, the Total Consumption accumulated value or the Aperture Counter (not the history). See the gist above. The value of this characteristic is changed whenever the reset button is tapped on Eve, so it can be used to reset the locally stored value. The meaning of the exact value is still unknown. I left this characteristics out of fakegato-history because it is not part of the common  history service.
+
+[NEW] A timers have been set up. 
+Weather and Room datas need to be sent every 10min (the 4032 entry buffer will last 28 days). So if you addEntry in that service, data's will be kept and averaged, then every 10 min, it's sent to the buffer.
+Room and Motion are event based, but if there is no new data, there is another timer repeating the last value every 10min (without that trick, there is sometime big "no data" holes in history)
+
+if your plugin don't send addEntry for "weather" and "room" for a short time (supposedly less than 1h (need feedback)), the graph behaviour seems to draw a straight line from the last data received to the new data received.
+if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours (need feedback)), the graph behaviour seems to indicate "no data for the period".
+
+if your Sensor is quite lazy (just send new data's if the data have changed more than x%) that might be good, if it's too long, you may resend the last data you have to fill the holes.
+if your Sensor is defect or batteryless just don't send, the "no data for the period" make sense.
 
 ### TODO
 
