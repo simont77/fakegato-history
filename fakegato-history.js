@@ -18,7 +18,7 @@ var homebridge;
 var Characteristic, Service;
 
 module.exports = function(pHomebridge) {
-    var globalFakeGatoTimer = new FakeGatoTimer({minutes:10});
+    var globalFakeGatoTimer = new FakeGatoTimer({global:true,minutes:10});
 	
     if (pHomebridge && !homebridge) {
         homebridge = pHomebridge;
@@ -115,28 +115,30 @@ module.exports = function(pHomebridge) {
             if (typeof size === 'undefined') { size = 4032; }
 			
             super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
-			
-			globalFakeGatoTimer.subscribe(this,function(history,timer){ // callback
-				var fakegato = this.service;
-				var calc = {sum:{},num:{},avrg:{}};
-				
-				for(var h in history) {
-					if (history.hasOwnProperty(h)) { // only valid keys
-						for(var key in history[h]) { // each record
-							if (history[h].hasOwnProperty(key) && key!='time') { // except time
-								if(!calc.sum[key]) calc.sum[key]=0;
-								if(!calc.num[key]) calc.num[key]=0;
-								calc.sum[key]+=history[h][key];
-								calc.num[key]++;
-								calc.avrg[key]=calc.sum[key]/calc.num[key];
-							}
+	    
+	    if(accessoryType == TYPE_WEATHER || accessoryType == TYPE_ROOM) {
+		    globalFakeGatoTimer.subscribe(this,function(backLog,timer){ // callback
+			var fakegato = this.service;
+			var calc = {sum:{},num:{},avrg:{}};
+
+			for(var h in backLog) {
+				if (backLog.hasOwnProperty(h)) { // only valid keys
+					for(var key in backLog[h]) { // each record
+						if (backLog[h].hasOwnProperty(key) && key!='time') { // except time
+							if(!calc.sum[key]) calc.sum[key]=0;
+							if(!calc.num[key]) calc.num[key]=0;
+							calc.sum[key]+=backLog[h][key];
+							calc.num[key]++;
+							calc.avrg[key]=calc.sum[key]/calc.num[key];
 						}
 					}
 				}
-				calc.avrg.time=moment().unix(); // set the time of the avrg
-				fakegato._addEntry(calc.avrg);
-				timer.emptyData(fakegato);
-			});			
+			}
+			calc.avrg.time=moment().unix(); // set the time of the avrg
+			fakegato._addEntry(calc.avrg);
+			timer.emptyData(fakegato);
+		    });			
+	    }
 
             var entry2address = function(val) {
                 var temp = val % this.memorySize;
