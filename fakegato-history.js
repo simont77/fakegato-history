@@ -16,9 +16,6 @@ const TYPE_ENERGY  = 'energy',
 
 var homebridge;
 var Characteristic, Service;
-var globalFakeGatoTimer = new FakeGatoTimer({
-		minutes: 10
-	});
 
 module.exports = function (pHomebridge) {
 	if (pHomebridge && !homebridge) {
@@ -26,6 +23,7 @@ module.exports = function (pHomebridge) {
 		Characteristic = homebridge.hap.Characteristic;
 		Service = homebridge.hap.Service;
 	}
+
 
 	var hexToBase64 = function (val) {
 		return new Buffer(('' + val).replace(/[^0-9A-F]/ig, ''), 'hex').toString('base64');
@@ -132,12 +130,19 @@ module.exports = function (pHomebridge) {
 			}.bind(this);
 			this.accessoryName = accessory.displayName;
 			this.log = accessory.log;
+
+			if (homebridge.globalFakeGatoTimer === undefined)
+				homebridge.globalFakeGatoTimer = new FakeGatoTimer({
+					minutes: 10,
+					log: this.log
+				});
+
 			switch (accessoryType) {
 				case TYPE_WEATHER:
 					this.accessoryType116 = "03 0102 0202 0302";
 					this.accessoryType117 = "07";
 					
-					globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
+					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
 						var fakegato = this.service;
 						var calc = {
 							sum: {},
@@ -173,7 +178,7 @@ module.exports = function (pHomebridge) {
 					this.accessoryType116 = "04 0102 0202 0402 0f03";
 					this.accessoryType117 = "0f";
 					
-					globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
+					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
 						var fakegato = this.service;
 						var calc = {
 							sum: {},
@@ -205,7 +210,7 @@ module.exports = function (pHomebridge) {
 					this.accessoryType116 = "01 0601";
 					this.accessoryType117 = "01";
 					
-					globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
+					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
 						var fakegato = this.service;
 						var lastEntryIndex = backLog.length-1;
 						
@@ -220,7 +225,7 @@ module.exports = function (pHomebridge) {
 					this.accessoryType116 = "02 1301 1c01";
 					this.accessoryType117 = "02";
 					
-					globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
+					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
 						var fakegato = this.service;
 						var lastEntryIndex = backLog.length-1;
 						
@@ -358,11 +363,11 @@ module.exports = function (pHomebridge) {
 			switch (this.accessoryType) {
 				case TYPE_DOOR:
 				case TYPE_MOTION:
-					globalFakeGatoTimer.addData({entry: entry, service: this, immediateCallback: true});
+					homebridge.globalFakeGatoTimer.addData({entry: entry, service: this, immediateCallback: true});
 					break;
 				case TYPE_WEATHER:
 				case TYPE_ROOM:
-					globalFakeGatoTimer.addData({entry: entry, service: this});
+					homebridge.globalFakeGatoTimer.addData({entry: entry, service: this});
 					break;
 				default:
 					this._addEntry(entry);

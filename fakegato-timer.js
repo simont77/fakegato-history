@@ -101,7 +101,8 @@ class FakeGatoTimer {
 			this.getSubscriber(service).backLog.push(data);
 		
 		if (immediateCallback) {
-			setTimeout(this.executeImmediateCallback.bind(this), 0,service);
+			//setTimeout(this.executeImmediateCallback.bind(this), 0,service);
+			this.executeImmediateCallback(this.getSubscriber(service));
 		}
 		
 		if (this.running === false)
