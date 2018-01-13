@@ -222,7 +222,7 @@ module.exports = function (pHomebridge) {
 							actualEntry.time = backLog[0].time;
 							actualEntry.status = backLog[0].status;
 						}
-						console.log('callbackDoor',immediate,actualEntry);
+						fakegato.log.debug('**Fakegato-timer callbackDoor: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
 						
 						fakegato._addEntry(actualEntry);
 					});
@@ -243,7 +243,7 @@ module.exports = function (pHomebridge) {
 							actualEntry.time = backLog[0].time;
 							actualEntry.status = backLog[0].status;
 						}
-						console.log('callbackMotion',immediate,actualEntry);
+						fakegato.log.debug('**Fakegato-timer callbackMotion: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
 						
 						fakegato._addEntry(actualEntry);
 					});

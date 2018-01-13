@@ -21,7 +21,7 @@ class FakeGatoTimer {
 
 	// Subscription management
 	subscribe(service, callback) {
-		this.log.debug("****Subscription :",service.accessoryName);
+		this.log.debug("** Fakegato-timer Subscription :",service.accessoryName);
 		let newService = {
 			'service': service,
 			'callback': callback,
@@ -55,14 +55,14 @@ class FakeGatoTimer {
 
 	// Timer management
 	start() {
-		this.log.debug("****Start Global Timer - ",this.minutes,"min****");
+		this.log.debug("**Start Global Fakegato-Timer - ",this.minutes,"min**");
 		if (this.running)
 			this.stop();
 		this.running = true;
 		this.intervalID = setInterval(this.executeCallbacks.bind(this), this.minutes * 60 * 1000);
 	}
 	stop() {
-		this.log.debug("****Stop Global Timer****");
+		this.log.debug("**Stop Global Fakegato-Timer****");
 		clearInterval(this.intervalID);
 		this.running = false;
 		this.intervalID = null;
@@ -70,7 +70,7 @@ class FakeGatoTimer {
 
 	// Data management
 	executeCallbacks() {
-		this.log.debug("****executeCallbacks****");
+		this.log.debug("**Fakegato-timer: executeCallbacks**");
 		if (this.subscribedServices.length !== 0) {
 			for (let s in this.subscribedServices) {
 				if (this.subscribedServices.hasOwnProperty(s)) {
@@ -83,7 +83,7 @@ class FakeGatoTimer {
 		}
 	}
 	executeImmediateCallback(service) {
-		this.log.debug("****executeImmediateCallback****");
+		this.log.debug("**Fakegato-timer: executeImmediateCallback**");
 
 		if (typeof(service.callback) == 'function' && service.backLog.length)
 			service.callback(service.backLog, this, true);
@@ -93,7 +93,7 @@ class FakeGatoTimer {
 		let service = params.service;
 		let immediateCallback = params.immediateCallback || false;
 		
-		this.log.debug("****addData",data,immediateCallback);
+		this.log.debug("**Fakegato-timer: addData ",service.accessoryName,data," immediate: ",immediateCallback);
 		
 		if(immediateCallback) // door or motion -> replace
 			this.getSubscriber(service).backLog[0] = data;
@@ -109,7 +109,7 @@ class FakeGatoTimer {
 			this.start();
 	}
 	emptyData(service) {
-		this.log.debug("****emptyData****");
+		this.log.debug("**Fakegato-timer: emptyData **", service.accessoryName);
 		let source = this.getSubscriber(service);
 
 		source.previousBackLog = source.backLog;
