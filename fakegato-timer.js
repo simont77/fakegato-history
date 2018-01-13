@@ -96,7 +96,7 @@ class FakeGatoTimer {
 		this.log.debug("****addData",data,immediateCallback);
 		
 		if(immediateCallback) // door or motion -> replace
-			this.getSubscriber(service).backLog = [data];
+			this.getSubscriber(service).backLog[0] = data;
 		else
 			this.getSubscriber(service).backLog.push(data);
 		

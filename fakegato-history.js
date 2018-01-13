@@ -212,13 +212,19 @@ module.exports = function (pHomebridge) {
 					
 					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
 						var fakegato = this.service;
-						var lastEntryIndex = backLog.length-1;
+						var actualEntry={};
 						
-						if(!immediate) backLog[lastEntryIndex].time = moment().unix();
+						if(!immediate) {
+							actualEntry.time = moment().unix();
+							actualEntry.status = backLog[0].status;
+						}
+						else {
+							actualEntry.time = backLog[0].time;
+							actualEntry.status = backLog[0].status;
+						}
+						console.log('callbackDoor',immediate,actualEntry);
 						
-						console.log('callbackDoor',immediate,backLog);
-						
-						fakegato._addEntry(backLog[lastEntryIndex]);
+						fakegato._addEntry(actualEntry);
 					});
 					break;
 				case TYPE_MOTION:
@@ -227,13 +233,19 @@ module.exports = function (pHomebridge) {
 					
 					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
 						var fakegato = this.service;
-						var lastEntryIndex = backLog.length-1;
+						var actualEntry={};
 						
-						if(!immediate) backLog[lastEntryIndex].time = moment().unix();	
+						if(!immediate) {
+							actualEntry.time = moment().unix();
+							actualEntry.status = backLog[0].status;
+						}
+						else {
+							actualEntry.time = backLog[0].time;
+							actualEntry.status = backLog[0].status;
+						}
+						console.log('callbackMotion',immediate,actualEntry);
 						
-						console.log('callbackMotion',immediate,backLog);
-						
-						fakegato._addEntry(backLog[lastEntryIndex]);
+						fakegato._addEntry(actualEntry);
 					});
 					break;
 				case TYPE_THERMO:
