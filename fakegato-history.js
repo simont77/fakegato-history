@@ -474,7 +474,7 @@ module.exports = function (pHomebridge) {
         this.transfer = false;
         callback(null, hexToBase64('00'));
       }
-    });
+    };
 
 
 		setCurrentS2W1(val, callback) {

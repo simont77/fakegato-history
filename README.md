@@ -4,7 +4,9 @@ Module to emulate Elgato Eve history service in Homebridge accessories, so that 
 More details on communication protocol and custom Characteristics here: https://gist.github.com/simont77/3f4d4330fa55b83f8ca96388d9004e7d
 
 Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter class). For other types see the gist above.
-Note that if your Eve.app is controlling more than one accessory for each type, the serial number should be different, otherwise Eve.app will merge the histories.
+Note that if your Eve.app is controlling more than one accessory for each type, the serial number should be unique, otherwise Eve.app will merge the histories.  Including hostname is recommended as well, for running multiple copies of the same plugin on different machines ( ie production and development ).  ie
+
+  .setCharacteristic(Characteristic.SerialNumber, hostname + "-" + this.deviceID)
 
 Import module into your plugin module export with:
 
@@ -13,7 +15,7 @@ Import module into your plugin module export with:
 Add the service to your Accessory using:
 
     this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, length);
-       
+
 where
 
 - accessoryType can be "weather", "energy", "room", "door", motion" or "thermo"
@@ -22,10 +24,10 @@ where
 
 Remember to return the fakagato service in getServices function.
 
-Eve.app requires at least an entry every 10 minutes to avoid holes in the history. Depending on the accessory type, fakegato-history may add extra entries every 10 minutes or may average the entries from the plugin and send data every 10 minutes. This is done using a single global timer shared among all accessories using fakegato. 
+Eve.app requires at least an entry every 10 minutes to avoid holes in the history. Depending on the accessory type, fakegato-history may add extra entries every 10 minutes or may average the entries from the plugin and send data every 10 minutes. This is done using a single global timer shared among all accessories using fakegato.
 
 Depending on your accessory type:
-        
+
 * Add entries to history of accessory emulating **Eve Weather** (TempSensor Service) using something like this:
 
 		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, pressure:this.airPressure, humidity:this.humidity});
@@ -34,32 +36,32 @@ Depending on your accessory type:
 
 * Add entries to history of accessory emulating **Eve Energy** (Outlet service) using something like this every 10 minutes:
 
-		this.loggingService.addEntry({time: moment().unix(), power: this.power}); 
-    
+		this.loggingService.addEntry({time: moment().unix(), power: this.power});
+
 	Power should be the average power in W over 10 minutes period. To have good accuracy, it is strongly advised not to use a single instantaneous measurement, but to average many few seconds measurements over 10 minutes. Fakegato does not use the internal timer for Energy, entries are added to the history as received from the plugin (this is done because the plugin may already have its own average for TotalComsumption calculation)
 
 * Add entries to history of accessory emulating **Eve Room** (TempSensor, HumiditySensor and AirQuality Services) using something like this:
 
-		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, humidity:this.humidity, ppm:this.ppm}); 
-	
+		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, humidity:this.humidity, ppm:this.ppm});
+
 	Temperature in Celsius, Humidity in %. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. Your entries should be in any case periodic, in order to avoid error with the average. Average is done independently on each quantity (i.e. you may different periods, and entries with only one or two quantities)
-	
+
 * Add entries to history of accessory emulating **Eve Door** (ContactSensor service) using something like this on every status change:
 
 		this.loggingService.addEntry({time: moment().unix(), status: this.status});
-	
+
 	Status can be 1 for ‘open’ or 0 for ‘close’. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
 
 * Add entries to history of accessory emulating **Eve Motion** (MotionSensor service) using something like this on every status change:
 
 		this.loggingService.addEntry({time: moment().unix(), status: this.status});
-	
+
 	Status can be 1 for ‘detected’ or 0 for ‘cleared’. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
 
 * Add entries to history of accessory emulating **Eve Thermo** (Thermostat service) using something like this every 10 minutes:
 
-		this.loggingService.addEntry({time: moment().unix(), currentTemp:this.currentTemp, setTemp:this.setTemp, valvePosition:this.valvePosition}); 
-	
+		this.loggingService.addEntry({time: moment().unix(), currentTemp:this.currentTemp, setTemp:this.setTemp, valvePosition:this.valvePosition});
+
 	currentTemp and setTemp in Celsius, valvePosition in %. Fakegato does not use the internal timer for Energy, entries are added to the history as received from the plugin (Thermo accessory this under development). For setTemp to show, you have to add all the 3 extra thermo characteristics (see gist), and enable set temperature visualization under accessory options in Eve.app.
 
 
@@ -72,12 +74,12 @@ If your "weather" or "room" plugin don't send addEntry for a short time (suppose
 - [x] Support for rolling-over of the history
 - [x] Aggregate transmission of several entries into a single Characteristic update in order to speed up transfer when not on local network.
 - [x] Add other accessory types. Help from people with access to real Eve accessory is needed. Dump of custom Characteristics during data transfer is required.
-- [ ] Make history persistent 
+- [ ] Make history persistent
 - [x] Adjustable history length
 - [ ] Periodic sending of reference time stamp (seems not really needed if the time of your homebridge machine is correct)
 
 ### Known bugs
-- Currenly not fully compatible with dynamic Platforms using Homebridge API v2 format.
+~~- Currenly not fully compatible with dynamic Platforms using Homebridge API v2 format.~~
 - Currently valve position history in thermo is not working
 
 ### How to contribute
