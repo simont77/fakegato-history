@@ -11,6 +11,9 @@
     "node": ">=4.3.2",
     "homebridge": ">=0.4.0"
   },
+  "dependencies": {
+    "moment": "*"  
+  },
   "author": "simont77",
   "license": "MIT",
   "bugs": {
