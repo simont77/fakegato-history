@@ -14,7 +14,10 @@ Import module into your plugin module export with:
 
 Add the service to your Accessory using:
 
+    Accessory.log = this.log;
     this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, length);
+
+And if your plugin is using V2 of the platform API, also add the above to your configureAccessory function as well.
 
 where
 
@@ -22,7 +25,7 @@ where
 - Accessory should be the accessory using the service, in order to correctly set the service name and pass the log to the parent object. Your Accessory should have a `this.log` variable pointing to the homebridge logger passed to the plugin constructor (add a line `this.log=log;` to your plugin). Debug messages will be shown if homebridge is launched with -D option.
 - length is the history length; if no value is given length is set to 4032 samples
 
-Remember to return the fakagato service in getServices function.
+Remember to return the fakagato service in getServices function if using the accessory API, and if using the platform API include it as a Service as part of your accessory.
 
 Eve.app requires at least an entry every 10 minutes to avoid holes in the history. Depending on the accessory type, fakegato-history may add extra entries every 10 minutes or may average the entries from the plugin and send data every 10 minutes. This is done using a single global timer shared among all accessories using fakegato.
 
@@ -32,7 +35,7 @@ Depending on your accessory type:
 
 		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, pressure:this.airPressure, humidity:this.humidity});
 
-	AiPressure is in mbar, Temperature in Celsius, Humidity in %. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. Your entries should be in any case periodic, in order to avoid error with the average. Average is done independently on each quantity (i.e. you may different periods, and entries with only one or two quantities)
+	AirPressure is in mbar, Temperature in Celsius, Humidity in %. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. Your entries should be in any case periodic, in order to avoid error with the average. Average is done independently on each quantity (i.e. you may different periods, and entries with only one or two quantities)
 
 * Add entries to history of accessory emulating **Eve Energy** (Outlet service) using something like this every 10 minutes:
 
