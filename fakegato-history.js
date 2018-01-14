@@ -133,10 +133,7 @@ module.exports = function (pHomebridge) {
   FakeGatoHistoryService.UUID = 'E863F007-079E-48FF-8F27-9C2605A29F52';
 
   class FakeGatoHistory extends Service {
-		constructor(accessoryType, accessory, size) {
-			if (typeof size === 'undefined') {
-				size = 4032;
-			}
+		constructor(accessoryType, accessory, size, minutes) {
 
 			super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
 
@@ -144,12 +141,15 @@ module.exports = function (pHomebridge) {
 				var temp = val % this.memorySize;
 				return temp;
 			}.bind(this);
+
+      this.size = size || 4032 ;
+      this.minutes = minutes || 10; // Optional timer length
 			this.accessoryName = accessory.displayName;
 			this.log = accessory.log;
 
 			if (homebridge.globalFakeGatoTimer === undefined)
 				homebridge.globalFakeGatoTimer = new FakeGatoTimer({
-					minutes: 10,
+					minutes: this.minutes,
 					log: this.log
 				});
 
@@ -274,7 +274,7 @@ module.exports = function (pHomebridge) {
 			this.firstEntry = 0;
 			this.lastEntry = 0;
 			this.history = [];
-			this.memorySize = size;
+			this.memorySize = this.size;
 			this.usedMemory = 0;
 			this.currentEntry = 1;
 			this.transfer = false;
@@ -395,6 +395,10 @@ module.exports = function (pHomebridge) {
 		}
 
     getCurrentS2R2(callback) {
+        var entry2address = function(val) {
+            return val % this.memorySize;
+        }.bind(this);
+
       if ((this.currentEntry < this.lastEntry) && (this.transfer == true)) {
         this.memoryAddress = entry2address(this.currentEntry);
         if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) {
