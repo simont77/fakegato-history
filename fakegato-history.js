@@ -141,7 +141,7 @@ module.exports = function (pHomebridge) {
 				case TYPE_WEATHER:
 					this.accessoryType116 = "03 0102 0202 0302";
 					this.accessoryType117 = "07";
-					
+
 					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
 						var fakegato = this.service;
 						var calc = {
@@ -177,7 +177,7 @@ module.exports = function (pHomebridge) {
 				case TYPE_ROOM:
 					this.accessoryType116 = "04 0102 0202 0402 0f03";
 					this.accessoryType117 = "0f";
-					
+
 					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
 						var fakegato = this.service;
 						var calc = {
@@ -209,11 +209,11 @@ module.exports = function (pHomebridge) {
 				case TYPE_DOOR:
 					this.accessoryType116 = "01 0601";
 					this.accessoryType117 = "01";
-					
+
 					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
 						var fakegato = this.service;
 						var actualEntry={};
-						
+
 						if(!immediate) {
 							actualEntry.time = moment().unix();
 							actualEntry.status = backLog[0].status;
@@ -223,18 +223,18 @@ module.exports = function (pHomebridge) {
 							actualEntry.status = backLog[0].status;
 						}
 						fakegato.log.debug('**Fakegato-timer callbackDoor: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
-						
+
 						fakegato._addEntry(actualEntry);
 					});
 					break;
 				case TYPE_MOTION:
 					this.accessoryType116 = "02 1301 1c01";
 					this.accessoryType117 = "02";
-					
+
 					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
 						var fakegato = this.service;
 						var actualEntry={};
-						
+
 						if(!immediate) {
 							actualEntry.time = moment().unix();
 							actualEntry.status = backLog[0].status;
@@ -244,7 +244,7 @@ module.exports = function (pHomebridge) {
 							actualEntry.status = backLog[0].status;
 						}
 						fakegato.log.debug('**Fakegato-timer callbackMotion: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
-						
+
 						fakegato._addEntry(actualEntry);
 					});
 					break;
@@ -271,87 +271,7 @@ module.exports = function (pHomebridge) {
 			this.addCharacteristic(S2R1Characteristic);
 
 			this.addCharacteristic(S2R2Characteristic)
-			.on('get', (callback) => {
-				if ((this.currentEntry < this.lastEntry) && (this.transfer == true)) {
-					this.memoryAddress = entry2address(this.currentEntry);
-					if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) {
-
-						var val = Format(
-								'15%s 0000 0000 81%s0000 0000 00 0000',
-								numToHex(swap32(this.currentEntry), 8),
-								numToHex(swap32(this.refTime), 8));
-
-						this.log.debug("Data %s: %s", this.accessoryName, val);
-						callback(null, hexToBase64(val));
-						this.setTime = false;
-						this.currentEntry++;
-					} else {
-						for (var i = 0; i < 11; i++) {
-							this.log.debug("%s Entry: %s, Address: %s", this.accessoryName, this.currentEntry, this.memoryAddress);
-							switch (this.accessoryType) {
-								case TYPE_WEATHER:
-									this.dataStream += Format(
-										" 10 %s%s%s%s%s%s",
-										numToHex(swap32(this.currentEntry), 8),
-										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-										this.accessoryType117,
-										numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
-										numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
-										numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
-									break;
-								case TYPE_ENERGY:
-									this.dataStream += Format(
-										" 14 %s%s%s0000 0000%s0000 0000",
-										numToHex(swap32(this.currentEntry), 8),
-										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-										this.accessoryType117,
-										numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
-									break;
-								case TYPE_ROOM:
-									this.dataStream += Format(
-										" 13 %s%s%s%s%s%s0000 00",
-										numToHex(swap32(this.currentEntry), 8),
-										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-										this.accessoryType117,
-										numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
-										numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
-										numToHex(swap16(this.history[this.memoryAddress].ppm), 4));
-									break;
-								case TYPE_DOOR:
-								case TYPE_MOTION:
-									this.dataStream += Format(
-										" 0b %s%s%s%s",
-										numToHex(swap32(this.currentEntry), 8),
-										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-										this.accessoryType117,
-										numToHex(this.history[this.memoryAddress].status, 2));
-									break;
-								case TYPE_THERMO:
-									this.dataStream += Format(
-										" 11 %s%s%s%s%s%s 0000",
-										numToHex(swap32(this.currentEntry), 8),
-										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-										this.accessoryType117,
-										numToHex(swap16(this.history[this.memoryAddress].currentTemp * 100), 4),
-										numToHex(swap16(this.history[this.memoryAddress].setTemp * 100), 4),
-										numToHex(this.history[this.memoryAddress].valvePosition, 2));
-									break;
-							}
-							this.currentEntry++;
-							this.memoryAddress = entry2address(this.currentEntry);
-							if (this.currentEntry > this.lastEntry) {
-								break;
-							}
-						}
-						this.log.debug("Data %s: %s", this.accessoryName, this.dataStream);
-						callback(null, hexToBase64(this.dataStream));
-						this.dataStream = '';
-					}
-				} else {
-					this.transfer = false;
-					callback(null, hexToBase64('00'));
-				}
-			});
+			.on('get', this.getCurrentS2R2.bind(this));
 
 			this.addCharacteristic(S2W1Characteristic)
 			.on('set', this.setCurrentS2W1.bind(this));
@@ -432,6 +352,89 @@ module.exports = function (pHomebridge) {
 			this.log.debug("Used memory %s: %s", this.accessoryName, this.usedMemory.toString(16));
 			this.log.debug("116 %s: %s", this.accessoryName, val);
 		}
+
+    getCurrentS2R2(callback) {
+      if ((this.currentEntry < this.lastEntry) && (this.transfer == true)) {
+        this.memoryAddress = entry2address(this.currentEntry);
+        if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) {
+
+          var val = Format(
+              '15%s 0000 0000 81%s0000 0000 00 0000',
+              numToHex(swap32(this.currentEntry), 8),
+              numToHex(swap32(this.refTime), 8));
+
+          this.log.debug("Data %s: %s", this.accessoryName, val);
+          callback(null, hexToBase64(val));
+          this.setTime = false;
+          this.currentEntry++;
+        } else {
+          for (var i = 0; i < 11; i++) {
+            this.log.debug("%s Entry: %s, Address: %s", this.accessoryName, this.currentEntry, this.memoryAddress);
+            switch (this.accessoryType) {
+              case TYPE_WEATHER:
+                this.dataStream += Format(
+                  " 10 %s%s%s%s%s%s",
+                  numToHex(swap32(this.currentEntry), 8),
+                  numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+                  this.accessoryType117,
+                  numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
+                  numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
+                  numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
+                break;
+              case TYPE_ENERGY:
+                this.dataStream += Format(
+                  " 14 %s%s%s0000 0000%s0000 0000",
+                  numToHex(swap32(this.currentEntry), 8),
+                  numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+                  this.accessoryType117,
+                  numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
+                break;
+              case TYPE_ROOM:
+                this.dataStream += Format(
+                  " 13 %s%s%s%s%s%s0000 00",
+                  numToHex(swap32(this.currentEntry), 8),
+                  numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+                  this.accessoryType117,
+                  numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
+                  numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
+                  numToHex(swap16(this.history[this.memoryAddress].ppm), 4));
+                break;
+              case TYPE_DOOR:
+              case TYPE_MOTION:
+                this.dataStream += Format(
+                  " 0b %s%s%s%s",
+                  numToHex(swap32(this.currentEntry), 8),
+                  numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+                  this.accessoryType117,
+                  numToHex(this.history[this.memoryAddress].status, 2));
+                break;
+              case TYPE_THERMO:
+                this.dataStream += Format(
+                  " 11 %s%s%s%s%s%s 0000",
+                  numToHex(swap32(this.currentEntry), 8),
+                  numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+                  this.accessoryType117,
+                  numToHex(swap16(this.history[this.memoryAddress].currentTemp * 100), 4),
+                  numToHex(swap16(this.history[this.memoryAddress].setTemp * 100), 4),
+                  numToHex(this.history[this.memoryAddress].valvePosition, 2));
+                break;
+            }
+            this.currentEntry++;
+            this.memoryAddress = entry2address(this.currentEntry);
+            if (this.currentEntry > this.lastEntry) {
+              break;
+            }
+          }
+          this.log.debug("Data %s: %s", this.accessoryName, this.dataStream);
+          callback(null, hexToBase64(this.dataStream));
+          this.dataStream = '';
+        }
+      } else {
+        this.transfer = false;
+        callback(null, hexToBase64('00'));
+      }
+    });
+
 
 		setCurrentS2W1(val, callback) {
 			callback(null, val);
