@@ -6,7 +6,7 @@ More details on communication protocol and custom Characteristics here: https://
 Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter class). For other types see the gist above.
 Note that if your Eve.app is controlling more than one accessory for each type, the serial number should be unique, otherwise Eve.app will merge the histories.  Including hostname is recommended as well, for running multiple copies of the same plugin on different machines ( ie production and development ).  ie
 
-  .setCharacteristic(Characteristic.SerialNumber, hostname + "-" + this.deviceID)
+    .setCharacteristic(Characteristic.SerialNumber, hostname + "-" + this.deviceID)
 
 Import module into your plugin module export with:
 
