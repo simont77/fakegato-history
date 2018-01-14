@@ -58,6 +58,9 @@ module.exports = function (pHomebridge) {
 			return ('0000000000000' + s).slice(-1 * len);
 		}
 		return s;
+  },
+  ucfirst = function(val) {
+    return val.charAt(0).toUpperCase() + val.substr(1);
 	};
 
 	class S2R1Characteristic extends Characteristic {
@@ -117,6 +120,19 @@ module.exports = function (pHomebridge) {
 	S2W2Characteristic.UUID = 'E863F121-079E-48FF-8F27-9C2605A29F52';
 
 	class FakeGatoHistoryService extends Service {
+    constructor(displayName, subtype) {
+      super(displayName, FakeGatoHistoryService.UUID, subtype);
+
+      this.addCharacteristic(S2R1Characteristic);
+      this.addCharacteristic(S2R2Characteristic);
+      this.addCharacteristic(S2W1Characteristic);
+      this.addCharacteristic(S2W2Characteristic);
+    }
+  }
+
+  FakeGatoHistoryService.UUID = 'E863F007-079E-48FF-8F27-9C2605A29F52';
+
+  class FakeGatoHistory extends Service {
 		constructor(accessoryType, accessory, size) {
 			if (typeof size === 'undefined') {
 				size = 4032;
@@ -268,16 +284,37 @@ module.exports = function (pHomebridge) {
 			this.dataStream = '';
 			this.IntervalID = null;
 
-			this.addCharacteristic(S2R1Characteristic);
+      if ( typeof accessory.getService === "function" ) {
+        // Platform API
+        this.service = accessory.getService(FakeGatoHistoryService);
 
-			this.addCharacteristic(S2R2Characteristic)
-			.on('get', this.getCurrentS2R2.bind(this));
+        if (this.service === undefined) {
+          this.service = accessory.addService(FakeGatoHistoryService, ucfirst(accessoryType) + ' History', accessoryType);
+        }
 
-			this.addCharacteristic(S2W1Characteristic)
-			.on('set', this.setCurrentS2W1.bind(this));
+        this.service.getCharacteristic(S2R2Characteristic)
+            .on('get', this.getCurrentS2R2.bind(this));
 
-			this.addCharacteristic(S2W2Characteristic)
-			.on('set', this.setCurrentS2W2.bind(this));
+        this.service.getCharacteristic(S2W1Characteristic)
+            .on('set', this.setCurrentS2W1.bind(this));
+
+        this.service.getCharacteristic(S2W2Characteristic)
+            .on('set', this.setCurrentS2W2.bind(this));
+
+      } else {
+        // Accessory API
+
+			  this.addCharacteristic(S2R1Characteristic);
+
+			  this.addCharacteristic(S2R2Characteristic)
+			      .on('get', this.getCurrentS2R2.bind(this));
+
+			  this.addCharacteristic(S2W1Characteristic)
+			      .on('set', this.setCurrentS2W1.bind(this));
+
+			  this.addCharacteristic(S2W2Characteristic)
+			      .on('set', this.setCurrentS2W2.bind(this));
+      }
 		}
 
 		sendHistory(address) {
@@ -345,7 +382,11 @@ module.exports = function (pHomebridge) {
 					numToHex(swap16(this.memorySize), 4),
 					numToHex(swap32(this.firstEntry), 8));
 
-			this.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
+      if (this.service === undefined) {
+			    this.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
+      } else {
+          this.service.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
+      }
 
 			this.log.debug("First entry %s: %s", this.accessoryName, this.firstEntry.toString(16));
 			this.log.debug("Last entry %s: %s", this.accessoryName, this.lastEntry.toString(16));
@@ -459,5 +500,5 @@ module.exports = function (pHomebridge) {
 
 	FakeGatoHistoryService.UUID = 'E863F007-079E-48FF-8F27-9C2605A29F52';
 
-	return FakeGatoHistoryService;
+	return FakeGatoHistory;
 };
