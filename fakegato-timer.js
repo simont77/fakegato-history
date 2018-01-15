@@ -2,6 +2,7 @@
 'use strict';
 
 const DEBUG = true;
+var debug = require('debug')('FakeGatoTimer');
 
 class FakeGatoTimer {
 	constructor(params) {
@@ -26,7 +27,8 @@ class FakeGatoTimer {
 			'service': service,
 			'callback': callback,
 			'backLog': [],
-			'previousBackLog': []
+			'previousBackLog': [],
+			'previousAvrg': {}
 		};
 
 		this.subscribedServices.push(newService);
@@ -76,8 +78,14 @@ class FakeGatoTimer {
 				if (this.subscribedServices.hasOwnProperty(s)) {
 					
 					let service = this.subscribedServices[s];
-					if (typeof(service.callback) == 'function' && service.backLog.length)
-						service.callback(service.backLog, this, false);
+					if (typeof(service.callback) == 'function' && service.backLog.length) {
+						service.previousAvrg=service.callback({
+								'backLog':service.backLog, 
+								'previousAvrg':service.previousAvrg, 
+								'timer':this, 
+								'immediate':false
+						});
+					}
 				}
 			}
 		}
@@ -86,7 +94,11 @@ class FakeGatoTimer {
 		this.log.debug("**Fakegato-timer: executeImmediateCallback**");
 
 		if (typeof(service.callback) == 'function' && service.backLog.length)
-			service.callback(service.backLog, this, true);
+			service.callback({
+					'backLog':service.backLog, 
+					'timer':this, 
+					'immediate':true
+			});
 	}	
 	addData(params) {
 		let data = params.entry;
