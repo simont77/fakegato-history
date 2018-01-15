@@ -4,7 +4,7 @@ Module to emulate Elgato Eve history service in Homebridge accessories, so that 
 More details on communication protocol and custom Characteristics here: https://gist.github.com/simont77/3f4d4330fa55b83f8ca96388d9004e7d
 
 Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter class). For other types see the gist above.
-Note that if your Eve.app is controlling more than one accessory for each type, the serial number should be unique, otherwise Eve.app will merge the histories.  Including hostname is recommended as well, for running multiple copies of the same plugin on different machines ( ie production and development ).  ie
+Note that if your Eve.app is controlling more than one accessory for each type, the serial number should be unique, otherwise Eve.app will merge the histories.  Including hostname is recommended as well, for running multiple copies of the same plugin on different machines (i.e. production and development), i.e.:
 
     .setCharacteristic(Characteristic.SerialNumber, hostname + "-" + this.deviceID)
 
@@ -65,7 +65,7 @@ Depending on your accessory type:
 
 		this.loggingService.addEntry({time: moment().unix(), currentTemp:this.currentTemp, setTemp:this.setTemp, valvePosition:this.valvePosition});
 
-	currentTemp and setTemp in Celsius, valvePosition in %. Fakegato does not use the internal timer for Energy, entries are added to the history as received from the plugin (Thermo accessory is under development). For setTemp to show, you have to add all the 3 extra thermo characteristics (see gist), and enable set temperature visualization under accessory options in Eve.app.
+	currentTemp and setTemp in Celsius, valvePosition in %. Fakegato does not use the internal timer for Thermo, entries are added to the history as received from the plugin (Thermo accessory is under development). For setTemp to show, you have to add all the 3 extra thermo characteristics (see gist), and enable set temperature visualization under accessory options in Eve.app.
 
 For Energy and Door accessories it is also worth to add the custom characteristic E863F112 for resetting, respectively, the Total Consumption accumulated value or the Aperture Counter (not the history). See the gist above. The value of this characteristic is changed whenever the reset button is tapped on Eve, so it can be used to reset the locally stored value. The value seems to be the number of seconds from 1.1.2001. I left this characteristics out of fakegato-history because it is not part of the common  history service.
 
@@ -81,7 +81,7 @@ If your "weather" or "room" plugin don't send addEntry for a short time (suppose
 - [ ] Periodic sending of reference time stamp (seems not really needed if the time of your homebridge machine is correct)
 
 ### Known bugs
-~~- Currenly not fully compatible with dynamic Platforms using Homebridge API v2 format.~~
+- ~~Currenly not fully compatible with dynamic Platforms using Homebridge API v2 format.~~
 - Currently valve position history in thermo is not working
 - In "weather" and "room" if you do not send at least an entry every 10 minutes you will get zeros in the history.
 
