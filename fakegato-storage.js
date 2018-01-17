@@ -13,7 +13,7 @@ class FakeGatoStorage {
 		if (!params)
 			params = {};
 		
-		this.writers = []
+		this.writers = [];
 		
 		this.log = params.log || {};
 		if (!params.log || !params.log.debug) {
