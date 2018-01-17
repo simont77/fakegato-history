@@ -346,7 +346,7 @@ module.exports = function (pHomebridge) {
 			this.IntervalID = null;
 
 			// load persisting data
-			this.load();
+			if(this.storage !== undefined) this.load();
 			
 			if ( typeof accessory.getService === "function" ) {
 				// Platform API
@@ -459,7 +459,7 @@ module.exports = function (pHomebridge) {
 			this.log.debug("Used memory %s: %s", this.accessoryName, this.usedMemory.toString(16));
 			this.log.debug("116 %s: %s", this.accessoryName, val);
 			
-			this.save();
+			if(this.storage !== undefined) this.save();
 		}
 		
 		save() {
