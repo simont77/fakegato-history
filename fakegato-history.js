@@ -347,7 +347,6 @@ module.exports = function (pHomebridge) {
 			this.refTime = 0;
 			this.memoryAddress = 0;
 			this.dataStream = '';
-			this.IntervalID = null;
 
 			// load persisting data
 			if(this.storage !== undefined) this.load();
@@ -472,6 +471,7 @@ module.exports = function (pHomebridge) {
 					firstEntry:this.firstEntry,
 					lastEntry :this.lastEntry,
 					usedMemory:this.usedMemory,
+					refTime   :this.refTime,
 					history   :this.history
 				};
 			
@@ -492,6 +492,7 @@ module.exports = function (pHomebridge) {
 				this.firstEntry = jsonFile.firstEntry;
 				this.lastEntry  = jsonFile.lastEntry;
 				this.usedMemory = jsonFile.usedMemory;
+				this.refTime    = jsonFile.refTime;
 				this.history	= jsonFile.history;
 			}
 		}
