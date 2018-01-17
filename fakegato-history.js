@@ -452,7 +452,7 @@ module.exports = function (pHomebridge) {
 		}
 		
 		save() {
-			//this.firstEntry, this.lastEntry, this.history and this.currentEntry
+			//this.firstEntry, this.lastEntry, this.history and this.usedMemory
 		}
 		
 		getCurrentS2R2(callback) {
