@@ -146,7 +146,7 @@ module.exports = function (pHomebridge) {
 			if(typeof(optionalParams) === 'object') {
 				this.size = optionalParams.size || 4032;
 				this.minutes = optionalParams.minutes || 10; // Optional timer length
-				this.storage = optionalParams.storage || 'fs'; // 'fs' or 'googleDrive'
+				this.storage = optionalParams.storage; // 'fs' or 'googleDrive'
 				this.path    = optionalParams.path;
 			} else {
 				this.size = optionalParams || 4032;
@@ -161,13 +161,19 @@ module.exports = function (pHomebridge) {
 					minutes: this.minutes,
 					log: this.log
 				});
-			if (homebridge.globalFakeGatoStorage === undefined && this.storage !== undefined)
-				homebridge.globalFakeGatoStorage = new FakeGatoStorage({
+			if(this.storage !== undefined) {
+				if (homebridge.globalFakeGatoStorage === undefined) {
+					homebridge.globalFakeGatoStorage = new FakeGatoStorage({
+						log: this.log
+					});
+				}
+				homebridge.globalFakeGatoStorage.addWriter(this,{
 					storage: this.storage,
-					path: this.path,
-					log: this.log
+					path: this.path
 				});
-
+			}
+			
+				
 			switch (accessoryType) {
 				case TYPE_WEATHER:
 					this.accessoryType116 = "03 0102 0202 0302";
@@ -339,6 +345,9 @@ module.exports = function (pHomebridge) {
 			this.dataStream = '';
 			this.IntervalID = null;
 
+			// load persisting data
+			this.load();
+			
 			if ( typeof accessory.getService === "function" ) {
 				// Platform API
 				this.service = accessory.getService(FakeGatoHistoryService);
@@ -449,10 +458,38 @@ module.exports = function (pHomebridge) {
 			this.log.debug("Last entry %s: %s", this.accessoryName, this.lastEntry.toString(16));
 			this.log.debug("Used memory %s: %s", this.accessoryName, this.usedMemory.toString(16));
 			this.log.debug("116 %s: %s", this.accessoryName, val);
+			
+			this.save();
 		}
 		
 		save() {
 			//this.firstEntry, this.lastEntry, this.history and this.usedMemory
+			let data = {
+					firstEntry:this.firstEntry,
+					lastEntry :this.lastEntry,
+					usedMemory:this.usedMemory,
+					history   :this.history
+				};
+			
+			
+			homebridge.globalFakeGatoStorage.write({
+				service: this,
+				data:JSON.stringify(data)/*,
+				callback:function(){}*/
+			});
+		}
+		load() {
+			//this.firstEntry, this.lastEntry, this.history and this.usedMemory
+			let data = homebridge.globalFakeGatoStorage.read({
+				service: this
+			});
+			if(data) {
+				let jsonFile = JSON.parse(data);
+				this.firstEntry = jsonFile.firstEntry;
+				this.lastEntry  = jsonFile.lastEntry;
+				this.usedMemory = jsonFile.usedMemory;
+				this.history	= jsonFile.history;
+			}
 		}
 		
 		getCurrentS2R2(callback) {
