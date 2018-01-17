@@ -62,6 +62,10 @@ module.exports = function (pHomebridge) {
 	},
 	ucfirst = function(val) {
 		return val.charAt(0).toUpperCase() + val.substr(1);
+	},
+	precisionRound = function (number, precision) {
+	  var factor = Math.pow(10, precision);
+	  return Math.round(number * factor) / factor;
 	};
 
 	class S2R1Characteristic extends Characteristic {
@@ -201,7 +205,7 @@ module.exports = function (pHomebridge) {
 											calc.num[key] = 0;
 										calc.sum[key] += backLog[h][key];
 										calc.num[key]++;
-										calc.avrg[key] = calc.sum[key] / calc.num[key];
+										calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key],2);
 									}
 								}
 							}
@@ -253,7 +257,7 @@ module.exports = function (pHomebridge) {
 											calc.num[key] = 0;
 										calc.sum[key] += backLog[h][key];
 										calc.num[key]++;
-										calc.avrg[key] = calc.sum[key] / calc.num[key];
+										calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key],2);
 									}
 								}
 							}
