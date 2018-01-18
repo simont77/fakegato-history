@@ -6,7 +6,7 @@ var debug = require('debug')('FakeGatoStorage');
 var fs = require('fs');
 var os = require('os');
 
-var googleDrive = require('./googleDrive/drive').drive;
+var googleDrive = require('./lib/googleDrive').drive;
 
 var fileSuffix = '_persist.json';
 
