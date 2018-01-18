@@ -76,20 +76,22 @@ There is a persistance possible to avoid to lost all history not yet downloaded 
 
 #### File System
 When instanciating the FakeGatoHistoryService, the third argument become an object with those attributes :
- this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
- 	size:length, // if you still need to specify the length
- 	storage:'fs',
-	path:'/mnt/usbkey/somewhere/to/store/my/persistence/' // or .homebridge directory if empty
- });
-
+```
+	this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
+		size:length, // if you still need to specify the length
+		storage:'fs',
+		path:'/mnt/usbkey/somewhere/to/store/my/persistence/' // or .homebridge directory if empty
+	 });
+```
 #### Google Drive
 When instanciating the FakeGatoHistoryService, the third argument become an object with those attributes :
- this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
- 	size:length, // if you still need to specify the length
- 	storage:'googleDrive',
-	folder:'fakegatoFolder' // or 'fakegato' if empty
- });
-
+```
+	this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
+		size:length, // if you still need to specify the length
+		storage:'googleDrive',
+		folder:'fakegatoFolder' // or 'fakegato' if empty
+	 });
+```
 * For the setup of Google Drive, please follow the Google Drive Quickstart for Node.js instructions from here except for these changes.
 
 https://developers.google.com/drive/v3/web/quickstart/nodejs
