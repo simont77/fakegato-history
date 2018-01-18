@@ -78,7 +78,7 @@ class FakeGatoTimer {
 				if (this.subscribedServices.hasOwnProperty(s)) {
 					
 					let service = this.subscribedServices[s];
-					if (typeof(service.callback) == 'function' && service.backLog.length) {
+					if (typeof(service.callback) == 'function') {
 						service.previousAvrg=service.callback({
 								'backLog':service.backLog, 
 								'previousAvrg':service.previousAvrg, 
@@ -124,7 +124,7 @@ class FakeGatoTimer {
 		this.log.debug("**Fakegato-timer: emptyData **", service.accessoryName);
 		let source = this.getSubscriber(service);
 
-		source.previousBackLog = source.backLog;
+		if(source.backLog.length) source.previousBackLog = source.backLog;
 		source.backLog = [];
 	}
 
