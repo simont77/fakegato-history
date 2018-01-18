@@ -6,6 +6,8 @@ var debug = require('debug')('FakeGatoStorage');
 var fs = require('fs');
 var os = require('os');
 
+var googleDrive = require('./googleDrive/drive').drive;
+
 var fileSuffix = '_persist.json';
 
 class FakeGatoStorage {
@@ -42,7 +44,9 @@ class FakeGatoStorage {
 				newWriter.path = params.path || os.homedir()+'/.homebridge/';
 			break;
 			case 'googleDrive' :
-			
+				newWriter.storageHandler = new googleDrive();;
+				newWriter.path = params.folder || 'fakegato';
+				
 			break;
 			/*
 			case 'memcached' :
@@ -75,12 +79,13 @@ class FakeGatoStorage {
 	write(params) { // must be asynchronous
 		this.log.debug("** Fakegato-storage write :",params.service.accessoryName,params.data);
 		let writer = this.getWriter(params.service);
+		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){});
 		switch(writer.storage) {
 			case 'fs' :
-				writer.storageHandler.writeFile(writer.path+writer.service.accessoryName+fileSuffix,params.data,'utf8',typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}));
+				writer.storageHandler.writeFile(writer.path+writer.service.accessoryName+fileSuffix,params.data,'utf8',callBack);
 			break;
 			case 'googleDrive' :
-			
+				writer.storageHandler.writeFile(writer.path,writer.service.accessoryName+fileSuffix,params.data,'application/json',callBack);
 			break;
 			/*
 			case 'memcached' :
@@ -102,7 +107,7 @@ class FakeGatoStorage {
 				}
 			break;
 			case 'googleDrive' :
-			
+				
 			break;
 			/*
 			case 'memcached' :
