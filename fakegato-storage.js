@@ -79,7 +79,7 @@ class FakeGatoStorage {
 	write(params) { // must be asynchronous
 		this.log.debug("** Fakegato-storage write :",params.service.accessoryName,params.data);
 		let writer = this.getWriter(params.service);
-		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){});
+		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 		switch(writer.storage) {
 			case 'fs' :
 				writer.storageHandler.writeFile(writer.path+writer.service.accessoryName+fileSuffix,params.data,'utf8',callBack);
@@ -94,7 +94,7 @@ class FakeGatoStorage {
 			*/
 		}
 	}
-	read(params){ // must by synchronous
+	read(params){
 		let writer = this.getWriter(params.service);
 		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 		switch(writer.storage) {
