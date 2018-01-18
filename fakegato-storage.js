@@ -85,7 +85,7 @@ class FakeGatoStorage {
 				writer.storageHandler.writeFile(writer.path+writer.service.accessoryName+fileSuffix,params.data,'utf8',callBack);
 			break;
 			case 'googleDrive' :
-				writer.storageHandler.writeFile(writer.path,writer.service.accessoryName+fileSuffix,params.data,'application/json',callBack);
+				writer.storageHandler.writeFile(writer.path,writer.service.accessoryName+fileSuffix,params.data,callBack);
 			break;
 			/*
 			case 'memcached' :
@@ -96,18 +96,13 @@ class FakeGatoStorage {
 	}
 	read(params){ // must by synchronous
 		let writer = this.getWriter(params.service);
+		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 		switch(writer.storage) {
 			case 'fs' :
-				if(writer.storageHandler.existsSync(writer.path+params.service.accessoryName+fileSuffix)) {
-					let data = writer.storageHandler.readFileSync(writer.path+params.service.accessoryName+fileSuffix,'utf8');
-					this.log.debug("** Fakegato-storage FS read :",params.service.accessoryName,data);
-					return data;
-				} else {
-					return null;
-				}
+				writer.storageHandler.readFile(writer.path+writer.service.accessoryName+fileSuffix,'utf8',callBack);	
 			break;
 			case 'googleDrive' :
-				
+				writer.storageHandler.readFile(writer.path,writer.service.accessoryName+fileSuffix,callBack);
 			break;
 			/*
 			case 'memcached' :
