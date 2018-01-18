@@ -72,7 +72,7 @@ For Energy and Door accessories it is also worth to add the custom characteristi
 If your "weather" or "room" plugin don't send addEntry for a short time (supposedly less than 1h - need feedback), the graph will draw a straight line from the last data received to the new data received. Instead, if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours - need feedback), the graph will show "no data for the period". Take this in consideration if your sensor does not send entries if the difference from the previuos one is small, you will end up with holes in the history. This is not currently addresses by fakegato, you should add extra entries if needed. Note that if you do not send a new entry at least every 10 minutes, the average will be 0, and you will a zero entry. This will be fixed soon.
 
 ### Persistance
-There is a persistance possible to avoid to lost all history not yet downloaded by Eve on restart or system crash. The persistance is written every 10min for "weather" and "room" / every event for "door" and "motion" + every 10 min. Thus the maximum loss is 10min.
+There is a persistance possible to avoid to lost all history not yet downloaded by Eve on restart or system crash. The persistance is written every 10min for "weather" and "room" / every event for "door" and "motion" + every 10 min. Thus the maximum data loss is 10min.
 
 #### File System
 When instanciating the FakeGatoHistoryService, the third argument become an object with those attributes :
