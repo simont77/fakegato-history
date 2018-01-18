@@ -483,18 +483,19 @@ module.exports = function (pHomebridge) {
 		}
 		load() {
 			//this.firstEntry, this.lastEntry, this.history and this.usedMemory
+			var thisHistory=this;
 			let data = homebridge.globalFakeGatoStorage.read({
 				service: this,
 				callback: function(err,data){
 					if(!err) {
 						let jsonFile = JSON.parse(data);
-						this.firstEntry = jsonFile.firstEntry;
-						this.lastEntry  = jsonFile.lastEntry;
-						this.usedMemory = jsonFile.usedMemory;
-						this.refTime    = jsonFile.refTime;
-						this.history	= jsonFile.history;
+						thisHistory.firstEntry = jsonFile.firstEntry;
+						thisHistory.lastEntry  = jsonFile.lastEntry;
+						thisHistory.usedMemory = jsonFile.usedMemory;
+						thisHistory.refTime    = jsonFile.refTime;
+						thisHistory.history	= jsonFile.history;
 					} else {
-						this.log.debug("**ERROR fetching persisting data restart from zero**");
+						thisHistory.log.debug("**ERROR fetching persisting data restart from zero**");
 					}
 				}
 			});
