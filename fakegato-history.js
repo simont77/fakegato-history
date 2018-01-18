@@ -478,23 +478,26 @@ module.exports = function (pHomebridge) {
 			
 			homebridge.globalFakeGatoStorage.write({
 				service: this,
-				data:JSON.stringify(data)/*,
-				callback:function(){}*/
+				data:JSON.stringify(data)
 			});
 		}
 		load() {
 			//this.firstEntry, this.lastEntry, this.history and this.usedMemory
 			let data = homebridge.globalFakeGatoStorage.read({
-				service: this
+				service: this,
+				callback: function(err,data){
+					if(!err) {
+						let jsonFile = JSON.parse(data);
+						this.firstEntry = jsonFile.firstEntry;
+						this.lastEntry  = jsonFile.lastEntry;
+						this.usedMemory = jsonFile.usedMemory;
+						this.refTime    = jsonFile.refTime;
+						this.history	= jsonFile.history;
+					} else {
+						this.log.debug("**ERROR fetching persisting data restart from zero**");
+					}
+				}
 			});
-			if(data) {
-				let jsonFile = JSON.parse(data);
-				this.firstEntry = jsonFile.firstEntry;
-				this.lastEntry  = jsonFile.lastEntry;
-				this.usedMemory = jsonFile.usedMemory;
-				this.refTime    = jsonFile.refTime;
-				this.history	= jsonFile.history;
-			}
 		}
 		
 		getCurrentS2R2(callback) {
