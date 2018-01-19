@@ -10,6 +10,8 @@ var googleDrive = require('./lib/googleDrive').drive;
 
 var fileSuffix = '_persist.json';
 
+var thisStorage;
+
 class FakeGatoStorage {
 	constructor(params) {
 		if (!params)
@@ -21,6 +23,7 @@ class FakeGatoStorage {
 		if (!this.log.debug) {
 			this.log.debug = DEBUG ? console.log : function() {};
 		}
+		thisStorage=this;
 	}
 	
 	addWriter(service,params) {
@@ -34,16 +37,20 @@ class FakeGatoStorage {
 			'callback': params.callback,
 			'storage' : params.storage || 'fs'
 		};
+		var onReady = typeof(params.onReady) == 'function' ? params.onReady:function(){}.bind(this);
 
 		switch(newWriter.storage) {
 			case 'fs' :
 				newWriter.storageHandler = fs;
 				newWriter.path = params.path || os.homedir()+'/.homebridge/';
+				this.writers.push(newWriter);
+				onReady.call();
 			break;
 			case 'googleDrive' :
-				newWriter.path = params.folder || 'fakegato';
+				newWriter.path = params.path || 'fakegato';
 				newWriter.keyPath = params.keyPath || os.homedir()+'/.homebridge/';
-				newWriter.storageHandler = new googleDrive({keyPath:newWriter.keyPath});
+				newWriter.storageHandler = new googleDrive({keyPath:newWriter.keyPath,callback:onReady});
+				this.writers.push(newWriter);
 			break;
 			/*
 			case 'memcached' :
@@ -51,7 +58,6 @@ class FakeGatoStorage {
 			break;
 			*/
 		}
-		this.writers.push(newWriter);
 	}
 	getWriter(service) {
 		let findServ = function (element) {
@@ -101,7 +107,7 @@ class FakeGatoStorage {
 				writer.storageHandler.readFile(writer.path+writer.service.accessoryName+fileSuffix,'utf8',callBack);	
 			break;
 			case 'googleDrive' :
-				this.log.debug("** Fakegato-storage read googleDrive :",writer.path,writer.service.accessoryName+fileSuffix);
+				this.log.debug("** Fakegato-storage read googleDrive :",writer.service.accessoryName+fileSuffix);
 				writer.storageHandler.readFile(writer.path,writer.service.accessoryName+fileSuffix,callBack);
 			break;
 			/*
