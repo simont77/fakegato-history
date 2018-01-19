@@ -8,11 +8,11 @@ const moment = require('moment');
 const EPOCH_OFFSET = 978307200;
 
 const TYPE_ENERGY  = 'energy',
-      TYPE_ROOM    = 'room',
-      TYPE_WEATHER = 'weather',
-      TYPE_DOOR    = 'door',
-      TYPE_MOTION  = 'motion',
-      TYPE_THERMO  = 'thermo';
+	  TYPE_ROOM    = 'room',
+	  TYPE_WEATHER = 'weather',
+	  TYPE_DOOR    = 'door',
+	  TYPE_MOTION  = 'motion',
+	  TYPE_THERMO  = 'thermo';
 
 var homebridge;
 var Characteristic, Service;
@@ -145,7 +145,11 @@ module.exports = function (pHomebridge) {
 			this.size = size || 4032 ;
 			this.minutes = minutes || 10; // Optional timer length
 			this.accessoryName = accessory.displayName;
-			this.log = accessory.log;
+			this.log = accessory.log || {};
+
+			if (!this.log.debug) {
+				this.log.debug = function() {};
+			}
 
 			if (homebridge.globalFakeGatoTimer === undefined)
 				homebridge.globalFakeGatoTimer = new FakeGatoTimer({

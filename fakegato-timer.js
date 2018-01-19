@@ -13,9 +13,9 @@ class FakeGatoTimer {
 		this.intervalID = null;
 		this.running = false;
 		this.log = params.log || {};
-		if (!params.log || !params.log.debug) {
-			if(DEBUG) this.log.debug = console.log;
-			else this.log.debug = function(){};
+
+		if (!this.log.debug) {
+			this.log.debug = DEBUG ? console.log : function() {};
 		}
 	}
 
