@@ -18,9 +18,8 @@ class FakeGatoStorage {
 		this.writers = [];
 		
 		this.log = params.log || {};
-		if (!params.log || !params.log.debug) {
-			if(DEBUG) this.log.debug = console.log;
-			else this.log.debug = function(){};
+		if (!this.log.debug) {
+			this.log.debug = DEBUG ? console.log : function() {};
 		}
 	}
 	
@@ -77,14 +76,15 @@ class FakeGatoStorage {
 	}
 	
 	write(params) { // must be asynchronous
-		this.log.debug("** Fakegato-storage write :",params.service.accessoryName,params.data);
 		let writer = this.getWriter(params.service);
 		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 		switch(writer.storage) {
 			case 'fs' :
+				this.log.debug("** Fakegato-storage write FS :",writer.path,writer.service.accessoryName,params.data);
 				writer.storageHandler.writeFile(writer.path+writer.service.accessoryName+fileSuffix,params.data,'utf8',callBack);
 			break;
 			case 'googleDrive' :
+				this.log.debug("** Fakegato-storage write googleDrive :",writer.path,writer.service.accessoryName,params.data);
 				writer.storageHandler.writeFile(writer.path,writer.service.accessoryName+fileSuffix,params.data,callBack);
 			break;
 			/*
@@ -99,9 +99,11 @@ class FakeGatoStorage {
 		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 		switch(writer.storage) {
 			case 'fs' :
+				this.log.debug("** Fakegato-storage read FS :",writer.path,writer.service.accessoryName);
 				writer.storageHandler.readFile(writer.path+writer.service.accessoryName+fileSuffix,'utf8',callBack);	
 			break;
 			case 'googleDrive' :
+				this.log.debug("** Fakegato-storage read googleDrive :",writer.path,writer.service.accessoryName);
 				writer.storageHandler.readFile(writer.path,writer.service.accessoryName+fileSuffix,callBack);
 			break;
 			/*
