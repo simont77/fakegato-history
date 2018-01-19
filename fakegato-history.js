@@ -511,22 +511,22 @@ module.exports = function (pHomebridge) {
 				callback: function(err,data){
 					if(!err) {
 						if(data) {
-							this.log.debug("read data :",data);
+							thisService.log.debug("read data :",data);
 							try {
 								let jsonFile = data;
-								this.firstEntry = jsonFile.firstEntry;
-								this.lastEntry  = jsonFile.lastEntry;
-								this.usedMemory = jsonFile.usedMemory;
-								this.refTime    = jsonFile.refTime;
-								this.history	= jsonFile.history;
+								thisService.firstEntry = jsonFile.firstEntry;
+								thisService.lastEntry  = jsonFile.lastEntry;
+								thisService.usedMemory = jsonFile.usedMemory;
+								thisService.refTime    = jsonFile.refTime;
+								thisService.history	= jsonFile.history;
 								cb(null,true);
 							} catch (e) {
-								this.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**",e);
+								thisService.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**",e);
 								cb(e,false);
 							}
 						}
 					} else {
-						this.log.debug("**ERROR fetching persisting data restart from zero**",err);
+						thisService.log.debug("**ERROR fetching persisting data restart from zero**",err);
 						cb(err,false);
 					}
 				}.bind(this)
