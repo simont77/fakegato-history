@@ -89,7 +89,8 @@ When instanciating the FakeGatoHistoryService, the third argument become an obje
 	this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
 		size:length, // optional - if you still need to specify the length
 		storage:'googleDrive',
-		folder:'fakegatoFolder' // or 'fakegato' if empty
+		folder:'fakegatoFolder', // or 'fakegato' if empty
+		keyPath:'/mnt/usbkey/somewhere/to/store/my/keys/' // where to find client_secret.json
 	 });
 ```
 * For the setup of Google Drive, please follow the Google Drive Quickstart for Node.js instructions from here except for these changes.
