@@ -17,6 +17,7 @@ const TYPE_ENERGY  = 'energy',
 
 var homebridge;
 var Characteristic, Service;
+var thisService;
 
 module.exports = function (pHomebridge) {
 	if (pHomebridge && !homebridge) {
@@ -159,7 +160,8 @@ module.exports = function (pHomebridge) {
 			
 			this.accessoryName = accessory.displayName;
 			this.log = accessory.log || {};
-
+			thisService=this;
+			
 			if (!this.log.debug) {
 				this.log.debug = function() {};
 			}
@@ -169,6 +171,7 @@ module.exports = function (pHomebridge) {
 					minutes: this.minutes,
 					log: this.log
 				});
+				
 			if(this.storage !== undefined) {
 				if (homebridge.globalFakeGatoStorage === undefined) {
 					homebridge.globalFakeGatoStorage = new FakeGatoStorage({
@@ -178,7 +181,16 @@ module.exports = function (pHomebridge) {
 				homebridge.globalFakeGatoStorage.addWriter(this,{
 					storage: this.storage,
 					path: this.path,
-					keyPath: optionalParams.keyPath || undefined
+					keyPath: optionalParams.keyPath || undefined,
+					onReady:function(){
+						this.loaded=false;
+						this.load(function(err,loaded){
+							this.registerEvents(accessory);
+							if(err) this.log.debug('Load error :',err);
+							else this.log.debug('History Loaded from Persistant Storage');
+							this.loaded=loaded;
+						}.bind(this));
+					}.bind(this)
 				});
 			}
 			
@@ -343,7 +355,7 @@ module.exports = function (pHomebridge) {
 			this.accessoryType = accessoryType;
 			this.firstEntry = 0;
 			this.lastEntry = 0;
-			this.history = ['noValue'];
+			this.history = ["noValue"];
 			this.memorySize = this.size;
 			this.usedMemory = 0;
 			this.currentEntry = 1;
@@ -353,15 +365,21 @@ module.exports = function (pHomebridge) {
 			this.memoryAddress = 0;
 			this.dataStream = '';
 
-			// load persisting data
-			if(this.storage !== undefined) this.load();
 			
+			if(this.storage === undefined) {
+				this.registerEvents(accessory);
+				this.loaded=true;
+			}
+		}
+		
+		registerEvents(accessory) {
+			this.log.debug('Registring Events');
 			if ( typeof accessory.getService === "function" ) {
 				// Platform API
 				this.service = accessory.getService(FakeGatoHistoryService);
 
 				if (this.service === undefined) {
-					this.service = accessory.addService(FakeGatoHistoryService, ucfirst(accessoryType) + ' History', accessoryType);
+					this.service = accessory.addService(FakeGatoHistoryService, ucfirst(this.accessoryType) + ' History', this.accessoryType);
 				}
 
 				this.service.getCharacteristic(S2R2Characteristic)
@@ -483,26 +501,35 @@ module.exports = function (pHomebridge) {
 			
 			homebridge.globalFakeGatoStorage.write({
 				service: this,
-				data:JSON.stringify(data)
+				data:data
 			});
 		}
-		load() {
-			//this.firstEntry, this.lastEntry, this.history and this.usedMemory
-			var thisHistory=this;
+		load(cb) {
+			this.log.debug("Loading...");
 			let data = homebridge.globalFakeGatoStorage.read({
 				service: this,
 				callback: function(err,data){
 					if(!err) {
-						let jsonFile = JSON.parse(data);
-						thisHistory.firstEntry = jsonFile.firstEntry;
-						thisHistory.lastEntry  = jsonFile.lastEntry;
-						thisHistory.usedMemory = jsonFile.usedMemory;
-						thisHistory.refTime    = jsonFile.refTime;
-						thisHistory.history	= jsonFile.history;
+						if(data) {
+							this.log.debug("read data :",data);
+							try {
+								let jsonFile = data;
+								this.firstEntry = jsonFile.firstEntry;
+								this.lastEntry  = jsonFile.lastEntry;
+								this.usedMemory = jsonFile.usedMemory;
+								this.refTime    = jsonFile.refTime;
+								this.history	= jsonFile.history;
+								cb(null,true);
+							} catch (e) {
+								this.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**",e);
+								cb(e,false);
+							}
+						}
 					} else {
-						thisHistory.log.debug("**ERROR fetching persisting data restart from zero**");
+						this.log.debug("**ERROR fetching persisting data restart from zero**",err);
+						cb(err,false);
 					}
-				}
+				}.bind(this)
 			});
 		}
 		
