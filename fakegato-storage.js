@@ -32,9 +32,7 @@ class FakeGatoStorage {
 		let newWriter = {
 			'service': service,
 			'callback': params.callback,
-			'storage' : params.storage || 'fs',
-			'path'    : '',
-			'storageHandler': null
+			'storage' : params.storage || 'fs'
 		};
 
 		switch(newWriter.storage) {
@@ -43,9 +41,9 @@ class FakeGatoStorage {
 				newWriter.path = params.path || os.homedir()+'/.homebridge/';
 			break;
 			case 'googleDrive' :
-				newWriter.storageHandler = new googleDrive();;
 				newWriter.path = params.folder || 'fakegato';
-				
+				newWriter.keyPath = params.keyPath || os.homedir()+'/.homebridge/';
+				newWriter.storageHandler = new googleDrive({keyPath:newWriter.keyPath});
 			break;
 			/*
 			case 'memcached' :
@@ -80,11 +78,11 @@ class FakeGatoStorage {
 		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 		switch(writer.storage) {
 			case 'fs' :
-				this.log.debug("** Fakegato-storage write FS :",writer.path,writer.service.accessoryName,params.data);
+				this.log.debug("** Fakegato-storage write FS :",writer.path+writer.service.accessoryName+fileSuffix,params.data);
 				writer.storageHandler.writeFile(writer.path+writer.service.accessoryName+fileSuffix,params.data,'utf8',callBack);
 			break;
 			case 'googleDrive' :
-				this.log.debug("** Fakegato-storage write googleDrive :",writer.path,writer.service.accessoryName,params.data);
+				this.log.debug("** Fakegato-storage write googleDrive :",writer.path,writer.service.accessoryName+fileSuffix,params.data);
 				writer.storageHandler.writeFile(writer.path,writer.service.accessoryName+fileSuffix,params.data,callBack);
 			break;
 			/*
@@ -99,11 +97,11 @@ class FakeGatoStorage {
 		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 		switch(writer.storage) {
 			case 'fs' :
-				this.log.debug("** Fakegato-storage read FS :",writer.path,writer.service.accessoryName);
+				this.log.debug("** Fakegato-storage read FS :",writer.path+writer.service.accessoryName+fileSuffix);
 				writer.storageHandler.readFile(writer.path+writer.service.accessoryName+fileSuffix,'utf8',callBack);	
 			break;
 			case 'googleDrive' :
-				this.log.debug("** Fakegato-storage read googleDrive :",writer.path,writer.service.accessoryName);
+				this.log.debug("** Fakegato-storage read googleDrive :",writer.path,writer.service.accessoryName+fileSuffix);
 				writer.storageHandler.readFile(writer.path,writer.service.accessoryName+fileSuffix,callBack);
 			break;
 			/*
