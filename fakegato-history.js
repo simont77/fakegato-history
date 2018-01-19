@@ -177,7 +177,8 @@ module.exports = function (pHomebridge) {
 				}
 				homebridge.globalFakeGatoStorage.addWriter(this,{
 					storage: this.storage,
-					path: this.path
+					path: this.path,
+					keyPath: optionalParams.keyPath || undefined
 				});
 			}
 			
