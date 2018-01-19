@@ -158,8 +158,12 @@ module.exports = function (pHomebridge) {
 			}
 			
 			this.accessoryName = accessory.displayName;
-			this.log = accessory.log;
+			this.log = accessory.log || {};
 
+			if (!this.log.debug) {
+				this.log.debug = function() {};
+			}
+			
 			if (homebridge.globalFakeGatoTimer === undefined)
 				homebridge.globalFakeGatoTimer = new FakeGatoTimer({
 					minutes: this.minutes,
