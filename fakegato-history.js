@@ -319,7 +319,6 @@ module.exports = function (pHomebridge) {
 		}
 
 		sendHistory(address) {
-			var hexAddress = address.toString('16'); // unused
 			if (address != 0) {
 				this.currentEntry = address;
 			} else {
@@ -353,6 +352,8 @@ module.exports = function (pHomebridge) {
 			}
 			.bind(this);
 
+			var val;
+
 			if (this.usedMemory < this.memorySize) {
 				this.usedMemory++;
 				this.firstEntry = 0;
@@ -363,7 +364,7 @@ module.exports = function (pHomebridge) {
 			}
 
 			if (this.refTime == 0) {
-				this.refTime = entry.time - EPOCH_OFFSET + 1;
+				this.refTime = entry.time - EPOCH_OFFSET;
 				this.history[this.lastEntry] = {
 					time: entry.time,
 					setRefTime: 1
@@ -374,14 +375,25 @@ module.exports = function (pHomebridge) {
 
 			this.history[entry2address(this.lastEntry)] = (entry);
 
-			var val = Format(
+			if (this.usedMemory < this.memorySize) {
+				val = Format(
+					'%s00000000%s%s%s%s%s000000000101',
+					numToHex(swap32(entry.time - this.refTime - EPOCH_OFFSET), 8),
+					numToHex(swap32(this.refTime), 8),
+					this.accessoryType116,
+					numToHex(swap16(this.usedMemory+1), 4),
+					numToHex(swap16(this.memorySize), 4),
+					numToHex(swap32(this.firstEntry), 8));
+			} else {
+				val = Format(
 					'%s00000000%s%s%s%s%s000000000101',
 					numToHex(swap32(entry.time - this.refTime - EPOCH_OFFSET), 8),
 					numToHex(swap32(this.refTime), 8),
 					this.accessoryType116,
 					numToHex(swap16(this.usedMemory), 4),
 					numToHex(swap16(this.memorySize), 4),
-					numToHex(swap32(this.firstEntry), 8));
+					numToHex(swap32(this.firstEntry+1), 8));
+			}	
 
 			if (this.service === undefined) {
 				this.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
@@ -401,20 +413,19 @@ module.exports = function (pHomebridge) {
 				return val % this.memorySize;
 			}.bind(this);
 
-			if ((this.currentEntry < this.lastEntry) && (this.transfer == true)) {
+			if ((this.currentEntry <= this.lastEntry) && (this.transfer == true)) {
 				this.memoryAddress = entry2address(this.currentEntry);
 				if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) {
 
 					var val = Format(
-						'15%s 0000 0000 80 0000 0000 0000 0000 00 0000 15%s 0100 0000 81%s0000 0000 00 0000',
+						'15%s 0100 0000 81%s0000 0000 00 0000',
 						numToHex(swap32(this.currentEntry), 8),
-						numToHex(swap32(this.currentEntry + 1), 8),
 						numToHex(swap32(this.refTime), 8));
 
 					this.log.debug("Data %s: %s", this.accessoryName, val);
 					callback(null, hexToBase64(val));
 					this.setTime = false;
-					this.currentEntry = this.currentEntry + 2;
+					this.currentEntry = this.currentEntry + 1;
 
 				}
 				else {
