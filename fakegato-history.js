@@ -446,6 +446,8 @@ module.exports = function (pHomebridge) {
 			
 			var val;
 
+			var val;
+
 			if (this.usedMemory < this.memorySize) {
 				this.usedMemory++;
 				this.firstEntry = 0;
@@ -555,16 +557,16 @@ module.exports = function (pHomebridge) {
 			if ((this.currentEntry <= this.lastEntry) && (this.transfer == true)) {
 				this.memoryAddress = entry2address(this.currentEntry);
 				if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) {
-					
 					var val = Format(
 						'15%s 0100 0000 81%s0000 0000 00 0000',
 						numToHex(swap32(this.currentEntry), 8),
 						numToHex(swap32(this.refTime), 8));
-
+          
 					this.log.debug("Data %s: %s", this.accessoryName, val);
 					callback(null, hexToBase64(val));
 					this.setTime = false;
 					this.currentEntry = this.currentEntry + 1;
+
 				}
 				else {
 				for (var i = 0; i < 11; i++) {
