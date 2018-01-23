@@ -186,10 +186,10 @@ module.exports = function (pHomebridge) {
 					onReady:function(){
 						this.loaded=false;
 						this.load(function(err,loaded){
-							this.log.debug("Loaded",loaded);
+							//this.log.debug("Loaded",loaded);
 							//this.registerEvents();
 							if(err) this.log.debug('Load error :',err);
-							else this.log.debug('History Loaded from Persistant Storage');
+							else if(loaded) this.log.debug('History Loaded from Persistant Storage');
 							this.loaded=loaded;
 						}.bind(this));
 					}.bind(this)
@@ -517,7 +517,7 @@ module.exports = function (pHomebridge) {
 			
 			homebridge.globalFakeGatoStorage.write({
 				service: this,
-				data:data
+				data:typeof(data) === "object" ? JSON.stringify(data) : data
 			});
 		}
 		load(cb) {
@@ -527,9 +527,10 @@ module.exports = function (pHomebridge) {
 				callback: function(err,data){
 					if(!err) {
 						if(data) {
-							thisService.log.debug("read data :",JSON.stringify(data));
 							try {
-								let jsonFile = data;
+								thisService.log.debug("read data from",thisService.accessoryName,":",data);
+								let jsonFile = typeof(data) === "object" ? data : JSON.parse(data);
+								
 								thisService.firstEntry = jsonFile.firstEntry;
 								thisService.lastEntry  = jsonFile.lastEntry;
 								thisService.usedMemory = jsonFile.usedMemory;
@@ -542,8 +543,8 @@ module.exports = function (pHomebridge) {
 							cb(null,true);
 						}
 					} else {
-						thisService.log.debug("**ERROR fetching persisting data restart from zero**",err);
-						cb(err,false);
+						// file don't exists
+						cb(null,false);
 					}
 				}.bind(this)
 			});
