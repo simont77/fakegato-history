@@ -3,6 +3,7 @@
 
 const Format = require('util').format;
 const FakeGatoTimer = require('./fakegato-timer').FakeGatoTimer;
+const FakeGatoStorage = require('./fakegato-storage').FakeGatoStorage;
 const moment = require('moment');
 
 const EPOCH_OFFSET = 978307200;
@@ -61,6 +62,10 @@ module.exports = function (pHomebridge) {
 	},
 	ucfirst = function(val) {
 		return val.charAt(0).toUpperCase() + val.substr(1);
+	},
+	precisionRound = function (number, precision) {
+	  var factor = Math.pow(10, precision);
+	  return Math.round(number * factor) / factor;
 	};
 
 	class S2R1Characteristic extends Characteristic {
@@ -131,9 +136,9 @@ module.exports = function (pHomebridge) {
 	}
 
   	FakeGatoHistoryService.UUID = 'E863F007-079E-48FF-8F27-9C2605A29F52';
-
+	var thisAccessory={};
   	class FakeGatoHistory extends Service {
-		constructor(accessoryType, accessory, size, minutes) {
+		constructor(accessoryType, accessory, optionalParams) {
 
 			super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
 
@@ -142,23 +147,64 @@ module.exports = function (pHomebridge) {
 				return temp;
 			}.bind(this);
 
-			this.size = size || 4032 ;
-			this.minutes = minutes || 10; // Optional timer length
-			this.accessoryName = accessory.displayName;
-			this.log = accessory.log;
-
+			if(typeof(optionalParams) === 'object') {
+				this.size = optionalParams.size || 4032;
+				this.minutes = optionalParams.minutes || 10; // Optional timer length
+				this.storage = optionalParams.storage; // 'fs' or 'googleDrive'
+				this.path    = optionalParams.path;
+			} else {
+				this.size = optionalParams || 4032;
+				this.minutes = 10;
+			}
+			
+			thisAccessory = accessory;
+			this.accessoryName = thisAccessory.displayName;
+			this.log = thisAccessory.log || {};
+			
+			if (!this.log.debug) {
+				this.log.debug = function() {};
+			}
+			
 			if (homebridge.globalFakeGatoTimer === undefined)
 				homebridge.globalFakeGatoTimer = new FakeGatoTimer({
 					minutes: this.minutes,
 					log: this.log
 				});
-
+				
+			if(this.storage !== undefined) {
+				if (homebridge.globalFakeGatoStorage === undefined) {
+					homebridge.globalFakeGatoStorage = new FakeGatoStorage({
+						log: this.log
+					});
+				}
+				homebridge.globalFakeGatoStorage.addWriter(this,{
+					storage: this.storage,
+					path: this.path,
+					keyPath: optionalParams.keyPath || undefined,
+					onReady:function(){
+						this.loaded=false;
+						this.load(function(err,loaded){
+							//this.log.debug("Loaded",loaded);
+							//this.registerEvents();
+							if(err) this.log.debug('Load error :',err);
+							else if(loaded) this.log.debug('History Loaded from Persistant Storage');
+							this.loaded=loaded;
+						}.bind(this));
+					}.bind(this)
+				});
+			}
+			
+				
 			switch (accessoryType) {
 				case TYPE_WEATHER:
 					this.accessoryType116 = "03 0102 0202 0302";
 					this.accessoryType117 = "07";
 
-					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
+					homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
+						var backLog = params.backLog || [];
+						var previousAvrg = params.previousAvrg || {};
+						var timer = params.timer;
+						
 						var fakegato = this.service;
 						var calc = {
 							sum: {},
@@ -176,14 +222,26 @@ module.exports = function (pHomebridge) {
 											calc.num[key] = 0;
 										calc.sum[key] += backLog[h][key];
 										calc.num[key]++;
-										calc.avrg[key] = calc.sum[key] / calc.num[key];
+										calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key],2);
 									}
 								}
 							}
 						}
 						calc.avrg.time = moment().unix(); // set the time of the avrg
+						
+						for (var key in previousAvrg) { // each record of previous average
+							if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
+								if(	calc.avrg[key] == 0 || // zero value
+									calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
+								{
+									calc.avrg[key]=previousAvrg[key];
+								}
+							}
+						}
+						
 						fakegato._addEntry(calc.avrg);
-						timer.emptyData(fakegato);// should i ? or repeat the last datas ?
+						timer.emptyData(fakegato);
+						return calc.avrg;
 					});
 					break;
 				case TYPE_ENERGY:
@@ -194,7 +252,11 @@ module.exports = function (pHomebridge) {
 					this.accessoryType116 = "04 0102 0202 0402 0f03";
 					this.accessoryType117 = "0f";
 
-					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
+					homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
+						var backLog = params.backLog || [];
+						var previousAvrg = params.previousAvrg || {};
+						var timer = params.timer;
+						
 						var fakegato = this.service;
 						var calc = {
 							sum: {},
@@ -212,21 +274,37 @@ module.exports = function (pHomebridge) {
 											calc.num[key] = 0;
 										calc.sum[key] += backLog[h][key];
 										calc.num[key]++;
-										calc.avrg[key] = calc.sum[key] / calc.num[key];
+										calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key],2);
 									}
 								}
 							}
 						}
 						calc.avrg.time = moment().unix(); // set the time of the avrg
+						
+						for (var key in previousAvrg) { // each record of previous average
+							if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
+								if(	calc.avrg[key] == 0 || // zero value
+									calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
+								{
+									calc.avrg[key]=previousAvrg[key];
+								}
+							}
+						}
+						
 						fakegato._addEntry(calc.avrg);
-						timer.emptyData(fakegato); // should i ? or repeat the last datas ?
+						timer.emptyData(fakegato);
+						return calc.avrg;
 					});
 					break;
 				case TYPE_DOOR:
 					this.accessoryType116 = "01 0601";
 					this.accessoryType117 = "01";
 
-					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
+					homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
+						var backLog = params.backLog || [];
+						var timer = params.timer;
+						var immediate = params.immediate;
+						
 						var fakegato = this.service;
 						var actualEntry={};
 
@@ -247,7 +325,11 @@ module.exports = function (pHomebridge) {
 					this.accessoryType116 = "02 1301 1c01";
 					this.accessoryType117 = "02";
 
-					homebridge.globalFakeGatoTimer.subscribe(this, function (backLog, timer, immediate) { // callback
+					homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
+						var backLog = params.backLog || [];
+						var timer = params.timer;
+						var immediate = params.immediate;
+						
 						var fakegato = this.service;
 						var actualEntry={};
 
@@ -273,7 +355,7 @@ module.exports = function (pHomebridge) {
 			this.accessoryType = accessoryType;
 			this.firstEntry = 0;
 			this.lastEntry = 0;
-			this.history = [];
+			this.history = ["noValue"];
 			this.memorySize = this.size;
 			this.usedMemory = 0;
 			this.currentEntry = 1;
@@ -282,14 +364,23 @@ module.exports = function (pHomebridge) {
 			this.refTime = 0;
 			this.memoryAddress = 0;
 			this.dataStream = '';
-			this.IntervalID = null;
 
-			if ( typeof accessory.getService === "function" ) {
+			
+			//if(this.storage === undefined) {
+				this.registerEvents()
+				this.loaded=true;
+			//}
+		}
+		
+		registerEvents() {
+			this.log.debug('Registring Events',thisAccessory.displayName);
+			if ( typeof thisAccessory.getService === "function" ) {
 				// Platform API
-				this.service = accessory.getService(FakeGatoHistoryService);
-
+				this.log.debug('Platform',thisAccessory.displayName);
+				
+				this.service = thisAccessory.getService(FakeGatoHistoryService);
 				if (this.service === undefined) {
-					this.service = accessory.addService(FakeGatoHistoryService, ucfirst(accessoryType) + ' History', accessoryType);
+					this.service = thisAccessory.addService(FakeGatoHistoryService, ucfirst(thisAccessory.displayName) + ' History', this.accessoryType);
 				}
 
 				this.service.getCharacteristic(S2R2Characteristic)
@@ -304,6 +395,7 @@ module.exports = function (pHomebridge) {
 			}
 			else {
 				// Accessory API
+				this.log.debug('Accessory',thisAccessory.displayName);
 
 				this.addCharacteristic(S2R1Characteristic);
 
@@ -351,6 +443,8 @@ module.exports = function (pHomebridge) {
 				return val % this.memorySize;
 			}
 			.bind(this);
+			
+			var val;
 
 			var val;
 
@@ -395,10 +489,10 @@ module.exports = function (pHomebridge) {
 					numToHex(swap32(this.firstEntry+1), 8));
 			}	
 
-			if (this.service === undefined) {
+			if (this.service === undefined) { // Accessory API
 				this.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
 			} 
-			else {
+			else { // Platform API
 				this.service.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
 			}
 
@@ -406,8 +500,55 @@ module.exports = function (pHomebridge) {
 			this.log.debug("Last entry %s: %s", this.accessoryName, this.lastEntry.toString(16));
 			this.log.debug("Used memory %s: %s", this.accessoryName, this.usedMemory.toString(16));
 			this.log.debug("116 %s: %s", this.accessoryName, val);
+			
+			if(this.storage !== undefined) this.save();
 		}
-
+		
+		save() {
+			let data = {
+					firstEntry:this.firstEntry,
+					lastEntry :this.lastEntry,
+					usedMemory:this.usedMemory,
+					refTime   :this.refTime,
+					history   :this.history
+				};
+			
+			
+			homebridge.globalFakeGatoStorage.write({
+				service: this,
+				data:typeof(data) === "object" ? JSON.stringify(data) : data
+			});
+		}
+		load(cb) {
+			this.log.debug("Loading...");
+			homebridge.globalFakeGatoStorage.read({
+				service: this,
+				callback: function(err,data){
+					if(!err) {
+						if(data) {
+							try {
+								this.log.debug("read data from",this.accessoryName,":",data);
+								let jsonFile = typeof(data) === "object" ? data : JSON.parse(data);
+								
+								this.firstEntry = jsonFile.firstEntry;
+								this.lastEntry  = jsonFile.lastEntry;
+								this.usedMemory = jsonFile.usedMemory;
+								this.refTime    = jsonFile.refTime;
+								this.history	= jsonFile.history;
+							} catch (e) {
+								this.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**",e);
+								cb(e,false);
+							}
+							cb(null,true);
+						}
+					} else {
+						// file don't exists
+						cb(null,false);
+					}
+				}.bind(this)
+			});
+		}
+		
 		getCurrentS2R2(callback) {
 			var entry2address = function(val) {
 				return val % this.memorySize;
@@ -416,12 +557,11 @@ module.exports = function (pHomebridge) {
 			if ((this.currentEntry <= this.lastEntry) && (this.transfer == true)) {
 				this.memoryAddress = entry2address(this.currentEntry);
 				if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) {
-
 					var val = Format(
 						'15%s 0100 0000 81%s0000 0000 00 0000',
 						numToHex(swap32(this.currentEntry), 8),
 						numToHex(swap32(this.refTime), 8));
-
+          
 					this.log.debug("Data %s: %s", this.accessoryName, val);
 					callback(null, hexToBase64(val));
 					this.setTime = false;
