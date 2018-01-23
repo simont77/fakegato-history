@@ -14,9 +14,8 @@ class FakeGatoTimer {
 		this.intervalID = null;
 		this.running = false;
 		this.log = params.log || {};
-		if (!params.log || !params.log.debug) {
-			if(DEBUG) this.log.debug = console.log;
-			else this.log.debug = function(){};
+		if (!this.log.debug) {
+			this.log.debug = DEBUG ? console.log : function() {};
 		}
 	}
 
@@ -57,7 +56,7 @@ class FakeGatoTimer {
 
 	// Timer management
 	start() {
-		this.log.debug("**Start Global Fakegato-Timer - ",this.minutes,"min**");
+		this.log.debug("**Start Global Fakegato-Timer - "+this.minutes+"min**");
 		if (this.running)
 			this.stop();
 		this.running = true;
@@ -78,7 +77,7 @@ class FakeGatoTimer {
 				if (this.subscribedServices.hasOwnProperty(s)) {
 					
 					let service = this.subscribedServices[s];
-					if (typeof(service.callback) == 'function' && service.backLog.length) {
+					if (typeof(service.callback) == 'function') {
 						service.previousAvrg=service.callback({
 								'backLog':service.backLog, 
 								'previousAvrg':service.previousAvrg, 
@@ -124,7 +123,7 @@ class FakeGatoTimer {
 		this.log.debug("**Fakegato-timer: emptyData **", service.accessoryName);
 		let source = this.getSubscriber(service);
 
-		source.previousBackLog = source.backLog;
+		if(source.backLog.length) source.previousBackLog = source.backLog;
 		source.backLog = [];
 	}
 

@@ -136,7 +136,7 @@ module.exports = function (pHomebridge) {
 	}
 
   	FakeGatoHistoryService.UUID = 'E863F007-079E-48FF-8F27-9C2605A29F52';
-
+	var thisAccessory={};
   	class FakeGatoHistory extends Service {
 		constructor(accessoryType, accessory, optionalParams) {
 
@@ -157,14 +157,20 @@ module.exports = function (pHomebridge) {
 				this.minutes = 10;
 			}
 			
-			this.accessoryName = accessory.displayName;
-			this.log = accessory.log;
-
+			thisAccessory = accessory;
+			this.accessoryName = thisAccessory.displayName;
+			this.log = thisAccessory.log || {};
+			
+			if (!this.log.debug) {
+				this.log.debug = function() {};
+			}
+			
 			if (homebridge.globalFakeGatoTimer === undefined)
 				homebridge.globalFakeGatoTimer = new FakeGatoTimer({
 					minutes: this.minutes,
 					log: this.log
 				});
+				
 			if(this.storage !== undefined) {
 				if (homebridge.globalFakeGatoStorage === undefined) {
 					homebridge.globalFakeGatoStorage = new FakeGatoStorage({
@@ -173,7 +179,18 @@ module.exports = function (pHomebridge) {
 				}
 				homebridge.globalFakeGatoStorage.addWriter(this,{
 					storage: this.storage,
-					path: this.path
+					path: this.path,
+					keyPath: optionalParams.keyPath || undefined,
+					onReady:function(){
+						this.loaded=false;
+						this.load(function(err,loaded){
+							//this.log.debug("Loaded",loaded);
+							//this.registerEvents();
+							if(err) this.log.debug('Load error :',err);
+							else if(loaded) this.log.debug('History Loaded from Persistant Storage');
+							this.loaded=loaded;
+						}.bind(this));
+					}.bind(this)
 				});
 			}
 			
@@ -338,7 +355,7 @@ module.exports = function (pHomebridge) {
 			this.accessoryType = accessoryType;
 			this.firstEntry = 0;
 			this.lastEntry = 0;
-			this.history = [];
+			this.history = ["noValue"];
 			this.memorySize = this.size;
 			this.usedMemory = 0;
 			this.currentEntry = 1;
@@ -348,15 +365,22 @@ module.exports = function (pHomebridge) {
 			this.memoryAddress = 0;
 			this.dataStream = '';
 
-			// load persisting data
-			if(this.storage !== undefined) this.load();
 			
-			if ( typeof accessory.getService === "function" ) {
+			//if(this.storage === undefined) {
+				this.registerEvents()
+				this.loaded=true;
+			//}
+		}
+		
+		registerEvents() {
+			this.log.debug('Registring Events',thisAccessory.displayName);
+			if ( typeof thisAccessory.getService === "function" ) {
 				// Platform API
-				this.service = accessory.getService(FakeGatoHistoryService);
-
+				this.log.debug('Platform',thisAccessory.displayName);
+				
+				this.service = thisAccessory.getService(FakeGatoHistoryService);
 				if (this.service === undefined) {
-					this.service = accessory.addService(FakeGatoHistoryService, ucfirst(accessoryType) + ' History', accessoryType);
+					this.service = thisAccessory.addService(FakeGatoHistoryService, ucfirst(thisAccessory.displayName) + ' History', this.accessoryType);
 				}
 
 				this.service.getCharacteristic(S2R2Characteristic)
@@ -371,6 +395,7 @@ module.exports = function (pHomebridge) {
 			}
 			else {
 				// Accessory API
+				this.log.debug('Accessory',thisAccessory.displayName);
 
 				this.addCharacteristic(S2R1Characteristic);
 
@@ -386,7 +411,6 @@ module.exports = function (pHomebridge) {
 		}
 
 		sendHistory(address) {
-			var hexAddress = address.toString('16'); // unused
 			if (address != 0) {
 				this.currentEntry = address;
 			} else {
@@ -419,6 +443,8 @@ module.exports = function (pHomebridge) {
 				return val % this.memorySize;
 			}
 			.bind(this);
+			
+			var val;
 
 			if (this.usedMemory < this.memorySize) {
 				this.usedMemory++;
@@ -441,19 +467,30 @@ module.exports = function (pHomebridge) {
 
 			this.history[entry2address(this.lastEntry)] = (entry);
 
-			var val = Format(
+			if (this.usedMemory < this.memorySize) {
+				val = Format(
+					'%s00000000%s%s%s%s%s000000000101',
+					numToHex(swap32(entry.time - this.refTime - EPOCH_OFFSET), 8),
+					numToHex(swap32(this.refTime), 8),
+					this.accessoryType116,
+					numToHex(swap16(this.usedMemory+1), 4),
+					numToHex(swap16(this.memorySize), 4),
+					numToHex(swap32(this.firstEntry), 8));
+			} else {
+				val = Format(
 					'%s00000000%s%s%s%s%s000000000101',
 					numToHex(swap32(entry.time - this.refTime - EPOCH_OFFSET), 8),
 					numToHex(swap32(this.refTime), 8),
 					this.accessoryType116,
 					numToHex(swap16(this.usedMemory), 4),
 					numToHex(swap16(this.memorySize), 4),
-					numToHex(swap32(this.firstEntry), 8));
+					numToHex(swap32(this.firstEntry+1), 8));
+			}	
 
-			if (this.service === undefined) {
+			if (this.service === undefined) { // Accessory API
 				this.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
 			} 
-			else {
+			else { // Platform API
 				this.service.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
 			}
 
@@ -466,7 +503,6 @@ module.exports = function (pHomebridge) {
 		}
 		
 		save() {
-			//this.firstEntry, this.lastEntry, this.history and this.usedMemory
 			let data = {
 					firstEntry:this.firstEntry,
 					lastEntry :this.lastEntry,
@@ -478,23 +514,37 @@ module.exports = function (pHomebridge) {
 			
 			homebridge.globalFakeGatoStorage.write({
 				service: this,
-				data:JSON.stringify(data)/*,
-				callback:function(){}*/
+				data:typeof(data) === "object" ? JSON.stringify(data) : data
 			});
 		}
-		load() {
-			//this.firstEntry, this.lastEntry, this.history and this.usedMemory
-			let data = homebridge.globalFakeGatoStorage.read({
-				service: this
+		load(cb) {
+			this.log.debug("Loading...");
+			homebridge.globalFakeGatoStorage.read({
+				service: this,
+				callback: function(err,data){
+					if(!err) {
+						if(data) {
+							try {
+								this.log.debug("read data from",this.accessoryName,":",data);
+								let jsonFile = typeof(data) === "object" ? data : JSON.parse(data);
+								
+								this.firstEntry = jsonFile.firstEntry;
+								this.lastEntry  = jsonFile.lastEntry;
+								this.usedMemory = jsonFile.usedMemory;
+								this.refTime    = jsonFile.refTime;
+								this.history	= jsonFile.history;
+							} catch (e) {
+								this.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**",e);
+								cb(e,false);
+							}
+							cb(null,true);
+						}
+					} else {
+						// file don't exists
+						cb(null,false);
+					}
+				}.bind(this)
 			});
-			if(data) {
-				let jsonFile = JSON.parse(data);
-				this.firstEntry = jsonFile.firstEntry;
-				this.lastEntry  = jsonFile.lastEntry;
-				this.usedMemory = jsonFile.usedMemory;
-				this.refTime    = jsonFile.refTime;
-				this.history	= jsonFile.history;
-			}
 		}
 		
 		getCurrentS2R2(callback) {
@@ -502,19 +552,19 @@ module.exports = function (pHomebridge) {
 				return val % this.memorySize;
 			}.bind(this);
 
-			if ((this.currentEntry < this.lastEntry) && (this.transfer == true)) {
+			if ((this.currentEntry <= this.lastEntry) && (this.transfer == true)) {
 				this.memoryAddress = entry2address(this.currentEntry);
 				if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) {
+					
+					var val = Format(
+						'15%s 0100 0000 81%s0000 0000 00 0000',
+						numToHex(swap32(this.currentEntry), 8),
+						numToHex(swap32(this.refTime), 8));
 
-				var val = Format(
-					'15%s 0000 0000 81%s0000 0000 00 0000',
-					numToHex(swap32(this.currentEntry), 8),
-					numToHex(swap32(this.refTime), 8));
-
-				this.log.debug("Data %s: %s", this.accessoryName, val);
-				callback(null, hexToBase64(val));
-				this.setTime = false;
-				this.currentEntry++;
+					this.log.debug("Data %s: %s", this.accessoryName, val);
+					callback(null, hexToBase64(val));
+					this.setTime = false;
+					this.currentEntry = this.currentEntry + 1;
 				}
 				else {
 				for (var i = 0; i < 11; i++) {

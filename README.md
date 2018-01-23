@@ -71,12 +71,43 @@ For Energy and Door accessories it is also worth to add the custom characteristi
 
 If your "weather" or "room" plugin don't send addEntry for a short time (supposedly less than 1h - need feedback), the graph will draw a straight line from the last data received to the new data received. Instead, if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours - need feedback), the graph will show "no data for the period". Take this in consideration if your sensor does not send entries if the difference from the previuos one is small, you will end up with holes in the history. This is not currently addresses by fakegato, you should add extra entries if needed. Note that if you do not send a new entry at least every 10 minutes, the average will be 0, and you will a zero entry. This will be fixed soon.
 
+### Persistance
+There is a persistance possible to avoid to lost all history not yet downloaded by Eve on restart or system crash. The persistance is written every 10min for "weather" and "room" / every event for "door" and "motion" + every 10 min. Thus the maximum data loss is 10min.
+
+#### File System
+When instanciating the FakeGatoHistoryService, the third argument become an object with those attributes :
+```
+	this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
+		size:length, // optional - if you still need to specify the length
+		storage:'fs',
+		path:'/mnt/usbkey/somewhere/to/store/my/persistence/' // or .homebridge directory if empty
+	 });
+```
+#### Google Drive
+When instanciating the FakeGatoHistoryService, the third argument become an object with those attributes :
+```
+	this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
+		size:length, // optional - if you still need to specify the length
+		storage:'googleDrive',
+		folder:'fakegatoFolder', // or 'fakegato' if empty
+		keyPath:'/mnt/usbkey/somewhere/to/store/my/keys/' // where to find client_secret.json
+	 });
+```
+* For the setup of Google Drive, please follow the Google Drive Quickstart for Node.js instructions from here except for these changes.
+
+https://developers.google.com/drive/v3/web/quickstart/nodejs
+
+* In Step 1-h the working directory should be the .homebridge directory
+* Skip Step 2 and 3
+* And in step 4, use the quickstartGoogleDrive.js included in the plugin itself.  And to do this you need to run the command from the plugin directory.  Then just follow steps a to c.
+
+
 ### TODO
 
 - [x] Support for rolling-over of the history
 - [x] Aggregate transmission of several entries into a single Characteristic update in order to speed up transfer when not on local network.
 - [x] Add other accessory types. Help from people with access to real Eve accessory is needed. Dump of custom Characteristics during data transfer is required.
-- [ ] Make history persistent
+- [x] Make history persistent
 - [x] Adjustable history length
 - [ ] Periodic sending of reference time stamp (seems not really needed if the time of your homebridge machine is correct)
 

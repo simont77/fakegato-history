@@ -6,7 +6,11 @@ var debug = require('debug')('FakeGatoStorage');
 var fs = require('fs');
 var os = require('os');
 
+var googleDrive = require('./lib/googleDrive').drive;
+
 var fileSuffix = '_persist.json';
+
+var thisStorage;
 
 class FakeGatoStorage {
 	constructor(params) {
@@ -16,10 +20,10 @@ class FakeGatoStorage {
 		this.writers = [];
 		
 		this.log = params.log || {};
-		if (!params.log || !params.log.debug) {
-			if(DEBUG) this.log.debug = console.log;
-			else this.log.debug = function(){};
+		if (!this.log.debug) {
+			this.log.debug = DEBUG ? console.log : function() {};
 		}
+		thisStorage=this;
 	}
 	
 	addWriter(service,params) {
@@ -31,18 +35,22 @@ class FakeGatoStorage {
 		let newWriter = {
 			'service': service,
 			'callback': params.callback,
-			'storage' : params.storage || 'fs',
-			'path'    : '',
-			'storageHandler': null
+			'storage' : params.storage || 'fs'
 		};
+		var onReady = typeof(params.onReady) == 'function' ? params.onReady:function(){}.bind(this);
 
 		switch(newWriter.storage) {
 			case 'fs' :
 				newWriter.storageHandler = fs;
 				newWriter.path = params.path || os.homedir()+'/.homebridge/';
+				this.writers.push(newWriter);		
+				onReady();
 			break;
 			case 'googleDrive' :
-			
+				newWriter.path = params.path || 'fakegato';
+				newWriter.keyPath = params.keyPath || os.homedir()+'/.homebridge/';
+				newWriter.storageHandler = new googleDrive({keyPath:newWriter.keyPath,callback:onReady});
+				this.writers.push(newWriter);
 			break;
 			/*
 			case 'memcached' :
@@ -50,7 +58,6 @@ class FakeGatoStorage {
 			break;
 			*/
 		}
-		this.writers.push(newWriter);
 	}
 	getWriter(service) {
 		let findServ = function (element) {
@@ -73,14 +80,16 @@ class FakeGatoStorage {
 	}
 	
 	write(params) { // must be asynchronous
-		this.log.debug("** Fakegato-storage write :",params.service.accessoryName,params.data);
 		let writer = this.getWriter(params.service);
+		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 		switch(writer.storage) {
 			case 'fs' :
-				writer.storageHandler.writeFile(writer.path+writer.service.accessoryName+fileSuffix,params.data,'utf8',typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}));
+				this.log.debug("** Fakegato-storage write FS :",writer.path+writer.service.accessoryName+fileSuffix,params.data);
+				writer.storageHandler.writeFile(writer.path+writer.service.accessoryName+fileSuffix,params.data,'utf8',callBack);
 			break;
 			case 'googleDrive' :
-			
+				this.log.debug("** Fakegato-storage write googleDrive :",writer.path,writer.service.accessoryName+fileSuffix,params.data);
+				writer.storageHandler.writeFile(writer.path,writer.service.accessoryName+fileSuffix,params.data,callBack);
 			break;
 			/*
 			case 'memcached' :
@@ -89,20 +98,17 @@ class FakeGatoStorage {
 			*/
 		}
 	}
-	read(params){ // must by synchronous
+	read(params){
 		let writer = this.getWriter(params.service);
+		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 		switch(writer.storage) {
 			case 'fs' :
-				if(writer.storageHandler.existsSync(writer.path+params.service.accessoryName+fileSuffix)) {
-					let data = writer.storageHandler.readFileSync(writer.path+params.service.accessoryName+fileSuffix,'utf8');
-					this.log.debug("** Fakegato-storage FS read :",params.service.accessoryName,data);
-					return data;
-				} else {
-					return null;
-				}
+				this.log.debug("** Fakegato-storage read FS :",writer.path+writer.service.accessoryName+fileSuffix);
+				writer.storageHandler.readFile(writer.path+writer.service.accessoryName+fileSuffix,'utf8',callBack);	
 			break;
 			case 'googleDrive' :
-			
+				this.log.debug("** Fakegato-storage read googleDrive :",writer.service.accessoryName+fileSuffix);
+				writer.storageHandler.readFile(writer.path,writer.service.accessoryName+fileSuffix,callBack);
 			break;
 			/*
 			case 'memcached' :

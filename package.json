@@ -12,7 +12,10 @@
     "homebridge": ">=0.4.0"
   },
   "dependencies": {
-    "moment": "*"
+    "moment": "*",
+    "google-auth-library": "^0.10.0",
+    "googleapis": "^18.0.0",
+    "debug": "^2.2.0"
   },
   "author": "simont77",
   "license": "MIT",
