@@ -56,7 +56,7 @@ class FakeGatoTimer {
 
 	// Timer management
 	start() {
-		this.log.debug("**Start Global Fakegato-Timer - ",this.minutes,"min**");
+		this.log.debug("**Start Global Fakegato-Timer - "+this.minutes+"min**");
 		if (this.running)
 			this.stop();
 		this.running = true;
