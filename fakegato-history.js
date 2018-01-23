@@ -522,7 +522,7 @@ module.exports = function (pHomebridge) {
 		}
 		load(cb) {
 			this.log.debug("Loading...");
-			let data = homebridge.globalFakeGatoStorage.read({
+			homebridge.globalFakeGatoStorage.read({
 				service: this,
 				callback: function(err,data){
 					if(!err) {
