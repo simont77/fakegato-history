@@ -137,7 +137,7 @@ module.exports = function (pHomebridge) {
 	}
 
   	FakeGatoHistoryService.UUID = 'E863F007-079E-48FF-8F27-9C2605A29F52';
-
+	var thisAccessory={};
   	class FakeGatoHistory extends Service {
 		constructor(accessoryType, accessory, optionalParams) {
 
@@ -158,8 +158,9 @@ module.exports = function (pHomebridge) {
 				this.minutes = 10;
 			}
 			
-			this.accessoryName = accessory.displayName;
-			this.log = accessory.log || {};
+			thisAccessory = accessory;
+			this.accessoryName = thisAccessory.displayName;
+			this.log = thisAccessory.log || {};
 			thisService=this;
 			
 			if (!this.log.debug) {
@@ -185,7 +186,8 @@ module.exports = function (pHomebridge) {
 					onReady:function(){
 						this.loaded=false;
 						this.load(function(err,loaded){
-							this.registerEvents(accessory);
+							this.log.debug("Loaded",loaded);
+							this.registerEvents();
 							if(err) this.log.debug('Load error :',err);
 							else this.log.debug('History Loaded from Persistant Storage');
 							this.loaded=loaded;
@@ -367,19 +369,21 @@ module.exports = function (pHomebridge) {
 
 			
 			if(this.storage === undefined) {
-				this.registerEvents(accessory);
+				setTimeout(this.registerEvents().bind(this),0);
 				this.loaded=true;
 			}
 		}
 		
-		registerEvents(accessory) {
-			this.log.debug('Registring Events');
-			if ( typeof accessory.getService === "function" ) {
+		registerEvents() {
+			this.log.debug('Registring Events',thisAccessory.displayName);
+			if ( typeof thisAccessory.getService === "function" ) {
 				// Platform API
-				this.service = accessory.getService(FakeGatoHistoryService);
-
+				this.log.debug('Platform',thisAccessory.displayName);
+				
+				this.service = thisAccessory.getService(FakeGatoHistoryService);
+				this.log.debug(this.service);
 				if (this.service === undefined) {
-					this.service = accessory.addService(FakeGatoHistoryService, ucfirst(this.accessoryType) + ' History', this.accessoryType);
+					this.service = thisAccessory.addService(FakeGatoHistoryService, ucfirst(thisAccessory.displayName) + ' History', this.accessoryType);
 				}
 
 				this.service.getCharacteristic(S2R2Characteristic)
@@ -394,6 +398,7 @@ module.exports = function (pHomebridge) {
 			}
 			else {
 				// Accessory API
+				this.log.debug('Accessory',thisAccessory.displayName);
 
 				this.addCharacteristic(S2R1Characteristic);
 
@@ -409,7 +414,6 @@ module.exports = function (pHomebridge) {
 		}
 
 		sendHistory(address) {
-			var hexAddress = address.toString('16'); // unused
 			if (address != 0) {
 				this.currentEntry = address;
 			} else {
@@ -442,6 +446,8 @@ module.exports = function (pHomebridge) {
 				return val % this.memorySize;
 			}
 			.bind(this);
+			
+			var val;
 
 			if (this.usedMemory < this.memorySize) {
 				this.usedMemory++;
@@ -464,19 +470,30 @@ module.exports = function (pHomebridge) {
 
 			this.history[entry2address(this.lastEntry)] = (entry);
 
-			var val = Format(
+			if (this.usedMemory < this.memorySize) {
+				val = Format(
+					'%s00000000%s%s%s%s%s000000000101',
+					numToHex(swap32(entry.time - this.refTime - EPOCH_OFFSET), 8),
+					numToHex(swap32(this.refTime), 8),
+					this.accessoryType116,
+					numToHex(swap16(this.usedMemory+1), 4),
+					numToHex(swap16(this.memorySize), 4),
+					numToHex(swap32(this.firstEntry), 8));
+			} else {
+				val = Format(
 					'%s00000000%s%s%s%s%s000000000101',
 					numToHex(swap32(entry.time - this.refTime - EPOCH_OFFSET), 8),
 					numToHex(swap32(this.refTime), 8),
 					this.accessoryType116,
 					numToHex(swap16(this.usedMemory), 4),
 					numToHex(swap16(this.memorySize), 4),
-					numToHex(swap32(this.firstEntry), 8));
+					numToHex(swap32(this.firstEntry+1), 8));
+			}	
 
-			if (this.service === undefined) {
+			if (this.service === undefined) { // Accessory API
 				this.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
 			} 
-			else {
+			else { // Platform API
 				this.service.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
 			}
 
@@ -511,7 +528,7 @@ module.exports = function (pHomebridge) {
 				callback: function(err,data){
 					if(!err) {
 						if(data) {
-							thisService.log.debug("read data :",data);
+							thisService.log.debug("read data :",JSON.stringify(data));
 							try {
 								let jsonFile = data;
 								thisService.firstEntry = jsonFile.firstEntry;
@@ -519,11 +536,11 @@ module.exports = function (pHomebridge) {
 								thisService.usedMemory = jsonFile.usedMemory;
 								thisService.refTime    = jsonFile.refTime;
 								thisService.history	= jsonFile.history;
-								cb(null,true);
 							} catch (e) {
 								thisService.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**",e);
 								cb(e,false);
 							}
+							cb(null,true);
 						}
 					} else {
 						thisService.log.debug("**ERROR fetching persisting data restart from zero**",err);
@@ -534,23 +551,24 @@ module.exports = function (pHomebridge) {
 		}
 		
 		getCurrentS2R2(callback) {
+			this.log.debug("getCurrentS2R2");
 			var entry2address = function(val) {
 				return val % this.memorySize;
 			}.bind(this);
 
-			if ((this.currentEntry < this.lastEntry) && (this.transfer == true)) {
+			if ((this.currentEntry <= this.lastEntry) && (this.transfer == true)) {
 				this.memoryAddress = entry2address(this.currentEntry);
 				if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) {
+					
+					var val = Format(
+						'15%s 0100 0000 81%s0000 0000 00 0000',
+						numToHex(swap32(this.currentEntry), 8),
+						numToHex(swap32(this.refTime), 8));
 
-				var val = Format(
-					'15%s 0000 0000 81%s0000 0000 00 0000',
-					numToHex(swap32(this.currentEntry), 8),
-					numToHex(swap32(this.refTime), 8));
-
-				this.log.debug("Data %s: %s", this.accessoryName, val);
-				callback(null, hexToBase64(val));
-				this.setTime = false;
-				this.currentEntry++;
+					this.log.debug("Data %s: %s", this.accessoryName, val);
+					callback(null, hexToBase64(val));
+					this.setTime = false;
+					this.currentEntry = this.currentEntry + 1;
 				}
 				else {
 				for (var i = 0; i < 11; i++) {
@@ -623,6 +641,7 @@ module.exports = function (pHomebridge) {
 
 
 		setCurrentS2W1(val, callback) {
+			this.log.debug("setCurrentS2W1");
 			callback(null, val);
 			this.log.debug("Data request %s: %s", this.accessoryName, base64ToHex(val));
 			var valHex = base64ToHex(val);
@@ -637,6 +656,7 @@ module.exports = function (pHomebridge) {
 		}
 
 		setCurrentS2W2(val, callback) {
+			this.log.debug("setCurrentS2W2");
 			this.log.debug("Clock adjust %s: %s", this.accessoryName, base64ToHex(val));
 			callback(null, val);
 		}
