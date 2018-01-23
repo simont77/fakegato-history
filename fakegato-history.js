@@ -17,7 +17,6 @@ const TYPE_ENERGY  = 'energy',
 
 var homebridge;
 var Characteristic, Service;
-var thisService;
 
 module.exports = function (pHomebridge) {
 	if (pHomebridge && !homebridge) {
@@ -161,7 +160,6 @@ module.exports = function (pHomebridge) {
 			thisAccessory = accessory;
 			this.accessoryName = thisAccessory.displayName;
 			this.log = thisAccessory.log || {};
-			thisService=this;
 			
 			if (!this.log.debug) {
 				this.log.debug = function() {};
@@ -505,7 +503,6 @@ module.exports = function (pHomebridge) {
 		}
 		
 		save() {
-			//this.firstEntry, this.lastEntry, this.history and this.usedMemory
 			let data = {
 					firstEntry:this.firstEntry,
 					lastEntry :this.lastEntry,
@@ -528,16 +525,16 @@ module.exports = function (pHomebridge) {
 					if(!err) {
 						if(data) {
 							try {
-								thisService.log.debug("read data from",thisService.accessoryName,":",data);
+								this.log.debug("read data from",this.accessoryName,":",data);
 								let jsonFile = typeof(data) === "object" ? data : JSON.parse(data);
 								
-								thisService.firstEntry = jsonFile.firstEntry;
-								thisService.lastEntry  = jsonFile.lastEntry;
-								thisService.usedMemory = jsonFile.usedMemory;
-								thisService.refTime    = jsonFile.refTime;
-								thisService.history	= jsonFile.history;
+								this.firstEntry = jsonFile.firstEntry;
+								this.lastEntry  = jsonFile.lastEntry;
+								this.usedMemory = jsonFile.usedMemory;
+								this.refTime    = jsonFile.refTime;
+								this.history	= jsonFile.history;
 							} catch (e) {
-								thisService.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**",e);
+								this.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**",e);
 								cb(e,false);
 							}
 							cb(null,true);
