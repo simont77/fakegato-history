@@ -43,8 +43,8 @@ class FakeGatoStorage {
 			case 'fs' :
 				newWriter.storageHandler = fs;
 				newWriter.path = params.path || os.homedir()+'/.homebridge/';
-				this.writers.push(newWriter);
-				onReady.call();
+				this.writers.push(newWriter);		
+				onReady();
 			break;
 			case 'googleDrive' :
 				newWriter.path = params.path || 'fakegato';
