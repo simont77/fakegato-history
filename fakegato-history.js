@@ -369,7 +369,7 @@ module.exports = function (pHomebridge) {
 
 			
 			if(this.storage === undefined) {
-				setTimeout(this.registerEvents().bind(this),0);
+				this.registerEvents()
 				this.loaded=true;
 			}
 		}
@@ -381,7 +381,6 @@ module.exports = function (pHomebridge) {
 				this.log.debug('Platform',thisAccessory.displayName);
 				
 				this.service = thisAccessory.getService(FakeGatoHistoryService);
-				this.log.debug(this.service);
 				if (this.service === undefined) {
 					this.service = thisAccessory.addService(FakeGatoHistoryService, ucfirst(thisAccessory.displayName) + ' History', this.accessoryType);
 				}
