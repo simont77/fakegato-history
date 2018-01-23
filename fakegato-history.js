@@ -187,7 +187,7 @@ module.exports = function (pHomebridge) {
 						this.loaded=false;
 						this.load(function(err,loaded){
 							this.log.debug("Loaded",loaded);
-							this.registerEvents();
+							//this.registerEvents();
 							if(err) this.log.debug('Load error :',err);
 							else this.log.debug('History Loaded from Persistant Storage');
 							this.loaded=loaded;
@@ -368,10 +368,10 @@ module.exports = function (pHomebridge) {
 			this.dataStream = '';
 
 			
-			if(this.storage === undefined) {
+			//if(this.storage === undefined) {
 				this.registerEvents()
 				this.loaded=true;
-			}
+			//}
 		}
 		
 		registerEvents() {
@@ -550,7 +550,6 @@ module.exports = function (pHomebridge) {
 		}
 		
 		getCurrentS2R2(callback) {
-			this.log.debug("getCurrentS2R2");
 			var entry2address = function(val) {
 				return val % this.memorySize;
 			}.bind(this);
@@ -640,7 +639,6 @@ module.exports = function (pHomebridge) {
 
 
 		setCurrentS2W1(val, callback) {
-			this.log.debug("setCurrentS2W1");
 			callback(null, val);
 			this.log.debug("Data request %s: %s", this.accessoryName, base64ToHex(val));
 			var valHex = base64ToHex(val);
@@ -655,7 +653,6 @@ module.exports = function (pHomebridge) {
 		}
 
 		setCurrentS2W2(val, callback) {
-			this.log.debug("setCurrentS2W2");
 			this.log.debug("Clock adjust %s: %s", this.accessoryName, base64ToHex(val));
 			callback(null, val);
 		}
