@@ -307,18 +307,19 @@ module.exports = function (pHomebridge) {
 						
 						var fakegato = this.service;
 						var actualEntry={};
+						if(backLog.length) {
+							if(!immediate) {
+								actualEntry.time = moment().unix();
+								actualEntry.status = backLog[0].status;
+							}
+							else {
+								actualEntry.time = backLog[0].time;
+								actualEntry.status = backLog[0].status;
+							}
+							fakegato.log.debug('**Fakegato-timer callbackDoor: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
 
-						if(!immediate) {
-							actualEntry.time = moment().unix();
-							actualEntry.status = backLog[0].status;
+							fakegato._addEntry(actualEntry);
 						}
-						else {
-							actualEntry.time = backLog[0].time;
-							actualEntry.status = backLog[0].status;
-						}
-						fakegato.log.debug('**Fakegato-timer callbackDoor: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
-
-						fakegato._addEntry(actualEntry);
 					});
 					break;
 				case TYPE_MOTION:
@@ -332,18 +333,20 @@ module.exports = function (pHomebridge) {
 						
 						var fakegato = this.service;
 						var actualEntry={};
+						
+						if(backLog.length) {
+							if(!immediate) {
+								actualEntry.time = moment().unix();
+								actualEntry.status = backLog[0].status;
+							}
+							else {
+								actualEntry.time = backLog[0].time;
+								actualEntry.status = backLog[0].status;
+							}
+							fakegato.log.debug('**Fakegato-timer callbackMotion: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
 
-						if(!immediate) {
-							actualEntry.time = moment().unix();
-							actualEntry.status = backLog[0].status;
+							fakegato._addEntry(actualEntry);
 						}
-						else {
-							actualEntry.time = backLog[0].time;
-							actualEntry.status = backLog[0].status;
-						}
-						fakegato.log.debug('**Fakegato-timer callbackMotion: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
-
-						fakegato._addEntry(actualEntry);
 					});
 					break;
 				case TYPE_THERMO:
