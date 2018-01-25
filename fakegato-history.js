@@ -307,7 +307,6 @@ module.exports = function (pHomebridge) {
 						
 						var fakegato = this.service;
 						var actualEntry={};
-
 						if(backLog.length) {
 							if(!immediate) {
 								actualEntry.time = moment().unix();
@@ -334,7 +333,7 @@ module.exports = function (pHomebridge) {
 						
 						var fakegato = this.service;
 						var actualEntry={};
-
+						
 						if(backLog.length) {
 							if(!immediate) {
 								actualEntry.time = moment().unix();
