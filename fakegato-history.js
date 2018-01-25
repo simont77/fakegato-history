@@ -180,7 +180,7 @@ module.exports = function (pHomebridge) {
 				homebridge.globalFakeGatoStorage.addWriter(this,{
 					storage: this.storage,
 					path: this.path,
-					keyPath: optionalParams.keyPath || undefined,
+					keyPath: optionalParams.keyPath || homebridge.user.storagePath() || undefined,
 					onReady:function(){
 						this.loaded=false;
 						this.load(function(err,loaded){
@@ -307,6 +307,7 @@ module.exports = function (pHomebridge) {
 						
 						var fakegato = this.service;
 						var actualEntry={};
+
 						if(backLog.length) {
 							if(!immediate) {
 								actualEntry.time = moment().unix();
@@ -333,7 +334,7 @@ module.exports = function (pHomebridge) {
 						
 						var fakegato = this.service;
 						var actualEntry={};
-						
+
 						if(backLog.length) {
 							if(!immediate) {
 								actualEntry.time = moment().unix();
