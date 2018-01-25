@@ -180,7 +180,7 @@ module.exports = function (pHomebridge) {
 				homebridge.globalFakeGatoStorage.addWriter(this,{
 					storage: this.storage,
 					path: this.path,
-					keyPath: optionalParams.keyPath || homebridge.user.storagePath()+'/' || undefined,
+					keyPath: optionalParams.keyPath || homebridge.user.storagePath() || undefined,
 					onReady:function(){
 						this.loaded=false;
 						this.load(function(err,loaded){
