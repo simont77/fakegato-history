@@ -307,6 +307,7 @@ module.exports = function (pHomebridge) {
 						
 						var fakegato = this.service;
 						var actualEntry={};
+
 						if(backLog.length) {
 							if(!immediate) {
 								actualEntry.time = moment().unix();
@@ -333,7 +334,7 @@ module.exports = function (pHomebridge) {
 						
 						var fakegato = this.service;
 						var actualEntry={};
-						
+
 						if(backLog.length) {
 							if(!immediate) {
 								actualEntry.time = moment().unix();
@@ -447,7 +448,6 @@ module.exports = function (pHomebridge) {
 			}
 			.bind(this);
 			
-
 			var val;
 
 			if (this.usedMemory < this.memorySize) {
@@ -550,6 +550,12 @@ module.exports = function (pHomebridge) {
 				}.bind(this)
 			});
 		}
+		cleanPersist() {
+			this.log.debug("Cleaning...");
+			homebridge.globalFakeGatoStorage.remove({
+				service: this
+			});
+		}
 		
 		getCurrentS2R2(callback) {
 			var entry2address = function(val) {
@@ -560,7 +566,6 @@ module.exports = function (pHomebridge) {
 				this.memoryAddress = entry2address(this.currentEntry);
 				if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) {
 					
-
 					var val = Format(
 						'15%s 0100 0000 81%s0000 0000 00 0000',
 						numToHex(swap32(this.currentEntry), 8),
@@ -570,7 +575,6 @@ module.exports = function (pHomebridge) {
 					callback(null, hexToBase64(val));
 					this.setTime = false;
 					this.currentEntry = this.currentEntry + 1;
-
 				}
 				else {
 				for (var i = 0; i < 11; i++) {
