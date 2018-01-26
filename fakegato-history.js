@@ -515,11 +515,12 @@ module.exports = function (pHomebridge) {
 					history   :this.history
 				};
 			
-			
-			homebridge.globalFakeGatoStorage.write({
-				service: this,
-				data:typeof(data) === "object" ? JSON.stringify(data) : data
-			});
+			if(this.loaded) {
+				homebridge.globalFakeGatoStorage.write({
+					service: this,
+					data:typeof(data) === "object" ? JSON.stringify(data) : data
+				});
+			}
 		}
 		load(cb) {
 			this.log.debug("Loading...");
