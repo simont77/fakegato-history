@@ -172,6 +172,7 @@ module.exports = function (pHomebridge) {
 				});
 				
 			if(this.storage !== undefined) {
+				this.loaded=false;
 				if (homebridge.globalFakeGatoStorage === undefined) {
 					homebridge.globalFakeGatoStorage = new FakeGatoStorage({
 						log: this.log
@@ -182,7 +183,7 @@ module.exports = function (pHomebridge) {
 					path: this.path,
 					keyPath: optionalParams.keyPath || homebridge.user.storagePath() || undefined,
 					onReady:function(){
-						this.loaded=false;
+						
 						this.load(function(err,loaded){
 							//this.log.debug("Loaded",loaded);
 							//this.registerEvents();
