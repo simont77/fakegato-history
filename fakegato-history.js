@@ -505,10 +505,9 @@ module.exports = function (pHomebridge) {
 				
 				if(this.storage !== undefined) this.save();
 			} else {
-				var thisHistory=this;
 				setTimeout(function(){ // retry in 100ms
-					thisHistory._addEntry(entry);
-				},100);	
+					this._addEntry(entry);
+				}.bind(this),100);	
 			}
 		}
 		
@@ -528,10 +527,9 @@ module.exports = function (pHomebridge) {
 					data:typeof(data) === "object" ? JSON.stringify(data) : data
 				});
 			} else {
-				var thisHistory=this;
 				setTimeout(function(){ // retry in 100ms
-					thisHistory.save();
-				},100);	
+					this.save();
+				}.bind(this),100);	
 			}
 		}
 		load(cb) {
