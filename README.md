@@ -80,7 +80,7 @@ When instanciating the FakeGatoHistoryService, the third argument become an obje
 	this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
 		size:length, // optional - if you still need to specify the length
 		storage:'fs',
-		path:'/mnt/usbkey/somewhere/to/store/my/persistence/' // or .homebridge directory if empty
+		path:'/mnt/usbkey/somewhere/to/store/my/persistence/' // or -U homebridge option or .homebridge directory if empty
 	 });
 ```
 #### Google Drive
