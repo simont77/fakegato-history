@@ -188,8 +188,10 @@ module.exports = function (pHomebridge) {
 							//this.log.debug("Loaded",loaded);
 							//this.registerEvents();
 							if(err) this.log.debug('Load error :',err);
-							else if(loaded) this.log.debug('History Loaded from Persistant Storage');
-							this.loaded=loaded;
+							else {
+								if(loaded) this.log.debug('History Loaded from Persistant Storage');
+								this.loaded=true;
+							}
 						}.bind(this));
 					}.bind(this)
 				});
@@ -370,11 +372,10 @@ module.exports = function (pHomebridge) {
 			this.memoryAddress = 0;
 			this.dataStream = '';
 
-			
-			//if(this.storage === undefined) {
-				this.registerEvents()
+			this.registerEvents()
+			if(this.storage === undefined) {
 				this.loaded=true;
-			//}
+			}
 		}
 		
 		registerEvents() {
