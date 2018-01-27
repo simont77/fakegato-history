@@ -5,6 +5,7 @@ const DEBUG = true;
 var debug = require('debug')('FakeGatoStorage');
 var fs = require('fs');
 var os = require('os');
+var path = require('path');
 
 var googleDrive = require('./lib/googleDrive').drive;
 
@@ -42,13 +43,13 @@ class FakeGatoStorage {
 		switch(newWriter.storage) {
 			case 'fs' :
 				newWriter.storageHandler = fs;
-				newWriter.path = params.path || os.homedir()+'/.homebridge/';
+				newWriter.path = params.path || path.join(os.homedir(),'.homebridge');
 				this.writers.push(newWriter);		
 				onReady();
 			break;
 			case 'googleDrive' :
 				newWriter.path = params.path || 'fakegato';
-				newWriter.keyPath = params.keyPath || os.homedir()+'/.homebridge/';
+				newWriter.keyPath = params.keyPath || path.join(os.homedir(),'.homebridge');
 				newWriter.storageHandler = new googleDrive({keyPath:newWriter.keyPath,callback:onReady});
 				this.writers.push(newWriter);
 			break;
@@ -84,11 +85,11 @@ class FakeGatoStorage {
 		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 		switch(writer.storage) {
 			case 'fs' :
-				this.log.debug("** Fakegato-storage write FS :",writer.path+writer.service.accessoryName+fileSuffix,params.data);
-				writer.storageHandler.writeFile(writer.path+writer.service.accessoryName+fileSuffix,params.data,'utf8',callBack);
+				this.log.debug("** Fakegato-storage write FS file:",path.join(writer.path,writer.service.accessoryName+fileSuffix),params.data);
+				writer.storageHandler.writeFile(path.join(writer.path,writer.service.accessoryName+fileSuffix),params.data,'utf8',callBack);
 			break;
 			case 'googleDrive' :
-				this.log.debug("** Fakegato-storage write googleDrive :",writer.path,writer.service.accessoryName+fileSuffix,params.data);
+				this.log.debug("** Fakegato-storage write googleDrive file:",writer.path,writer.service.accessoryName+fileSuffix,params.data);
 				writer.storageHandler.writeFile(writer.path,writer.service.accessoryName+fileSuffix,params.data,callBack);
 			break;
 			/*
@@ -103,11 +104,11 @@ class FakeGatoStorage {
 		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 		switch(writer.storage) {
 			case 'fs' :
-				this.log.debug("** Fakegato-storage read FS :",writer.path+writer.service.accessoryName+fileSuffix);
-				writer.storageHandler.readFile(writer.path+writer.service.accessoryName+fileSuffix,'utf8',callBack);	
+				this.log.debug("** Fakegato-storage read FS file:",path.join(writer.path,writer.service.accessoryName+fileSuffix));
+				writer.storageHandler.readFile(path.join(writer.path,writer.service.accessoryName+fileSuffix),'utf8',callBack);	
 			break;
 			case 'googleDrive' :
-				this.log.debug("** Fakegato-storage read googleDrive :",writer.service.accessoryName+fileSuffix);
+				this.log.debug("** Fakegato-storage read googleDrive file:",writer.path,writer.service.accessoryName+fileSuffix);
 				writer.storageHandler.readFile(writer.path,writer.service.accessoryName+fileSuffix,callBack);
 			break;
 			/*
@@ -117,6 +118,25 @@ class FakeGatoStorage {
 			*/
 		}
 	}
+	remove(params){
+		let writer = this.getWriter(params.service);
+		let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
+		switch(writer.storage) {
+			case 'fs' :
+				this.log.debug("** Fakegato-storage delete FS file:",path.join(writer.path,writer.service.accessoryName+fileSuffix));
+				writer.storageHandler.unlink(path.join(writer.path,writer.service.accessoryName+fileSuffix),callBack);	
+			break;
+			case 'googleDrive' :
+				this.log.debug("** Fakegato-storage delete googleDrive file:",writer.path,writer.service.accessoryName+fileSuffix);
+				writer.storageHandler.deleteFile(writer.path,writer.service.accessoryName+fileSuffix,callBack);
+			break;
+			/*
+			case 'memcached' :
+			
+			break;
+			*/
+		}
+	}	
 }
 
 module.exports = {
