@@ -71,39 +71,39 @@ For Energy and Door accessories it is also worth to add the custom characteristi
 
 If your "weather" or "room" plugin don't send addEntry for a short time (supposedly less than 1h - need feedback), the graph will draw a straight line from the last data received to the new data received. Instead, if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours - need feedback), the graph will show "no data for the period". Take this in consideration if your sensor does not send entries if the difference from the previuos one is small, you will end up with holes in the history. This is not currently addresses by fakegato, you should add extra entries if needed. Note that if you do not send a new entry at least every 10 minutes, the average will be 0, and you will a zero entry. This will be fixed soon.
 
-### Persistance
+### History Persistance
 
 It is possible to persist data to disk or to Google Drive to avoid loosing part of the history not yet downloaded by Eve on restart or system crash. Data is saved every 10min for "weather" and "room", on every event and every 10 minutes for "door" and "motion", on every event for other types.
 
 #### File System
-In order to enable persistance on local disk, when instanciating the FakeGatoHistoryService, the third argument become an object with those attributes:
+In order to enable persistance on local disk, when instantiating the FakeGatoHistoryService, the third argument become an object with these attributes:
 ```
-	this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
-		size:length, 							// optional - if you still need to specify the length
-		storage:'fs',
-		path:'/place/to/store/my/persistence/'  // if empty it will be used the -U homebridge option if present or .homebridge
-	 });
+this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
+	size:length, 				// optional - if you still need to specify the length
+	storage:'fs',
+	path:'/place/to/store/my/persistence/'  // if empty it will be used the -U homebridge option if present or .homebridge
+});
 ```
-Data will be saved in json files, one for each persisted accessory, with filename in the form *hostname_accessoryDisplayName_persist.json*. In order to reset the persisted data, simply delete this files. 
+Data will be saved in json files, one for each persisted accessory, with filename in the form *hostname_accessoryDisplayName_persist.json*. In order to reset the persisted data, simply delete these files. 
 
 #### Google Drive
-In order to enable persistance on Google Drive, when instanciating the FakeGatoHistoryService, the third argument become an object with those attributes :
+In order to enable persistance on Google Drive, when instantiating the FakeGatoHistoryService, the third argument become an object with these attributes :
 ```
-	this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
-		size:length, 							// optional - if you still need to specify the length
-		storage:'googleDrive',
-		folder:'fakegatoFolder', 				// folder on Google drive to persist data, 'fakegato' if empty
-		keyPath:'/place/to/store/my/keys/' 		// where to find client_secret.json, if empty it will be used the -U homebridge option if present or .homebridge
-	 });
+this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
+	size:length, 				// optional - if you still need to specify the length
+	storage:'googleDrive',
+	folder:'fakegatoFolder', 		// folder on Google drive to persist data, 'fakegato' if empty
+	keyPath:'/place/to/store/my/keys/' 	// where to find client_secret.json, if empty it will be used the -U homebridge option if present or .homebridge
+});
 ```
 For the setup of Google Drive, please follow the Google Drive Quickstart for Node.js instructions from https://developers.google.com/drive/v3/web/quickstart/nodejs, except for these changes:
 * In Step 1-h the working directory should be the .homebridge directory
 * Skip Step 2 and 3
-* And in step 4, use the quickstartGoogleDrive.js included in the plugin itself.  And to do this you need to run the command from the plugin directory.  Then just follow steps a to c.
+* In step 4, use the quickstartGoogleDrive.js included with this module. You need to run the command from fakegato-hisory directory. Then just follow steps a to c.
 
 ##### Additional notes for Google Drive
 * The folder in which you want to save the persisted data must be already present on Google Drive
-* Pay attention so that your plugin does not issue multiple addEntry call for the same accessory at the same time (this may results in unproper behaeviour of Google Drive to the its asynchronous nature)
+* Pay attention so that your plugin does not issue multiple addEntry calls for the same accessory at the same time (this may results in unproper behaeviour of Google Drive to the its asynchronous nature)
 
 ### TODO
 
@@ -117,7 +117,7 @@ For the setup of Google Drive, please follow the Google Drive Quickstart for Nod
 ### Known bugs
 
 - Currently valve position history in thermo is not working
-~~- In "weather" and "room" if you do not send at least an entry every 10 minutes you will get zeros in the history.~~
+- ~~In "weather" and "room" if you do not send at least an entry every 10 minutes you will get zeros in the history.~~
 
 ### How to contribute
 
