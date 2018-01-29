@@ -217,7 +217,7 @@ module.exports = function (pHomebridge) {
 
 						for (var h in backLog) {
 							if (backLog.hasOwnProperty(h)) { // only valid keys
-								for (var key in backLog[h]) { // each record
+								for (let key in backLog[h]) { // each record
 									if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
 										if (!calc.sum[key])
 											calc.sum[key] = 0;
@@ -232,7 +232,7 @@ module.exports = function (pHomebridge) {
 						}
 						calc.avrg.time = moment().unix(); // set the time of the avrg
 						
-						for (var key in previousAvrg) { // each record of previous average
+						for (let key in previousAvrg) { // each record of previous average
 							if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
 								if(	calc.avrg[key] == 0 || // zero value
 									calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
@@ -269,7 +269,7 @@ module.exports = function (pHomebridge) {
 
 						for (var h in backLog) {
 							if (backLog.hasOwnProperty(h)) { // only valid keys
-								for (var key in backLog[h]) { // each record
+								for (let key in backLog[h]) { // each record
 									if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
 										if (!calc.sum[key])
 											calc.sum[key] = 0;
@@ -372,7 +372,7 @@ module.exports = function (pHomebridge) {
 			this.memoryAddress = 0;
 			this.dataStream = '';
 
-			this.registerEvents()
+			this.registerEvents();
 			if(this.storage === undefined) {
 				this.loaded=true;
 			}
@@ -467,6 +467,7 @@ module.exports = function (pHomebridge) {
 						time: entry.time,
 						setRefTime: 1
 					};
+					this.initialTime=entry.time;
 					this.lastEntry++;
 					this.usedMemory++;
 				}
@@ -512,7 +513,9 @@ module.exports = function (pHomebridge) {
 				}.bind(this),100);	
 			}
 		}
-		
+		getInitialTime() {
+			return this.initialTime;
+		}
 		save() {
 			if(this.loaded) {
 				let data = {
@@ -520,6 +523,7 @@ module.exports = function (pHomebridge) {
 						lastEntry :this.lastEntry,
 						usedMemory:this.usedMemory,
 						refTime   :this.refTime,
+						initialTime:this.initialTime,
 						history   :this.history
 					};
 			
@@ -549,6 +553,7 @@ module.exports = function (pHomebridge) {
 								this.lastEntry  = jsonFile.lastEntry;
 								this.usedMemory = jsonFile.usedMemory;
 								this.refTime    = jsonFile.refTime;
+								this.initialTime= jsonFile.initialTime;
 								this.history	= jsonFile.history;
 							} catch (e) {
 								this.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**",e);
@@ -656,7 +661,7 @@ module.exports = function (pHomebridge) {
 				this.transfer = false;
 				callback(null, hexToBase64('00'));
 			}
-		};
+		}
 
 
 		setCurrentS2W1(val, callback) {
