@@ -467,6 +467,7 @@ module.exports = function (pHomebridge) {
 						time: entry.time,
 						setRefTime: 1
 					};
+					this.initialTime=entry.time;
 					this.lastEntry++;
 					this.usedMemory++;
 				}
@@ -512,7 +513,9 @@ module.exports = function (pHomebridge) {
 				}.bind(this),100);	
 			}
 		}
-		
+		getInitialTime() {
+			return this.initialTime;
+		}
 		save() {
 			if(this.loaded) {
 				let data = {
@@ -520,6 +523,7 @@ module.exports = function (pHomebridge) {
 						lastEntry :this.lastEntry,
 						usedMemory:this.usedMemory,
 						refTime   :this.refTime,
+						initialTime:this.initialTime,
 						history   :this.history
 					};
 			
@@ -549,6 +553,7 @@ module.exports = function (pHomebridge) {
 								this.lastEntry  = jsonFile.lastEntry;
 								this.usedMemory = jsonFile.usedMemory;
 								this.refTime    = jsonFile.refTime;
+								this.initialTime= jsonFile.initialTime;
 								this.history	= jsonFile.history;
 							} catch (e) {
 								this.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**",e);
