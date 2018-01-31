@@ -255,6 +255,51 @@ module.exports = function (pHomebridge) {
 				case TYPE_ENERGY:
 					this.accessoryType116 = "04 0102 0202 0702 0f03";
 					this.accessoryType117 = "1f";
+					if(!this.disableTimer) {
+						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
+							var backLog = params.backLog || [];
+							var previousAvrg = params.previousAvrg || {};
+							var timer = params.timer;
+							
+							var fakegato = this.service;
+							var calc = {
+								sum: {},
+								num: {},
+								avrg: {}
+							};
+
+							for (var h in backLog) {
+								if (backLog.hasOwnProperty(h)) { // only valid keys
+									for (let key in backLog[h]) { // each record
+										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
+											if (!calc.sum[key])
+												calc.sum[key] = 0;
+											if (!calc.num[key])
+												calc.num[key] = 0;
+											calc.sum[key] += backLog[h][key];
+											calc.num[key]++;
+											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key],2);
+										}
+									}
+								}
+							}
+							calc.avrg.time = moment().unix(); // set the time of the avrg
+							
+							for (let key in previousAvrg) { // each record of previous average
+								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
+									if(	calc.avrg[key] == 0 || // zero value
+										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
+									{
+										calc.avrg[key]=previousAvrg[key];
+									}
+								}
+							}
+							
+							fakegato._addEntry(calc.avrg);
+							timer.emptyData(fakegato);
+							return calc.avrg;
+						});
+					}
 					break;
 				case TYPE_ROOM:
 					this.accessoryType116 = "04 0102 0202 0402 0f03";
@@ -289,7 +334,7 @@ module.exports = function (pHomebridge) {
 							}
 							calc.avrg.time = moment().unix(); // set the time of the avrg
 							
-							for (var key in previousAvrg) { // each record of previous average
+							for (let key in previousAvrg) { // each record of previous average
 								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
 									if(	calc.avrg[key] == 0 || // zero value
 										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
@@ -442,6 +487,7 @@ module.exports = function (pHomebridge) {
 					break;
 				case TYPE_WEATHER:
 				case TYPE_ROOM:
+				case TYPE_ENERGY:
 					if(!this.disableTimer)
 						homebridge.globalFakeGatoTimer.addData({entry: entry, service: this});
 					else
