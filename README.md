@@ -29,6 +29,12 @@ Remember to return the fakagato service in getServices function if using the acc
 
 Eve.app requires at least an entry every 10 minutes to avoid holes in the history. Depending on the accessory type, fakegato-history may add extra entries every 10 minutes or may average the entries from the plugin and send data every 10 minutes. This is done using a single global timer shared among all accessories using fakegato.
 
+you may opt for managing yourself the Timer by using that constructor :
+```
+	this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {size:length,disableTimer:true});
+```
+then you'll have to addEntry yourself data's every 10min.
+
 Depending on your accessory type:
 
 * Add entries to history of accessory emulating **Eve Weather** (TempSensor Service) using something like this:
