@@ -41,11 +41,11 @@ Depending on your accessory type:
 
 	AirPressure is in mbar, Temperature in Celsius, Humidity in %. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. Your entries should be in any case periodic, in order to avoid error with the average. Average is done independently on each quantity (i.e. you may different periods, and entries with only one or two quantities)
 
-* Add entries to history of accessory emulating **Eve Energy** (Outlet service) using something like this every 10 minutes:
+* Add entries to history of accessory emulating **Eve Energy** (Outlet service) using something like this:
 
 		this.loggingService.addEntry({time: moment().unix(), power: this.power});
 
-	Power should be the average power in W over 10 minutes period. To have good accuracy, it is strongly advised not to use a single instantaneous measurement, but to average many few seconds measurements over 10 minutes. Fakegato does not use the internal timer for Energy, entries are added to the history as received from the plugin (this is done because the plugin may already have its own average for TotalComsumption calculation)
+	Power is in Watt. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. To have good accuracy, your entries should be in any case periodic, in order to avoid error with the average.
 
 * Add entries to history of accessory emulating **Eve Room** (TempSensor, HumiditySensor and AirQuality Services) using something like this:
 
