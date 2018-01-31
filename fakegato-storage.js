@@ -52,7 +52,7 @@ class FakeGatoStorage {
 			case 'googleDrive' :
 				newWriter.path = params.path || 'fakegato';
 				newWriter.keyPath = params.keyPath || path.join(os.homedir(),'.homebridge');
-				newWriter.storageHandler = new googleDrive({keyPath:newWriter.keyPath,callback:onReady});
+				newWriter.storageHandler = new googleDrive({keyPath:newWriter.keyPath,callback:onReady,folder:newWriter.path});
 				this.writers.push(newWriter);
 			break;
 			/*
