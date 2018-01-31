@@ -26,40 +26,52 @@ class FakeGatoStorage {
 			this.log.debug = DEBUG ? console.log : function() {};
 		}
 		thisStorage=this;
+		this.addingWriter=false;
 	}
 
 	addWriter(service,params) {
-		if (!params)
-			params = {};
+		if(!this.addingWriter) {
+			this.addingWriter=true;
+			if (!params)
+				params = {};
 
-		this.log.debug("** Fakegato-storage AddWriter :",service.accessoryName);
+			this.log.debug("** Fakegato-storage AddWriter :",service.accessoryName);
 
-		let newWriter = {
-			'service': service,
-			'callback': params.callback,
-			'storage' : params.storage || 'fs',
-			'fileName': hostname+"_"+service.accessoryName+fileSuffix		// Unique filename per homebridge server.  Allows test environments on other servers not to break prod.
-		};
-		var onReady = typeof(params.onReady) == 'function' ? params.onReady:function(){}.bind(this);
+			let newWriter = {
+				'service': service,
+				'callback': params.callback,
+				'storage' : params.storage || 'fs',
+				'fileName': hostname+"_"+service.accessoryName+fileSuffix		// Unique filename per homebridge server.  Allows test environments on other servers not to break prod.
+			};
+			var onReady = typeof(params.onReady) == 'function' ? params.onReady:function(){}.bind(this);
 
-		switch(newWriter.storage) {
-			case 'fs' :
-				newWriter.storageHandler = fs;
-				newWriter.path = params.path || path.join(os.homedir(),'.homebridge');
-				this.writers.push(newWriter);
-				onReady();
-			break;
-			case 'googleDrive' :
-				newWriter.path = params.path || 'fakegato';
-				newWriter.keyPath = params.keyPath || path.join(os.homedir(),'.homebridge');
-				newWriter.storageHandler = new googleDrive({keyPath:newWriter.keyPath,callback:onReady});
-				this.writers.push(newWriter);
-			break;
-			/*
-			case 'memcached' :
+			switch(newWriter.storage) {
+				case 'fs' :
+					newWriter.storageHandler = fs;
+					newWriter.path = params.path || path.join(os.homedir(),'.homebridge');
+					this.writers.push(newWriter);
+					this.addingWriter=false;
+					onReady();
+				break;
+				case 'googleDrive' :
+					newWriter.path = params.path || 'fakegato';
+					newWriter.keyPath = params.keyPath || path.join(os.homedir(),'.homebridge');
+					newWriter.storageHandler = new googleDrive({keyPath:newWriter.keyPath,callback:function(){
+						this.addingWriter=false;
+						onReady(arguments);
+					}.bind(this),folder:newWriter.path});
+					this.writers.push(newWriter);
+				break;
+				/*
+				case 'memcached' :
 
-			break;
-			*/
+				break;
+				*/
+			}
+		} else {
+			setTimeout(function(){
+				this.addWriter(service,params);
+			}.bind(this),100);
 		}
 	}
 	getWriter(service) {

@@ -142,7 +142,7 @@ module.exports = function (pHomebridge) {
 
 			super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
 
-			var entry2address = function (val) {
+			var entry2address = function (val) { // not used ?
 				var temp = val % this.memorySize;
 				return temp;
 			}.bind(this);
@@ -152,9 +152,11 @@ module.exports = function (pHomebridge) {
 				this.minutes = optionalParams.minutes || 10; // Optional timer length
 				this.storage = optionalParams.storage; // 'fs' or 'googleDrive'
 				this.path    = optionalParams.path || optionalParams.folder;
+				this.disableTimer = optionalParams.disableTimer || false;
 			} else {
 				this.size = optionalParams || 4032;
 				this.minutes = 10;
+				this.disableTimer = false;
 			}
 			
 			thisAccessory = accessory;
@@ -165,11 +167,13 @@ module.exports = function (pHomebridge) {
 				this.log.debug = function() {};
 			}
 			
-			if (homebridge.globalFakeGatoTimer === undefined)
-				homebridge.globalFakeGatoTimer = new FakeGatoTimer({
-					minutes: this.minutes,
-					log: this.log
-				});
+			if(!this.disableTimer) {
+				if (homebridge.globalFakeGatoTimer === undefined)
+					homebridge.globalFakeGatoTimer = new FakeGatoTimer({
+						minutes: this.minutes,
+						log: this.log
+					});
+			}
 				
 			if(this.storage !== undefined) {
 				this.loaded=false;
@@ -202,50 +206,51 @@ module.exports = function (pHomebridge) {
 				case TYPE_WEATHER:
 					this.accessoryType116 = "03 0102 0202 0302";
 					this.accessoryType117 = "07";
+					if(!this.disableTimer) {
+						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
+							var backLog = params.backLog || [];
+							var previousAvrg = params.previousAvrg || {};
+							var timer = params.timer;
+							
+							var fakegato = this.service;
+							var calc = {
+								sum: {},
+								num: {},
+								avrg: {}
+							};
 
-					homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-						var backLog = params.backLog || [];
-						var previousAvrg = params.previousAvrg || {};
-						var timer = params.timer;
-						
-						var fakegato = this.service;
-						var calc = {
-							sum: {},
-							num: {},
-							avrg: {}
-						};
-
-						for (var h in backLog) {
-							if (backLog.hasOwnProperty(h)) { // only valid keys
-								for (let key in backLog[h]) { // each record
-									if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
-										if (!calc.sum[key])
-											calc.sum[key] = 0;
-										if (!calc.num[key])
-											calc.num[key] = 0;
-										calc.sum[key] += backLog[h][key];
-										calc.num[key]++;
-										calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key],2);
+							for (var h in backLog) {
+								if (backLog.hasOwnProperty(h)) { // only valid keys
+									for (let key in backLog[h]) { // each record
+										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
+											if (!calc.sum[key])
+												calc.sum[key] = 0;
+											if (!calc.num[key])
+												calc.num[key] = 0;
+											calc.sum[key] += backLog[h][key];
+											calc.num[key]++;
+											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key],2);
+										}
 									}
 								}
 							}
-						}
-						calc.avrg.time = moment().unix(); // set the time of the avrg
-						
-						for (let key in previousAvrg) { // each record of previous average
-							if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-								if(	calc.avrg[key] == 0 || // zero value
-									calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-								{
-									calc.avrg[key]=previousAvrg[key];
+							calc.avrg.time = moment().unix(); // set the time of the avrg
+							
+							for (let key in previousAvrg) { // each record of previous average
+								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
+									if(	calc.avrg[key] == 0 || // zero value
+										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
+									{
+										calc.avrg[key]=previousAvrg[key];
+									}
 								}
 							}
-						}
-						
-						fakegato._addEntry(calc.avrg);
-						timer.emptyData(fakegato);
-						return calc.avrg;
-					});
+							
+							fakegato._addEntry(calc.avrg);
+							timer.emptyData(fakegato);
+							return calc.avrg;
+						});
+					}
 					break;
 				case TYPE_ENERGY:
 					this.accessoryType116 = "04 0102 0202 0702 0f03";
@@ -254,104 +259,105 @@ module.exports = function (pHomebridge) {
 				case TYPE_ROOM:
 					this.accessoryType116 = "04 0102 0202 0402 0f03";
 					this.accessoryType117 = "0f";
+					if(!this.disableTimer) {
+						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
+							var backLog = params.backLog || [];
+							var previousAvrg = params.previousAvrg || {};
+							var timer = params.timer;
+							
+							var fakegato = this.service;
+							var calc = {
+								sum: {},
+								num: {},
+								avrg: {}
+							};
 
-					homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-						var backLog = params.backLog || [];
-						var previousAvrg = params.previousAvrg || {};
-						var timer = params.timer;
-						
-						var fakegato = this.service;
-						var calc = {
-							sum: {},
-							num: {},
-							avrg: {}
-						};
-
-						for (var h in backLog) {
-							if (backLog.hasOwnProperty(h)) { // only valid keys
-								for (let key in backLog[h]) { // each record
-									if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
-										if (!calc.sum[key])
-											calc.sum[key] = 0;
-										if (!calc.num[key])
-											calc.num[key] = 0;
-										calc.sum[key] += backLog[h][key];
-										calc.num[key]++;
-										calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key],2);
+							for (var h in backLog) {
+								if (backLog.hasOwnProperty(h)) { // only valid keys
+									for (let key in backLog[h]) { // each record
+										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
+											if (!calc.sum[key])
+												calc.sum[key] = 0;
+											if (!calc.num[key])
+												calc.num[key] = 0;
+											calc.sum[key] += backLog[h][key];
+											calc.num[key]++;
+											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key],2);
+										}
 									}
 								}
 							}
-						}
-						calc.avrg.time = moment().unix(); // set the time of the avrg
-						
-						for (var key in previousAvrg) { // each record of previous average
-							if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-								if(	calc.avrg[key] == 0 || // zero value
-									calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-								{
-									calc.avrg[key]=previousAvrg[key];
+							calc.avrg.time = moment().unix(); // set the time of the avrg
+							
+							for (var key in previousAvrg) { // each record of previous average
+								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
+									if(	calc.avrg[key] == 0 || // zero value
+										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
+									{
+										calc.avrg[key]=previousAvrg[key];
+									}
 								}
 							}
-						}
-						
-						fakegato._addEntry(calc.avrg);
-						timer.emptyData(fakegato);
-						return calc.avrg;
-					});
+							
+							fakegato._addEntry(calc.avrg);
+							timer.emptyData(fakegato);
+							return calc.avrg;
+						});
+					}
 					break;
 				case TYPE_DOOR:
 					this.accessoryType116 = "01 0601";
 					this.accessoryType117 = "01";
+					if(!this.disableTimer) {
+						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
+							var backLog = params.backLog || [];
+							var immediate = params.immediate;
+							
+							var fakegato = this.service;
+							var actualEntry={};
 
-					homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-						var backLog = params.backLog || [];
-						var timer = params.timer;
-						var immediate = params.immediate;
-						
-						var fakegato = this.service;
-						var actualEntry={};
+							if(backLog.length) {
+								if(!immediate) {
+									actualEntry.time = moment().unix();
+									actualEntry.status = backLog[0].status;
+								}
+								else {
+									actualEntry.time = backLog[0].time;
+									actualEntry.status = backLog[0].status;
+								}
+								fakegato.log.debug('**Fakegato-timer callbackDoor: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
 
-						if(backLog.length) {
-							if(!immediate) {
-								actualEntry.time = moment().unix();
-								actualEntry.status = backLog[0].status;
+								fakegato._addEntry(actualEntry);
 							}
-							else {
-								actualEntry.time = backLog[0].time;
-								actualEntry.status = backLog[0].status;
-							}
-							fakegato.log.debug('**Fakegato-timer callbackDoor: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
-
-							fakegato._addEntry(actualEntry);
-						}
-					});
+						});
+					}
 					break;
 				case TYPE_MOTION:
 					this.accessoryType116 = "02 1301 1c01";
 					this.accessoryType117 = "02";
+					if(!this.disableTimer) {
+						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
+							var backLog = params.backLog || [];
+							var immediate = params.immediate;
+							
+							var fakegato = this.service;
+							var actualEntry={};
 
-					homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-						var backLog = params.backLog || [];
-						var timer = params.timer;
-						var immediate = params.immediate;
-						
-						var fakegato = this.service;
-						var actualEntry={};
+							if(backLog.length) {
+								if(!immediate) {
+									actualEntry.time = moment().unix();
+									actualEntry.status = backLog[0].status;
+								}
+								else {
+									actualEntry.time = backLog[0].time;
+									actualEntry.status = backLog[0].status;
+								}
+								fakegato.log.debug('**Fakegato-timer callbackMotion: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
 
-						if(backLog.length) {
-							if(!immediate) {
-								actualEntry.time = moment().unix();
-								actualEntry.status = backLog[0].status;
+								fakegato._addEntry(actualEntry);
 							}
-							else {
-								actualEntry.time = backLog[0].time;
-								actualEntry.status = backLog[0].status;
-							}
-							fakegato.log.debug('**Fakegato-timer callbackMotion: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
-
-							fakegato._addEntry(actualEntry);
-						}
-					});
+						});
+					}
 					break;
 				case TYPE_THERMO:
 					this.accessoryType116 = "05 0102 1102 1001 1201 1d01";
@@ -426,15 +432,20 @@ module.exports = function (pHomebridge) {
 		}
 
 		addEntry(entry) {
-			var selfService = this;
 			switch (this.accessoryType) {
 				case TYPE_DOOR:
 				case TYPE_MOTION:
-					homebridge.globalFakeGatoTimer.addData({entry: entry, service: this, immediateCallback: true});
+					if(!this.disableTimer)
+						homebridge.globalFakeGatoTimer.addData({entry: entry, service: this, immediateCallback: true});
+					else
+						this._addEntry(entry);
 					break;
 				case TYPE_WEATHER:
 				case TYPE_ROOM:
-					homebridge.globalFakeGatoTimer.addData({entry: entry, service: this});
+					if(!this.disableTimer)
+						homebridge.globalFakeGatoTimer.addData({entry: entry, service: this});
+					else
+						this._addEntry(entry);
 					break;
 				default:
 					this._addEntry(entry);
