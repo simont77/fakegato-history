@@ -27,13 +27,11 @@ where
 
 Remember to return the fakagato service in getServices function if using the accessory API, and if using the platform API include it as a Service as part of your accessory.
 
-Eve.app requires at least an entry every 10 minutes to avoid holes in the history. Depending on the accessory type, fakegato-history may add extra entries every 10 minutes or may average the entries from the plugin and send data every 10 minutes. This is done using a single global timer shared among all accessories using fakegato.
-
-you may opt for managing yourself the Timer by using that constructor :
+Eve.app requires at least an entry every 10 minutes to avoid holes in the history. Depending on the accessory type, fakegato-history may add extra entries every 10 minutes or may average the entries from the plugin and send data every 10 minutes. This is done using a single global timer shared among all accessories using fakegato. You may opt for managing yourself the Timer and disabling the embedded one by using that constructor:
 ```
 	this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {size:length,disableTimer:true});
 ```
-then you'll have to addEntry yourself data's every 10min.
+then you'll have to addEntry yourself data every 10min.
 
 Depending on your accessory type:
 
@@ -118,6 +116,7 @@ For the setup of Google Drive, please follow the Google Drive Quickstart for Nod
 - [x] Add other accessory types. Help from people with access to real Eve accessory is needed. Dump of custom Characteristics during data transfer is required.
 - [x] Make history persistent
 - [x] Adjustable history length
+- [ ] Addition and management of other history related characteristics
 - [ ] Periodic sending of reference time stamp (seems not really needed if the time of your homebridge machine is correct)
 
 ### Known bugs
