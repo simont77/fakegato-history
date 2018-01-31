@@ -142,7 +142,7 @@ module.exports = function (pHomebridge) {
 
 			super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
 
-			var entry2address = function (val) {
+			var entry2address = function (val) { // not used ?
 				var temp = val % this.memorySize;
 				return temp;
 			}.bind(this);
@@ -311,7 +311,6 @@ module.exports = function (pHomebridge) {
 					if(!this.disableTimer) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
 							var backLog = params.backLog || [];
-							var timer = params.timer;
 							var immediate = params.immediate;
 							
 							var fakegato = this.service;
@@ -339,7 +338,6 @@ module.exports = function (pHomebridge) {
 					if(!this.disableTimer) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
 							var backLog = params.backLog || [];
-							var timer = params.timer;
 							var immediate = params.immediate;
 							
 							var fakegato = this.service;
@@ -434,7 +432,6 @@ module.exports = function (pHomebridge) {
 		}
 
 		addEntry(entry) {
-			var selfService = this;
 			switch (this.accessoryType) {
 				case TYPE_DOOR:
 				case TYPE_MOTION:
