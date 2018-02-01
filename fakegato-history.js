@@ -238,7 +238,7 @@ module.exports = function (pHomebridge) {
 							
 							for (let key in previousAvrg) { // each record of previous average
 								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-									if(	//calc.avrg[key] == 0 || // zero value
+									if(	!backLog.length ||//calc.avrg[key] == 0 || // zero value
 										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
 									{
 										calc.avrg[key]=previousAvrg[key];
@@ -287,7 +287,7 @@ module.exports = function (pHomebridge) {
 							
 							for (let key in previousAvrg) { // each record of previous average
 								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-									if(	//calc.avrg[key] == 0 || // zero value
+									if(	!backLog.length ||//calc.avrg[key] == 0 || // zero value
 										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
 									{
 										calc.avrg[key]=previousAvrg[key];
@@ -336,7 +336,7 @@ module.exports = function (pHomebridge) {
 							
 							for (let key in previousAvrg) { // each record of previous average
 								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-									if(	//calc.avrg[key] == 0 || // zero value
+									if(	!backLog.length ||//calc.avrg[key] == 0 || // zero value
 										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
 									{
 										calc.avrg[key]=previousAvrg[key];
@@ -577,30 +577,22 @@ module.exports = function (pHomebridge) {
 		}
 		save() {
 			if(this.loaded) {
-				if(!this.saving) {
-					this.saving=true;
-					let data = {
-							firstEntry:this.firstEntry,
-							lastEntry :this.lastEntry,
-							usedMemory:this.usedMemory,
-							refTime   :this.refTime,
-							initialTime:this.initialTime,
-							history   :this.history
-						};
-				
-				
-					homebridge.globalFakeGatoStorage.write({
-						service: this,
-						data:typeof(data) === "object" ? JSON.stringify(data) : data,
-						callback:function(){
-							this.saving=false;
-						}.bind(this)
-					});
-				} else {
-					setTimeout(function(){ // retry in 100ms
-						this.save();
-					}.bind(this),100);	
-				}
+
+				let data = {
+						firstEntry:this.firstEntry,
+						lastEntry :this.lastEntry,
+						usedMemory:this.usedMemory,
+						refTime   :this.refTime,
+						initialTime:this.initialTime,
+						history   :this.history
+					};
+			
+			
+				homebridge.globalFakeGatoStorage.write({
+					service: this,
+					data:typeof(data) === "object" ? JSON.stringify(data) : data
+				});
+
 			} else {
 				setTimeout(function(){ // retry in 100ms
 					this.save();
