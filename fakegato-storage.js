@@ -101,14 +101,14 @@ class FakeGatoStorage {
 			let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 			switch(writer.storage) {
 				case 'fs' :
-					this.log.debug("** Fakegato-storage write FS file:",path.join(writer.path,writer.fileName),params.data);
+					this.log.debug("** Fakegato-storage write FS file:",path.join(writer.path,writer.fileName),params.data.substr(1,80));
 					writer.storageHandler.writeFile(path.join(writer.path,writer.fileName),params.data,'utf8',function(){
 						this.writing=false;
 						callBack(arguments);
 					}.bind(this));
 				break;
 				case 'googleDrive' :
-					this.log.debug("** Fakegato-storage write googleDrive file:",writer.path,writer.fileName,params.data);
+					this.log.debug("** Fakegato-storage write googleDrive file:",writer.path,writer.fileName,params.data.substr(1,80));
 					writer.storageHandler.writeFile(writer.path,writer.fileName,params.data,function(){
 						this.writing=false;
 						callBack(arguments);
@@ -123,7 +123,7 @@ class FakeGatoStorage {
 		} else {
 			setTimeout(function(){ // retry in 100ms
 				this.write(params);
-			}.bind(this),100);	
+			}.bind(this),100);
 		}
 	}
 	read(params){
