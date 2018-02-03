@@ -3,7 +3,7 @@ Module to emulate Elgato Eve history service in Homebridge accessories, so that 
 
 More details on communication protocol and custom Characteristics here: https://gist.github.com/simont77/3f4d4330fa55b83f8ca96388d9004e7d
 
-Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter class). For other types see the gist above.
+Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for energy, motion and door example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter and MHDryContact classes). For other types see the gist above.
 Note that if your Eve.app is controlling more than one accessory for each type, the serial number should be unique, otherwise Eve.app will merge the histories.  Including hostname is recommended as well, for running multiple copies of the same plugin on different machines (i.e. production and development), i.e.:
 
     .setCharacteristic(Characteristic.SerialNumber, hostname + "-" + this.deviceID)
@@ -27,7 +27,11 @@ where
 
 Remember to return the fakagato service in getServices function if using the accessory API, and if using the platform API include it as a Service as part of your accessory.
 
-Eve.app requires at least an entry every 10 minutes to avoid holes in the history. Depending on the accessory type, fakegato-history may add extra entries every 10 minutes or may average the entries from the plugin and send data every 10 minutes. This is done using a single global timer shared among all accessories using fakegato.
+Eve.app requires at least an entry every 10 minutes to avoid holes in the history. Depending on the accessory type, fakegato-history may add extra entries every 10 minutes or may average the entries from the plugin and send data every 10 minutes. This is done using a single global timer shared among all accessories using fakegato. You may opt for managing yourself the Timer and disabling the embedded one by using that constructor:
+```
+	this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {size:length,disableTimer:true});
+```
+then you'll have to addEntry yourself data every 10min.
 
 Depending on your accessory type:
 
@@ -37,11 +41,11 @@ Depending on your accessory type:
 
 	AirPressure is in mbar, Temperature in Celsius, Humidity in %. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. Your entries should be in any case periodic, in order to avoid error with the average. Average is done independently on each quantity (i.e. you may different periods, and entries with only one or two quantities)
 
-* Add entries to history of accessory emulating **Eve Energy** (Outlet service) using something like this every 10 minutes:
+* Add entries to history of accessory emulating **Eve Energy** (Outlet service) using something like this:
 
 		this.loggingService.addEntry({time: moment().unix(), power: this.power});
 
-	Power should be the average power in W over 10 minutes period. To have good accuracy, it is strongly advised not to use a single instantaneous measurement, but to average many few seconds measurements over 10 minutes. Fakegato does not use the internal timer for Energy, entries are added to the history as received from the plugin (this is done because the plugin may already have its own average for TotalComsumption calculation)
+	Power is in Watt. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. To have good accuracy, your entries should be in any case periodic, in order to avoid error with the average.
 
 * Add entries to history of accessory emulating **Eve Room** (TempSensor, HumiditySensor and AirQuality Services) using something like this:
 
@@ -71,19 +75,54 @@ For Energy and Door accessories it is also worth to add the custom characteristi
 
 If your "weather" or "room" plugin don't send addEntry for a short time (supposedly less than 1h - need feedback), the graph will draw a straight line from the last data received to the new data received. Instead, if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours - need feedback), the graph will show "no data for the period". Take this in consideration if your sensor does not send entries if the difference from the previuos one is small, you will end up with holes in the history. This is not currently addresses by fakegato, you should add extra entries if needed. Note that if you do not send a new entry at least every 10 minutes, the average will be 0, and you will a zero entry. This will be fixed soon.
 
+### History Persistance
+
+It is possible to persist data to disk or to Google Drive to avoid loosing part of the history not yet downloaded by Eve on restart or system crash. Data is saved every 10min for "weather" and "room", on every event and every 10 minutes for "door" and "motion", on every event for other types.
+
+#### File System
+In order to enable persistance on local disk, when instantiating the FakeGatoHistoryService, the third argument become an object with these attributes:
+```
+this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
+	size:length, 				// optional - if you still need to specify the length
+	storage:'fs',
+	path:'/place/to/store/my/persistence/'  // if empty it will be used the -U homebridge option if present or .homebridge
+});
+```
+Data will be saved in json files, one for each persisted accessory, with filename in the form *hostname_accessoryDisplayName_persist.json*. In order to reset the persisted data, simply delete these files. 
+
+#### Google Drive
+In order to enable persistance on Google Drive, when instantiating the FakeGatoHistoryService, the third argument become an object with these attributes :
+```
+this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
+	size:length, 				// optional - if you still need to specify the length
+	storage:'googleDrive',
+	folder:'fakegatoFolder', 		// folder on Google drive to persist data, 'fakegato' if empty
+	keyPath:'/place/to/store/my/keys/' 	// where to find client_secret.json, if empty it will be used the -U homebridge option if present or .homebridge
+});
+```
+For the setup of Google Drive, please follow the Google Drive Quickstart for Node.js instructions from https://developers.google.com/drive/v3/web/quickstart/nodejs, except for these changes:
+* In Step 1-h the working directory should be the .homebridge directory
+* Skip Step 2 and 3
+* In step 4, use the quickstartGoogleDrive.js included with this module. You need to run the command from fakegato-hisory directory. Then just follow steps a to c.
+
+##### Additional notes for Google Drive
+* The folder in which you want to save the persisted data must be already present on Google Drive
+* Pay attention so that your plugin does not issue multiple addEntry calls for the same accessory at the same time (this may results in unproper behaeviour of Google Drive to the its asynchronous nature)
+
 ### TODO
 
 - [x] Support for rolling-over of the history
 - [x] Aggregate transmission of several entries into a single Characteristic update in order to speed up transfer when not on local network.
 - [x] Add other accessory types. Help from people with access to real Eve accessory is needed. Dump of custom Characteristics during data transfer is required.
-- [ ] Make history persistent
+- [x] Make history persistent
 - [x] Adjustable history length
+- [ ] Addition and management of other history related characteristics
 - [ ] Periodic sending of reference time stamp (seems not really needed if the time of your homebridge machine is correct)
 
 ### Known bugs
-- ~~Currenly not fully compatible with dynamic Platforms using Homebridge API v2 format.~~
+
 - Currently valve position history in thermo is not working
-- In "weather" and "room" if you do not send at least an entry every 10 minutes you will get zeros in the history.
+- ~~In "weather" and "room" if you do not send at least an entry every 10 minutes you will get zeros in the history.~~
 
 ### How to contribute
 
