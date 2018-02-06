@@ -665,9 +665,9 @@ module.exports = function (pHomebridge) {
 						numToHex(swap32(this.currentEntry), 8),
 						numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 						this.accessoryType117,
-						numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
-						numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
-						numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
+						this.history[this.memoryAddress].temp !== undefined ? numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4) : numToHex(65535,4),
+						this.history[this.memoryAddress].humidity !== undefined ? numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4) : numToHex(65535,4),
+						this.history[this.memoryAddress].pressure !== undefined ? numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4) : numToHex(65535,4));
 						break;
 					case TYPE_ENERGY:
 						this.dataStream += Format(
@@ -683,9 +683,9 @@ module.exports = function (pHomebridge) {
 						numToHex(swap32(this.currentEntry), 8),
 						numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 						this.accessoryType117,
-						numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
-						numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
-						numToHex(swap16(this.history[this.memoryAddress].ppm), 4));
+						this.history[this.memoryAddress].temp !== undefined ? numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4) : numToHex(65535,4),
+						this.history[this.memoryAddress].humidity !== undefined ? numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4) : numToHex(65535,4),
+						this.history[this.memoryAddress].ppm !== undefined ? numToHex(swap16(this.history[this.memoryAddress].ppm), 4) : numToHex(65535,4));
 						break;
 					case TYPE_DOOR:
 					case TYPE_MOTION:
@@ -702,9 +702,9 @@ module.exports = function (pHomebridge) {
 						numToHex(swap32(this.currentEntry), 8),
 						numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 						this.accessoryType117,
-						numToHex(swap16(this.history[this.memoryAddress].currentTemp * 100), 4),
-						numToHex(swap16(this.history[this.memoryAddress].setTemp * 100), 4),
-						numToHex(this.history[this.memoryAddress].valvePosition, 2));
+						this.history[this.memoryAddress].currentTemp !== undefined ? numToHex(swap16(this.history[this.memoryAddress].currentTemp * 100), 4) : numToHex(65535,4),
+						this.history[this.memoryAddress].setTemp !== undefined ? numToHex(swap16(this.history[this.memoryAddress].setTemp * 100), 4) : numToHex(65535,4),
+						this.history[this.memoryAddress].valvePosition !== undefined ? numToHex(this.history[this.memoryAddress].valvePosition, 2) : numToHex(255,2));
 						break;
 					}
 					this.currentEntry++;
