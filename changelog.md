@@ -1,3 +1,10 @@
+### v0.4.0
+- added ability to persist history either to filesystem or to google drive
+- added option to disagle internal timer
+- variuos fixes on internal timer average calculation
+- now also Energy uses the global internal timer
+- added initialTime and getter, for external management of characteristics 11A (last opening/activation on Door/Motion)
+
 ### v0.3.8
 - improve protocol to ensure prompt download of data even if Eve is missing a single entry (before this commit, two new entries were necessary for Eve to start downloading)
 

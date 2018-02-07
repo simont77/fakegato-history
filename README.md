@@ -73,6 +73,8 @@ Depending on your accessory type:
 
 For Energy and Door accessories it is also worth to add the custom characteristic E863F112 for resetting, respectively, the Total Consumption accumulated value or the Aperture Counter (not the history). See Wiki. The value of this characteristic is changed whenever the reset button is tapped on Eve, so it can be used to reset the locally stored value. The value seems to be the number of seconds from 1.1.2001. I left this characteristics out of fakegato-history because it is not part of the common  history service.
 
+For Door and Motion you may want to add characteristic E863F11A for setting the time of last activation. Value is the number of second from reset of fakegato-history. You can get this time using the function getInitialTime()
+
 If your "weather" or "room" plugin don't send addEntry for a short time (supposedly less than 1h - need feedback), the graph will draw a straight line from the last data received to the new data received. Instead, if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours - need feedback), the graph will show "no data for the period". Take this in consideration if your sensor does not send entries if the difference from the previuos one is small, you will end up with holes in the history. This is not currently addresses by fakegato, you should add extra entries if needed. Note that if you do not send a new entry at least every 10 minutes, the average will be 0, and you will a zero entry. This will be fixed soon.
 
 ### History Persistance
@@ -106,7 +108,6 @@ For the setup of Google Drive, please follow the Google Drive Quickstart for Nod
 * In step 4, use the quickstartGoogleDrive.js included with this module. You need to run the command from fakegato-hisory directory. Then just follow steps a to c.
 
 ##### Additional notes for Google Drive
-* The folder in which you want to save the persisted data must be already present on Google Drive
 * Pay attention so that your plugin does not issue multiple addEntry calls for the same accessory at the same time (this may results in unproper behaeviour of Google Drive to the its asynchronous nature)
 
 ### TODO
@@ -122,7 +123,6 @@ For the setup of Google Drive, please follow the Google Drive Quickstart for Nod
 ### Known bugs
 
 - Currently valve position history in thermo is not working
-- ~~In "weather" and "room" if you do not send at least an entry every 10 minutes you will get zeros in the history.~~
 
 ### How to contribute
 
