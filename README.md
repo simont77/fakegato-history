@@ -9,7 +9,7 @@ Module to emulate Elgato Eve history service in Homebridge accessories, so that 
 More details on communication protocol and custom Characteristics in the Wiki.
 
 Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter class). For other types see the Wiki.
-Avoid the use of "/" in characteristics of the Information Service (e.g. serial number, manifacturer, etc.), since this may cause data to not appear in the history. Note that if your Eve.app is controlling more than one accessory for each type, the serial number should be unique, otherwise Eve.app will merge the histories. Adding hostname is recommended as well, for running multiple copies of the same plugin on different machines (i.e. production and development), i.e.:
+Avoid the use of "/" in characteristics of the Information Service (e.g. serial number, manufacturer, etc.), since this may cause data to not appear in the history. Note that if your Eve.app is controlling more than one accessory for each type, the serial number should be unique, otherwise Eve.app will merge the histories. Adding hostname is recommended as well, for running multiple copies of the same plugin on different machines (i.e. production and development), i.e.:
 
     .setCharacteristic(Characteristic.SerialNumber, hostname + "-" + this.deviceID)
 
@@ -30,7 +30,7 @@ where
 - Accessory should be the accessory using the service, in order to correctly set the service name and pass the log to the parent object. Your Accessory should have a `this.log` variable pointing to the homebridge logger passed to the plugin constructor (add a line `this.log=log;` to your plugin). Debug messages will be shown if homebridge is launched with -D option.
 - length is the history length; if no value is given length is set to 4032 samples
 
-Remember to return the fakagato service in getServices function if using the accessory API, and if using the platform API include it as a Service as part of your accessory.
+Remember to return the fakegato service in getServices function if using the accessory API, and if using the platform API include it as a Service as part of your accessory.
 
 Eve.app requires at least an entry every 10 minutes to avoid holes in the history. Depending on the accessory type, fakegato-history may add extra entries every 10 minutes or may average the entries from the plugin and send data every 10 minutes. This is done using a single global timer shared among all accessories using fakegato. You may opt for managing yourself the Timer and disabling the embedded one by using that constructor:
 ```
@@ -80,14 +80,14 @@ For Energy and Door accessories it is also worth to add the custom characteristi
 
 For Door and Motion you may want to add characteristic E863F11A for setting the time of last activation. Value is the number of second from reset of fakegato-history. You can get this time using the function getInitialTime()
 
-If your "weather" or "room" plugin don't send addEntry for a short time (supposedly less than 1h - need feedback), the graph will draw a straight line from the last data received to the new data received. Instead, if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours - need feedback), the graph will show "no data for the period". Take this in consideration if your sensor does not send entries if the difference from the previuos one is small, you will end up with holes in the history. This is not currently addresses by fakegato, you should add extra entries if needed. Note that if you do not send a new entry at least every 10 minutes, the average will be 0, and you will a zero entry. This will be fixed soon.
+If your "weather" or "room" plugin don't send addEntry for a short time (supposedly less than 1h - need feedback), the graph will draw a straight line from the last data received to the new data received. Instead, if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours - need feedback), the graph will show "no data for the period". Take this in consideration if your sensor does not send entries if the difference from the previous one is small, you will end up with holes in the history. This is not currently addresses by fakegato, you should add extra entries if needed. Note that if you do not send a new entry at least every 10 minutes, the average will be 0, and you will a zero entry. This will be fixed soon.
 
-### History Persistance
+### History Persistence
 
 It is possible to persist data to disk or to Google Drive to avoid loosing part of the history not yet downloaded by Eve on restart or system crash. Data is saved every 10min for "weather" and "room", on every event and every 10 minutes for "door" and "motion", on every event for other types.
 
 #### File System
-In order to enable persistance on local disk, when instantiating the FakeGatoHistoryService, the third argument become an object with these attributes:
+In order to enable persistence on local disk, when instantiating the FakeGatoHistoryService, the third argument become an object with these attributes:
 ```
 this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
 	size:length, 				// optional - if you still need to specify the length
@@ -95,10 +95,10 @@ this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
 	path:'/place/to/store/my/persistence/'  // if empty it will be used the -U homebridge option if present or .homebridge
 });
 ```
-Data will be saved in json files, one for each persisted accessory, with filename in the form *hostname_accessoryDisplayName_persist.json*. In order to reset the persisted data, simply delete these files. 
+Data will be saved in JSON files, one for each persisted accessory, with filename in the form *hostname_accessoryDisplayName_persist.json*. In order to reset the persisted data, simply delete these files. 
 
 #### Google Drive
-In order to enable persistance on Google Drive, when instantiating the FakeGatoHistoryService, the third argument become an object with these attributes :
+In order to enable persistence on Google Drive, when instantiating the FakeGatoHistoryService, the third argument become an object with these attributes:
 ```
 this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
 	size:length, 				// optional - if you still need to specify the length
@@ -110,10 +110,10 @@ this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
 For the setup of Google Drive, please follow the Google Drive Quickstart for Node.js instructions from https://developers.google.com/drive/v3/web/quickstart/nodejs, except for these changes:
 * In Step 1-h the working directory should be the .homebridge directory
 * Skip Step 2 and 3
-* In step 4, use the quickstartGoogleDrive.js included with this module. You need to run the command from fakegato-hisory directory. Then just follow steps a to c.
+* In step 4, use the quickstartGoogleDrive.js included with this module. You need to run the command from fakegato-history directory. Then just follow steps a to c.
 
 ##### Additional notes for Google Drive
-* Pay attention so that your plugin does not issue multiple addEntry calls for the same accessory at the same time (this may results in unproper behaeviour of Google Drive to the its asynchronous nature)
+* Pay attention so that your plugin does not issue multiple addEntry calls for the same accessory at the same time (this may results in improper behaviour of Google Drive to the its asynchronous nature)
 
 ## TODO
 
@@ -137,5 +137,5 @@ If you own an Eve accessory and would like to help improving this module, you ca
 - Download this code https://github.com/simont77/HMCatalog-Swift3/tree/experimental and compile the HMCatalog app. Follow this guide https://stackoverflow.com/questions/30973799/ios-9-new-feature-free-provisioning-run-your-app-on-a-device-just-with-your-ap to compile for your own device and install on it (the app will not work on any other device). The App will run only for few days, since the code signature has a very short expiration date, but you can repeat the procedure if needed. This is called Free Provisioning, you may find many additional guides on the web in case of issues. You will have also to enable Homekit support, let Xcode fix issues when it offers to do it.
 - Run the HMCatalog app. You should be able to read raw values of all the characteristics of your accessories.
 - Trigger an history transfer of the history within Eve.app
-- Open again the HMCatalog app, select your Eve accessory and the Service E863F007-079E-48FF-8F27-9C2605A29F52. If using an iPad you can open HMCatalog and Eve in split view to monitor in real time the communication as it occurs.
+- Open again the HMCatalog app, select your Eve accessory and the Service E863F007-079E-48FF-8F27-9C2605A29F52. If using an iPad, you can open HMCatalog and Eve in split view to monitor in real time the communication as it occurs.
 - Copy values of all characteristics (especially E863F117-079E-48FF-8F27-9C2605A29F52 and E863F116-079E-48FF-8F27-9C2605A29F52) and leave me a comment with it.
