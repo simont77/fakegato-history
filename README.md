@@ -1,6 +1,6 @@
 # fakegato-history
 [![npm](https://img.shields.io/npm/v/fakegato-history.svg?style=plastic)](https://www.npmjs.com/package/fakegato-history)
-[![npm](https://img.shields.io/npm/dt/homebridge-weather-station-extended.svg?style=flat)](https://www.npmjs.com/package/fakegato-history)
+[![npm](https://img.shields.io/npm/dt/homebridge-weather-station-extended.svg?style=plastic)](https://www.npmjs.com/package/fakegato-history)
 [![GitHub last commit](https://img.shields.io/github/last-commit/simont77/fakegato-history.svg?style=plastic)](https://github.com/simont77/fakegato-history)
 [![GitHub license](https://img.shields.io/github/license/simont77/fakegato-history.svg?style=plastic)](https://github.com/simont77/fakegato-history)
 
