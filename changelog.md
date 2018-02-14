@@ -1,7 +1,7 @@
 ### v0.4.0
 - added ability to persist history either to filesystem or to google drive
-- added option to disagle internal timer
-- variuos fixes on internal timer average calculation
+- added option to disable internal timer
+- various fixes on internal timer average calculation
 - now also Energy uses the global internal timer
 - added initialTime and getter, for external management of characteristics 11A (last opening/activation on Door/Motion)
 
@@ -12,7 +12,7 @@
 - fix to allow showing last activation in Door and Motion
 
 ### v0.3.6
-- added compatibility with Platfoms
+- added compatibility with platfoms
 
 ### v0.3.5
 - added internal global timer
