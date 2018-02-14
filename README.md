@@ -114,7 +114,7 @@ For the setup of Google Drive, please follow the Google Drive Quickstart for Nod
 ##### Additional notes for Google Drive
 * Pay attention so that your plugin does not issue multiple addEntry calls for the same accessory at the same time (this may results in unproper behaeviour of Google Drive to the its asynchronous nature)
 
-### TODO
+## TODO
 
 - [x] Support for rolling-over of the history
 - [x] Aggregate transmission of several entries into a single Characteristic update in order to speed up transfer when not on local network.
@@ -124,11 +124,11 @@ For the setup of Google Drive, please follow the Google Drive Quickstart for Nod
 - [ ] Addition and management of other history related characteristics
 - [ ] Periodic sending of reference time stamp (seems not really needed if the time of your homebridge machine is correct)
 
-### Known bugs
+## Known bugs
 
 - Currently valve position history in thermo is not working
 
-### How to contribute
+## How to contribute
 
 If you own an Eve accessory and would like to help improving this module, you can follow this procedure to dump the communication:
 
