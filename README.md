@@ -1,4 +1,8 @@
 # fakegato-history
+[![npm](https://img.shields.io/npm/v/fakegato-history.svg?style=flat-square)](https://www.npmjs.com/package/fakegato-history)
+[![npm](https://img.shields.io/npm/dt/homebridge-weather-station-extended.svg?style=flat-square)](https://www.npmjs.com/package/fakegato-history)
+[![GitHub last commit](https://img.shields.io/github/last-commit/simont77/fakegato-history.svg?style=flat-square)](https://github.com/simont77/fakegato-history)
+
 Module to emulate Elgato Eve history service in Homebridge accessories, so that it will show in Eve.app (Home.app does not support it). Still work in progress. Use at your own risk, no guarantee is provided.
 
 More details on communication protocol and custom Characteristics in the Wiki.
