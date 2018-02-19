@@ -1,3 +1,6 @@
+### v0.4.1
+- fix filesystem persist location when -U option is used in homebridge
+
 ### v0.4.0
 - added ability to persist history either to filesystem or to google drive
 - added option to disable internal timer

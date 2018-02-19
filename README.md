@@ -92,7 +92,7 @@ In order to enable persistence on local disk, when instantiating the FakeGatoHis
 this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
 	size:length, 				// optional - if you still need to specify the length
 	storage:'fs',
-	path:'/place/to/store/my/persistence/'  // if empty it will be used the -U homebridge option if present or .homebridge
+	path:'/place/to/store/my/persistence/'  // if empty it will be used the -U homebridge option if present, or .homebridge in the user's home folder
 });
 ```
 Data will be saved in JSON files, one for each persisted accessory, with filename in the form *hostname_accessoryDisplayName_persist.json*. In order to reset the persisted data, simply delete these files. 
