@@ -151,7 +151,7 @@ module.exports = function (pHomebridge) {
 				this.size = optionalParams.size || 4032;
 				this.minutes = optionalParams.minutes || 10; // Optional timer length
 				this.storage = optionalParams.storage; // 'fs' or 'googleDrive'
-				this.path    = optionalParams.path || optionalParams.folder;
+				this.path    = optionalParams.path || optionalParams.folder || (this.storage == 'fs' ? homebridge.user.storagePath() : undefined);
 				this.disableTimer = optionalParams.disableTimer || false;
 			} else {
 				this.size = optionalParams || 4032;
