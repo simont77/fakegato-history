@@ -152,6 +152,7 @@ module.exports = function (pHomebridge) {
 				this.minutes = optionalParams.minutes || 10; // Optional timer length
 				this.storage = optionalParams.storage; // 'fs' or 'googleDrive'
 				this.path    = optionalParams.path || optionalParams.folder || (this.storage == 'fs' ? homebridge.user.storagePath() : undefined);
+				this.filename = optionalParams.filename
 				this.disableTimer = optionalParams.disableTimer || false;
 			} else {
 				this.size = optionalParams || 4032;
@@ -185,6 +186,7 @@ module.exports = function (pHomebridge) {
 				homebridge.globalFakeGatoStorage.addWriter(this,{
 					storage: this.storage,
 					path: this.path,
+					filename: this.filename,
 					keyPath: optionalParams.keyPath || homebridge.user.storagePath() || undefined,
 					onReady:function(){
 
@@ -653,7 +655,7 @@ module.exports = function (pHomebridge) {
 			if ((this.currentEntry <= this.lastEntry) && (this.transfer == true)) {
 				this.memoryAddress = entry2address(this.currentEntry);
 				if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) {
-					
+
 					var val = Format(
 						'15%s 0100 0000 81%s0000 0000 00 0000',
 						numToHex(swap32(this.currentEntry), 8),
