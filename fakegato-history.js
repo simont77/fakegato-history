@@ -152,21 +152,22 @@ module.exports = function (pHomebridge) {
 				this.minutes = optionalParams.minutes || 10; // Optional timer length
 				this.storage = optionalParams.storage; // 'fs' or 'googleDrive'
 				this.path    = optionalParams.path || optionalParams.folder || (this.storage == 'fs' ? homebridge.user.storagePath() : undefined);
+				this.filename = optionalParams.filename
 				this.disableTimer = optionalParams.disableTimer || false;
 			} else {
 				this.size = optionalParams || 4032;
 				this.minutes = 10;
 				this.disableTimer = false;
 			}
-			
+
 			thisAccessory = accessory;
 			this.accessoryName = thisAccessory.displayName;
 			this.log = thisAccessory.log || {};
-			
+
 			if (!this.log.debug) {
 				this.log.debug = function() {};
 			}
-			
+
 			if(!this.disableTimer) {
 				if (homebridge.globalFakeGatoTimer === undefined)
 					homebridge.globalFakeGatoTimer = new FakeGatoTimer({
@@ -174,7 +175,7 @@ module.exports = function (pHomebridge) {
 						log: this.log
 					});
 			}
-				
+
 			if(this.storage !== undefined) {
 				this.loaded=false;
 				if (homebridge.globalFakeGatoStorage === undefined) {
@@ -185,9 +186,10 @@ module.exports = function (pHomebridge) {
 				homebridge.globalFakeGatoStorage.addWriter(this,{
 					storage: this.storage,
 					path: this.path,
+					filename: this.filename,
 					keyPath: optionalParams.keyPath || homebridge.user.storagePath() || undefined,
 					onReady:function(){
-						
+
 						this.load(function(err,loaded){
 							//this.log.debug("Loaded",loaded);
 							//this.registerEvents();
@@ -200,8 +202,8 @@ module.exports = function (pHomebridge) {
 					}.bind(this)
 				});
 			}
-			
-				
+
+
 			switch (accessoryType) {
 				case TYPE_WEATHER:
 					this.accessoryType116 = "03 0102 0202 0302";
@@ -211,7 +213,7 @@ module.exports = function (pHomebridge) {
 							var backLog = params.backLog || [];
 							var previousAvrg = params.previousAvrg || {};
 							var timer = params.timer;
-							
+
 							var fakegato = this.service;
 							var calc = {
 								sum: {},
@@ -235,7 +237,7 @@ module.exports = function (pHomebridge) {
 								}
 							}
 							calc.avrg.time = moment().unix(); // set the time of the avrg
-							
+
 							for (let key in previousAvrg) { // each record of previous average
 								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
 									if(	!backLog.length ||//calc.avrg[key] == 0 || // zero value
@@ -245,7 +247,7 @@ module.exports = function (pHomebridge) {
 									}
 								}
 							}
-							
+
 							if(Object.keys(calc.avrg).length > 1) {
 								fakegato._addEntry(calc.avrg);
 								timer.emptyData(fakegato);
@@ -262,7 +264,7 @@ module.exports = function (pHomebridge) {
 							var backLog = params.backLog || [];
 							var previousAvrg = params.previousAvrg || {};
 							var timer = params.timer;
-							
+
 							var fakegato = this.service;
 							var calc = {
 								sum: {},
@@ -286,7 +288,7 @@ module.exports = function (pHomebridge) {
 								}
 							}
 							calc.avrg.time = moment().unix(); // set the time of the avrg
-							
+
 							for (let key in previousAvrg) { // each record of previous average
 								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
 									if(	!backLog.length ||//calc.avrg[key] == 0 || // zero value
@@ -296,7 +298,7 @@ module.exports = function (pHomebridge) {
 									}
 								}
 							}
-							
+
 							fakegato._addEntry(calc.avrg);
 							timer.emptyData(fakegato);
 							return calc.avrg;
@@ -311,7 +313,7 @@ module.exports = function (pHomebridge) {
 							var backLog = params.backLog || [];
 							var previousAvrg = params.previousAvrg || {};
 							var timer = params.timer;
-							
+
 							var fakegato = this.service;
 							var calc = {
 								sum: {},
@@ -335,7 +337,7 @@ module.exports = function (pHomebridge) {
 								}
 							}
 							calc.avrg.time = moment().unix(); // set the time of the avrg
-							
+
 							for (let key in previousAvrg) { // each record of previous average
 								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
 									if(	!backLog.length ||//calc.avrg[key] == 0 || // zero value
@@ -345,7 +347,7 @@ module.exports = function (pHomebridge) {
 									}
 								}
 							}
-							
+
 							if(Object.keys(calc.avrg).length > 1) {
 								fakegato._addEntry(calc.avrg);
 								timer.emptyData(fakegato);
@@ -361,7 +363,7 @@ module.exports = function (pHomebridge) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
 							var backLog = params.backLog || [];
 							var immediate = params.immediate;
-							
+
 							var fakegato = this.service;
 							var actualEntry={};
 
@@ -388,7 +390,7 @@ module.exports = function (pHomebridge) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
 							var backLog = params.backLog || [];
 							var immediate = params.immediate;
-							
+
 							var fakegato = this.service;
 							var actualEntry={};
 
@@ -428,19 +430,19 @@ module.exports = function (pHomebridge) {
 			this.dataStream = '';
 
 			this.saving=false;
-			
+
 			this.registerEvents();
 			if(this.storage === undefined) {
 				this.loaded=true;
 			}
 		}
-		
+
 		registerEvents() {
 			this.log.debug('Registring Events',thisAccessory.displayName);
 			if ( typeof thisAccessory.getService === "function" ) {
 				// Platform API
 				this.log.debug('Platform',thisAccessory.displayName);
-				
+
 				this.service = thisAccessory.getService(FakeGatoHistoryService);
 				if (this.service === undefined) {
 					this.service = thisAccessory.addService(FakeGatoHistoryService, ucfirst(thisAccessory.displayName) + ' History', this.accessoryType);
@@ -489,15 +491,20 @@ module.exports = function (pHomebridge) {
 					if(!this.disableTimer)
 						homebridge.globalFakeGatoTimer.addData({entry: entry, service: this, immediateCallback: true});
 					else
-						this._addEntry(entry);
+						this._addEntry({time: entry.time, status: entry.status});
 					break;
 				case TYPE_WEATHER:
 				case TYPE_ROOM:
+					if(!this.disableTimer)
+						homebridge.globalFakeGatoTimer.addData({entry: entry, service: this});
+					else
+						this._addEntry({time: entry.time, temp: entry.temp, humidity: entry.humidity, pressure: entry.pressure});
+					break;
 				case TYPE_ENERGY:
 					if(!this.disableTimer)
 						homebridge.globalFakeGatoTimer.addData({entry: entry, service: this});
 					else
-						this._addEntry(entry);
+						this._addEntry({time: entry.time, power: entry.power});
 					break;
 				default:
 					this._addEntry(entry);
@@ -512,7 +519,7 @@ module.exports = function (pHomebridge) {
 					return val % this.memorySize;
 				}
 				.bind(this);
-				
+
 				var val;
 
 				if (this.usedMemory < this.memorySize) {
@@ -555,11 +562,11 @@ module.exports = function (pHomebridge) {
 						numToHex(swap16(this.usedMemory), 4),
 						numToHex(swap16(this.memorySize), 4),
 						numToHex(swap32(this.firstEntry+1), 8));
-				}	
+				}
 
 				if (this.service === undefined) { // Accessory API
 					this.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
-				} 
+				}
 				else { // Platform API
 					this.service.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
 				}
@@ -568,12 +575,12 @@ module.exports = function (pHomebridge) {
 				this.log.debug("Last entry %s: %s", this.accessoryName, this.lastEntry.toString(16));
 				this.log.debug("Used memory %s: %s", this.accessoryName, this.usedMemory.toString(16));
 				this.log.debug("116 %s: %s", this.accessoryName, val);
-				
+
 				if(this.storage !== undefined) this.save();
 			} else {
 				setTimeout(function(){ // retry in 100ms
 					this._addEntry(entry);
-				}.bind(this),100);	
+				}.bind(this),100);
 			}
 		}
 		getInitialTime() {
@@ -590,8 +597,8 @@ module.exports = function (pHomebridge) {
 						initialTime:this.initialTime,
 						history   :this.history
 					};
-			
-			
+
+
 				homebridge.globalFakeGatoStorage.write({
 					service: this,
 					data:typeof(data) === "object" ? JSON.stringify(data) : data
@@ -600,7 +607,7 @@ module.exports = function (pHomebridge) {
 			} else {
 				setTimeout(function(){ // retry in 100ms
 					this.save();
-				}.bind(this),100);	
+				}.bind(this),100);
 			}
 		}
 		load(cb) {
@@ -613,7 +620,7 @@ module.exports = function (pHomebridge) {
 							try {
 								this.log.debug("read data from",this.accessoryName,":",data);
 								let jsonFile = typeof(data) === "object" ? data : JSON.parse(data);
-								
+
 								this.firstEntry = jsonFile.firstEntry;
 								this.lastEntry  = jsonFile.lastEntry;
 								this.usedMemory = jsonFile.usedMemory;
@@ -639,7 +646,7 @@ module.exports = function (pHomebridge) {
 				service: this
 			});
 		}
-		
+
 		getCurrentS2R2(callback) {
 			var entry2address = function(val) {
 				return val % this.memorySize;
@@ -648,7 +655,7 @@ module.exports = function (pHomebridge) {
 			if ((this.currentEntry <= this.lastEntry) && (this.transfer == true)) {
 				this.memoryAddress = entry2address(this.currentEntry);
 				if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) {
-					
+
 					var val = Format(
 						'15%s 0100 0000 81%s0000 0000 00 0000',
 						numToHex(swap32(this.currentEntry), 8),
