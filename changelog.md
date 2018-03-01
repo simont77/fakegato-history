@@ -1,3 +1,7 @@
+### v0.4.2
+- fix bug when internal timer is not enabled
+- add optional parameter for filename
+
 ### v0.4.1
 - fix filesystem persist location when -U option is used in homebridge
 
