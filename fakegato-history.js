@@ -152,7 +152,7 @@ module.exports = function (pHomebridge) {
 				this.minutes = optionalParams.minutes || 10; // Optional timer length
 				this.storage = optionalParams.storage; // 'fs' or 'googleDrive'
 				this.path    = optionalParams.path || optionalParams.folder || (this.storage == 'fs' ? homebridge.user.storagePath() : undefined);
-				this.filename = optionalParams.filename
+				this.filename = optionalParams.filename;
 				this.disableTimer = optionalParams.disableTimer || false;
 			} else {
 				this.size = optionalParams || 4032;
@@ -494,11 +494,16 @@ module.exports = function (pHomebridge) {
 						this._addEntry({time: entry.time, status: entry.status});
 					break;
 				case TYPE_WEATHER:
-				case TYPE_ROOM:
 					if(!this.disableTimer)
 						homebridge.globalFakeGatoTimer.addData({entry: entry, service: this});
 					else
 						this._addEntry({time: entry.time, temp: entry.temp, humidity: entry.humidity, pressure: entry.pressure});
+					break;
+				case TYPE_ROOM:
+					if(!this.disableTimer)
+						homebridge.globalFakeGatoTimer.addData({entry: entry, service: this});
+					else
+						this._addEntry({time: entry.time, temp: entry.temp, humidity: entry.humidity, ppm: entry.ppm});
 					break;
 				case TYPE_ENERGY:
 					if(!this.disableTimer)

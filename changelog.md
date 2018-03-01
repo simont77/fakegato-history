@@ -1,3 +1,6 @@
+### v0.4.3
+- fix for "room" when internal timer is not enabled
+
 ### v0.4.2
 - fix bug when internal timer is not enabled
 - add optional parameter for filename

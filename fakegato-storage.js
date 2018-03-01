@@ -96,7 +96,7 @@ class FakeGatoStorage {
 
 	write(params) { // must be asynchronous
 		if(!this.writing) {
-			this.writing = true
+			this.writing = true;
 			let writer = this.getWriter(params.service);
 			let callBack = typeof(params.callback)=='function'?params.callback:(typeof(writer.callback)=='function'?writer.callback:function(){}); // use parameter callback or writer callback or empty function
 			switch(writer.storage) {
