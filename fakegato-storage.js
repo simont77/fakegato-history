@@ -41,7 +41,7 @@ class FakeGatoStorage {
 				'service': service,
 				'callback': params.callback,
 				'storage' : params.storage || 'fs',
-				'fileName': params.filename || hostname+"_"+service.accessoryName+fileSuffix		// Unique filename per homebridge server.  Allows test environments on other servers not to break prod.
+				'filename': params.filename || hostname+"_"+service.accessoryName+fileSuffix		// Unique filename per homebridge server.  Allows test environments on other servers not to break prod.
 			};
 			var onReady = typeof(params.onReady) == 'function' ? params.onReady:function(){}.bind(this);
 
