@@ -155,7 +155,7 @@ module.exports = function (pHomebridge) {
 				this.filename = optionalParams.filename;
 				this.disableTimer = optionalParams.disableTimer || false;
 			} else {
-				this.size = optionalParams || 4032;
+				this.size = 4032;
 				this.minutes = 10;
 				this.disableTimer = false;
 			}
