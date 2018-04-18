@@ -6,7 +6,7 @@ var debug = require('debug')('FakeGatoStorage');
 var fs = require('fs');
 var os = require('os');
 var path = require('path');
-var hostname = os.hostname();
+var hostname = os.hostname().split(".")[0];
 
 var googleDrive = require('./lib/googleDrive').drive;
 
