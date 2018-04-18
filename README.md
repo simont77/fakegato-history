@@ -86,6 +86,10 @@ If your "weather" or "room" plugin don't send addEntry for a short time (suppose
 
 It is possible to persist data to disk or to Google Drive to avoid loosing part of the history not yet downloaded by Eve on restart or system crash. Data is saved every 10min for "weather" and "room", on every event and every 10 minutes for "door" and "motion", on every event for other types.
 
+Data will be saved, either on local filesystem or on google drive, in JSON files, one for each persisted accessory, with filename in the form *hostname_accessoryDisplayName_persist.json*. In order to reset the persisted data, simply delete these files.
+
+**NOTE when updating from version <0.4.4:** On certain systems (e.g. os X), previus versions may append ".local" or ".lan" after *hostname* in the file name. This additional portions are now removed to improve reliability of persistence on google drive when network goes down. If you do not want to loose your previous history, before updating check if your system creates files with the additional portion, and if so, rename them.
+
 #### File System
 In order to enable persistence on local disk, when instantiating the FakeGatoHistoryService, the third argument become an object with these attributes:
 ```
@@ -95,7 +99,6 @@ this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
 	path:'/place/to/store/my/persistence/'  // if empty it will be used the -U homebridge option if present, or .homebridge in the user's home folder
 });
 ```
-Data will be saved in JSON files, one for each persisted accessory, with filename in the form *hostname_accessoryDisplayName_persist.json*. In order to reset the persisted data, simply delete these files. 
 
 #### Google Drive
 In order to enable persistence on Google Drive, when instantiating the FakeGatoHistoryService, the third argument become an object with these attributes:
