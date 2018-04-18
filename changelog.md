@@ -1,3 +1,5 @@
+### v0.4.4
+- Fixes for google drive availability issues (#54)
 ### v0.4.3
 - fix for "room" when internal timer is not enabled
 
