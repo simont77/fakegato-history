@@ -591,6 +591,15 @@ module.exports = function (pHomebridge) {
 		getInitialTime() {
 			return this.initialTime;
 		}
+
+		setExtraPersistedData(extra) {
+			this.extra = extra;
+		}
+
+		getExtraPersistedData() {
+			return this.extra;
+		}
+
 		save() {
 			if(this.loaded) {
 
@@ -600,7 +609,8 @@ module.exports = function (pHomebridge) {
 						usedMemory:this.usedMemory,
 						refTime   :this.refTime,
 						initialTime:this.initialTime,
-						history   :this.history
+						history   :this.history,
+						extra     :this.extra
 					};
 
 
@@ -632,6 +642,7 @@ module.exports = function (pHomebridge) {
 								this.refTime    = jsonFile.refTime;
 								this.initialTime= jsonFile.initialTime;
 								this.history	= jsonFile.history;
+								this.extra	    = jsonFile.extra;
 							} catch (e) {
 								this.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**",e);
 								cb(e,false);
