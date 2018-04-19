@@ -6,6 +6,8 @@
 
 Module to emulate Elgato Eve history service in Homebridge accessories, so that it will show in Eve.app (Home.app does not support it). Still work in progress. Use at your own risk, no guarantee is provided.
 
+**NOTE when updating from version <0.5.0:** On certain systems (e.g. macOS), previus versions may append ".local" or ".lan" after *hostname* in the file name. This additional portions are now removed to improve reliability of persistence on google drive when network goes down. If you do not want to loose your previous history, before updating check if your system creates files with the additional portion, and if so, rename them.
+
 More details on communication protocol and custom Characteristics in the Wiki.
 
 Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-extended, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter class). For other types see the Wiki.
@@ -78,7 +80,7 @@ Depending on your accessory type:
 
 For Energy and Door accessories it is also worth to add the custom characteristic E863F112 for resetting, respectively, the Total Consumption accumulated value or the Aperture Counter (not the history). See Wiki. The value of this characteristic is changed whenever the reset button is tapped on Eve, so it can be used to reset the locally stored value. The value seems to be the number of seconds from 1.1.2001. I left this characteristics out of fakegato-history because it is not part of the common  history service.
 
-For Door and Motion you may want to add characteristic E863F11A for setting the time of last activation. Value is the number of second from reset of fakegato-history. You can get this time using the function getInitialTime()
+For Door and Motion you may want to add characteristic E863F11A for setting the time of last activation. Value is the number of second from reset of fakegato-history. You can get this time using the function *getInitialTime()*
 
 If your "weather" or "room" plugin don't send addEntry for a short time (supposedly less than 1h - need feedback), the graph will draw a straight line from the last data received to the new data received. Instead, if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours - need feedback), the graph will show "no data for the period". Take this in consideration if your sensor does not send entries if the difference from the previous one is small, you will end up with holes in the history. This is not currently addresses by fakegato, you should add extra entries if needed. Note that if you do not send a new entry at least every 10 minutes, the average will be 0, and you will a zero entry. This will be fixed soon.
 
@@ -88,7 +90,9 @@ It is possible to persist data to disk or to Google Drive to avoid loosing part 
 
 Data will be saved, either on local filesystem or on google drive, in JSON files, one for each persisted accessory, with filename in the form *hostname_accessoryDisplayName_persist.json*. In order to reset the persisted data, simply delete these files.
 
-**NOTE when updating from version <0.4.4:** On certain systems (e.g. os X), previus versions may append ".local" or ".lan" after *hostname* in the file name. This additional portions are now removed to improve reliability of persistence on google drive when network goes down. If you do not want to loose your previous history, before updating check if your system creates files with the additional portion, and if so, rename them.
+**NOTE when updating from version <0.5.0:** On certain systems (e.g. macOS), previus versions may append ".local" or ".lan" after *hostname* in the file name. This additional portions are now removed to improve reliability of persistence on google drive when network goes down. If you do not want to loose your previous history, before updating check if your system creates files with the additional portion, and if so, rename them.
+
+As an added feature, plugins can leverage persistance capabilities of fakegato, both on filesystem and google drive, using the two functions *setExtraPersistedData(extra)* and *getExtraPersistedData()*. Extra can be any json formattable data. Plugin has to check that what is returned is what it is expecting (fakegato will return undefined object if extra data is not present on the persisted file, or if google drive has not started yet), and retry if needed. 
 
 #### File System
 In order to enable persistence on local disk, when instantiating the FakeGatoHistoryService, the third argument become an object with these attributes:
