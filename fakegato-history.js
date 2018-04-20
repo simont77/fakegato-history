@@ -670,7 +670,8 @@ module.exports = function (pHomebridge) {
 
 			if ((this.currentEntry <= this.lastEntry) && (this.transfer == true)) {
 				this.memoryAddress = entry2address(this.currentEntry);
-				if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true)) {
+				if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true) ||
+						(this.memoryAddress == 0)) {
 
 					var val = Format(
 						'15%s 0100 0000 81%s0000 0000 00 0000',
