@@ -92,7 +92,7 @@ Data will be saved, either on local filesystem or on google drive, in JSON files
 
 **NOTE when updating from version <0.5.0:** On certain systems (e.g. macOS), previus versions may append ".local" or ".lan" after *hostname* in the file name. This additional portions are now removed to improve reliability of persistence on google drive when network goes down. If you do not want to loose your previous history, before updating check if your system creates files with the additional portion, and if so, rename them.
 
-As an added feature, plugins can leverage persistance capabilities of fakegato, both on filesystem and google drive, using the two functions *setExtraPersistedData(extra)* and *getExtraPersistedData()*. Extra can be any json formattable data. Plugin has to check that what is returned is what it is expecting (fakegato will return undefined object if extra data is not present on the persisted file, or if google drive has not started yet), and retry if needed. 
+As an added feature, plugins can leverage persistance capabilities of fakegato, both on filesystem and google drive, using the two functions *setExtraPersistedData(extra)* and *getExtraPersistedData()*. Extra can be any json formattable data. Plugin has to check that what is returned is what it is expecting (fakegato will return undefined object if extra data is not present on the persisted file, or if google drive has not started yet), and retry if needed. It is also advisable to call in advance the function *isHistoryLoaded()* to check whether fakegato finished loading the history from the storage.
 
 #### File System
 In order to enable persistence on local disk, when instantiating the FakeGatoHistoryService, the third argument become an object with these attributes:

@@ -1,9 +1,11 @@
 ### v0.5.1
 - Improves reliability when a new iDevice starts downloading an existing history that has already rolled up.
+- Added isHistoryLoaded() function
 
 ### v0.5.0
 - Fixes for google drive availability issues (#54). NOTE: On certain systems (e.g. macOS), previus versions may append ".local" or ".lan" after *hostname* in the file name. This additional portions are now removed to improve reliability of persistence on google drive when network goes down. If you do not want to loose your previous history, before updating check if your system creates files with the additional portion, and if so, rename them.
 - Added possibility to leverage fakegato persistance capability to save extra user data
+
 ### v0.4.3
 - fix for "room" when internal timer is not enabled
 

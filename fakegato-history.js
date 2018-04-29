@@ -610,6 +610,10 @@ module.exports = function (pHomebridge) {
 			return this.extra;
 		}
 
+		isHistoryLoaded() {
+			return this.loaded;
+		}
+
 		save() {
 			if(this.loaded) {
 
