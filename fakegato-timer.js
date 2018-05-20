@@ -15,13 +15,13 @@ class FakeGatoTimer {
 		this.running = false;
 		this.log = params.log || {};
 		if (!this.log.debug) {
-			this.log.debug = DEBUG ? console.log : function() {};
+			this.log.debug = DEBUG ? console.log : function () { };
 		}
 	}
 
 	// Subscription management
 	subscribe(service, callback) {
-		this.log.debug("** Fakegato-timer Subscription :",service.accessoryName);
+		this.log.debug("** Fakegato-timer Subscription :", service.accessoryName);
 		let newService = {
 			'service': service,
 			'callback': callback,
@@ -56,7 +56,7 @@ class FakeGatoTimer {
 
 	// Timer management
 	start() {
-		this.log.debug("**Start Global Fakegato-Timer - "+this.minutes+"min**");
+		this.log.debug("**Start Global Fakegato-Timer - " + this.minutes + "min**");
 		if (this.running)
 			this.stop();
 		this.running = true;
@@ -75,14 +75,14 @@ class FakeGatoTimer {
 		if (this.subscribedServices.length !== 0) {
 			for (let s in this.subscribedServices) {
 				if (this.subscribedServices.hasOwnProperty(s)) {
-					
+
 					let service = this.subscribedServices[s];
-					if (typeof(service.callback) == 'function') {
-						service.previousAvrg=service.callback({
-								'backLog':service.backLog, 
-								'previousAvrg':service.previousAvrg, 
-								'timer':this, 
-								'immediate':false
+					if (typeof (service.callback) == 'function') {
+						service.previousAvrg = service.callback({
+							'backLog': service.backLog,
+							'previousAvrg': service.previousAvrg,
+							'timer': this,
+							'immediate': false
 						});
 					}
 				}
@@ -92,30 +92,30 @@ class FakeGatoTimer {
 	executeImmediateCallback(service) {
 		this.log.debug("**Fakegato-timer: executeImmediateCallback**");
 
-		if (typeof(service.callback) == 'function' && service.backLog.length)
+		if (typeof (service.callback) == 'function' && service.backLog.length)
 			service.callback({
-					'backLog':service.backLog, 
-					'timer':this, 
-					'immediate':true
+				'backLog': service.backLog,
+				'timer': this,
+				'immediate': true
 			});
-	}	
+	}
 	addData(params) {
 		let data = params.entry;
 		let service = params.service;
 		let immediateCallback = params.immediateCallback || false;
-		
-		this.log.debug("**Fakegato-timer: addData ",service.accessoryName,data," immediate: ",immediateCallback);
-		
-		if(immediateCallback) // door or motion -> replace
+
+		this.log.debug("**Fakegato-timer: addData ", service.accessoryName, data, " immediate: ", immediateCallback);
+
+		if (immediateCallback) // door or motion -> replace
 			this.getSubscriber(service).backLog[0] = data;
 		else
 			this.getSubscriber(service).backLog.push(data);
-		
+
 		if (immediateCallback) {
 			//setTimeout(this.executeImmediateCallback.bind(this), 0,service);
 			this.executeImmediateCallback(this.getSubscriber(service));
 		}
-		
+
 		if (this.running === false)
 			this.start();
 	}
@@ -123,7 +123,7 @@ class FakeGatoTimer {
 		this.log.debug("**Fakegato-timer: emptyData **", service.accessoryName);
 		let source = this.getSubscriber(service);
 
-		if(source.backLog.length) source.previousBackLog = source.backLog;
+		if (source.backLog.length) source.previousBackLog = source.backLog;
 		source.backLog = [];
 	}
 

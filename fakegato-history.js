@@ -8,12 +8,12 @@ const moment = require('moment');
 
 const EPOCH_OFFSET = 978307200;
 
-const TYPE_ENERGY  = 'energy',
-      TYPE_ROOM    = 'room',
-      TYPE_WEATHER = 'weather',
-      TYPE_DOOR    = 'door',
-      TYPE_MOTION  = 'motion',
-      TYPE_THERMO  = 'thermo';
+const TYPE_ENERGY = 'energy',
+	TYPE_ROOM = 'room',
+	TYPE_WEATHER = 'weather',
+	TYPE_DOOR = 'door',
+	TYPE_MOTION = 'motion',
+	TYPE_THERMO = 'thermo';
 
 var homebridge;
 var Characteristic, Service;
@@ -29,44 +29,44 @@ module.exports = function (pHomebridge) {
 	var hexToBase64 = function (val) {
 		return new Buffer(('' + val).replace(/[^0-9A-F]/ig, ''), 'hex').toString('base64');
 	},
-	base64ToHex = function (val) {
-		if (!val)
-			return val;
-		return new Buffer(val, 'base64').toString('hex');
-	},
-	swap16 = function (val) {
-		return ((val & 0xFF) << 8)
-		 | ((val >>> 8) & 0xFF);
-	},
-	swap32 = function (val) {
-		return ((val & 0xFF) << 24)
-		 | ((val & 0xFF00) << 8)
-		 | ((val >>> 8) & 0xFF00)
-		 | ((val >>> 24) & 0xFF);
-	},
-	hexToHPA = function (val) { //unused
-		return parseInt(swap16(val), 10);
-	},
-	hPAtoHex = function (val) { //unused
-		return swap16(Math.round(val)).toString(16);
-	},
-	numToHex = function (val, len) {
-		var s = Number(val >>> 0).toString(16);
-		if (s.length % 2 != 0) {
-			s = '0' + s;
-		}
-		if (len) {
-			return ('0000000000000' + s).slice(-1 * len);
-		}
-		return s;
-	},
-	ucfirst = function(val) {
-		return val.charAt(0).toUpperCase() + val.substr(1);
-	},
-	precisionRound = function (number, precision) {
-	  var factor = Math.pow(10, precision);
-	  return Math.round(number * factor) / factor;
-	};
+		base64ToHex = function (val) {
+			if (!val)
+				return val;
+			return new Buffer(val, 'base64').toString('hex');
+		},
+		swap16 = function (val) {
+			return ((val & 0xFF) << 8)
+				| ((val >>> 8) & 0xFF);
+		},
+		swap32 = function (val) {
+			return ((val & 0xFF) << 24)
+				| ((val & 0xFF00) << 8)
+				| ((val >>> 8) & 0xFF00)
+				| ((val >>> 24) & 0xFF);
+		},
+		hexToHPA = function (val) { //unused
+			return parseInt(swap16(val), 10);
+		},
+		hPAtoHex = function (val) { //unused
+			return swap16(Math.round(val)).toString(16);
+		},
+		numToHex = function (val, len) {
+			var s = Number(val >>> 0).toString(16);
+			if (s.length % 2 != 0) {
+				s = '0' + s;
+			}
+			if (len) {
+				return ('0000000000000' + s).slice(-1 * len);
+			}
+			return s;
+		},
+		ucfirst = function (val) {
+			return val.charAt(0).toUpperCase() + val.substr(1);
+		},
+		precisionRound = function (number, precision) {
+			var factor = Math.pow(10, precision);
+			return Math.round(number * factor) / factor;
+		};
 
 	class S2R1Characteristic extends Characteristic {
 		constructor() {
@@ -126,18 +126,18 @@ module.exports = function (pHomebridge) {
 
 	class FakeGatoHistoryService extends Service {
 		constructor(displayName, subtype) {
-		super(displayName, FakeGatoHistoryService.UUID, subtype);
+			super(displayName, FakeGatoHistoryService.UUID, subtype);
 
-		this.addCharacteristic(S2R1Characteristic);
-		this.addCharacteristic(S2R2Characteristic);
-		this.addCharacteristic(S2W1Characteristic);
-		this.addCharacteristic(S2W2Characteristic);
+			this.addCharacteristic(S2R1Characteristic);
+			this.addCharacteristic(S2R2Characteristic);
+			this.addCharacteristic(S2W1Characteristic);
+			this.addCharacteristic(S2W2Characteristic);
 		}
 	}
 
-  	FakeGatoHistoryService.UUID = 'E863F007-079E-48FF-8F27-9C2605A29F52';
-	var thisAccessory={};
-  	class FakeGatoHistory extends Service {
+	FakeGatoHistoryService.UUID = 'E863F007-079E-48FF-8F27-9C2605A29F52';
+	var thisAccessory = {};
+	class FakeGatoHistory extends Service {
 		constructor(accessoryType, accessory, optionalParams) {
 
 			super(accessory.displayName + " History", FakeGatoHistoryService.UUID);
@@ -147,11 +147,11 @@ module.exports = function (pHomebridge) {
 				return temp;
 			}.bind(this);
 
-			if(typeof(optionalParams) === 'object') {
+			if (typeof (optionalParams) === 'object') {
 				this.size = optionalParams.size || 4032;
 				this.minutes = optionalParams.minutes || 10; // Optional timer length
 				this.storage = optionalParams.storage; // 'fs' or 'googleDrive'
-				this.path    = optionalParams.path || optionalParams.folder || (this.storage == 'fs' ? homebridge.user.storagePath() : undefined);
+				this.path = optionalParams.path || optionalParams.folder || (this.storage == 'fs' ? homebridge.user.storagePath() : undefined);
 				this.filename = optionalParams.filename;
 				this.disableTimer = optionalParams.disableTimer || false;
 			} else {
@@ -165,10 +165,10 @@ module.exports = function (pHomebridge) {
 			this.log = thisAccessory.log || {};
 
 			if (!this.log.debug) {
-				this.log.debug = function() {};
+				this.log.debug = function () { };
 			}
 
-			if(!this.disableTimer) {
+			if (!this.disableTimer) {
 				if (homebridge.globalFakeGatoTimer === undefined)
 					homebridge.globalFakeGatoTimer = new FakeGatoTimer({
 						minutes: this.minutes,
@@ -176,27 +176,27 @@ module.exports = function (pHomebridge) {
 					});
 			}
 
-			if(this.storage !== undefined) {
-				this.loaded=false;
+			if (this.storage !== undefined) {
+				this.loaded = false;
 				if (homebridge.globalFakeGatoStorage === undefined) {
 					homebridge.globalFakeGatoStorage = new FakeGatoStorage({
 						log: this.log
 					});
 				}
-				homebridge.globalFakeGatoStorage.addWriter(this,{
+				homebridge.globalFakeGatoStorage.addWriter(this, {
 					storage: this.storage,
 					path: this.path,
 					filename: this.filename,
 					keyPath: optionalParams.keyPath || homebridge.user.storagePath() || undefined,
-					onReady:function(){
+					onReady: function () {
 
-						this.load(function(err,loaded){
+						this.load(function (err, loaded) {
 							//this.log.debug("Loaded",loaded);
 							//this.registerEvents();
-							if(err) this.log.debug('Load error :',err);
+							if (err) this.log.debug('Load error :', err);
 							else {
-								if(loaded) this.log.debug('History Loaded from Persistant Storage');
-								this.loaded=true;
+								if (loaded) this.log.debug('History Loaded from Persistant Storage');
+								this.loaded = true;
 							}
 						}.bind(this));
 					}.bind(this)
@@ -208,7 +208,7 @@ module.exports = function (pHomebridge) {
 				case TYPE_WEATHER:
 					this.accessoryType116 = "03 0102 0202 0302";
 					this.accessoryType117 = "07";
-					if(!this.disableTimer) {
+					if (!this.disableTimer) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
 							var backLog = params.backLog || [];
 							var previousAvrg = params.previousAvrg || {};
@@ -231,7 +231,7 @@ module.exports = function (pHomebridge) {
 												calc.num[key] = 0;
 											calc.sum[key] += backLog[h][key];
 											calc.num[key]++;
-											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key],2);
+											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
 										}
 									}
 								}
@@ -240,15 +240,15 @@ module.exports = function (pHomebridge) {
 
 							for (let key in previousAvrg) { // each record of previous average
 								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-									if(	!backLog.length ||//calc.avrg[key] == 0 || // zero value
+									if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
 										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
 									{
-										calc.avrg[key]=previousAvrg[key];
+										calc.avrg[key] = previousAvrg[key];
 									}
 								}
 							}
 
-							if(Object.keys(calc.avrg).length > 1) {
+							if (Object.keys(calc.avrg).length > 1) {
 								fakegato._addEntry(calc.avrg);
 								timer.emptyData(fakegato);
 							}
@@ -259,7 +259,7 @@ module.exports = function (pHomebridge) {
 				case TYPE_ENERGY:
 					this.accessoryType116 = "04 0102 0202 0702 0f03";
 					this.accessoryType117 = "1f";
-					if(!this.disableTimer) {
+					if (!this.disableTimer) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
 							var backLog = params.backLog || [];
 							var previousAvrg = params.previousAvrg || {};
@@ -282,7 +282,7 @@ module.exports = function (pHomebridge) {
 												calc.num[key] = 0;
 											calc.sum[key] += backLog[h][key];
 											calc.num[key]++;
-											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key],2);
+											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
 										}
 									}
 								}
@@ -291,10 +291,10 @@ module.exports = function (pHomebridge) {
 
 							for (let key in previousAvrg) { // each record of previous average
 								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-									if(	!backLog.length ||//calc.avrg[key] == 0 || // zero value
+									if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
 										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
 									{
-										calc.avrg[key]=previousAvrg[key];
+										calc.avrg[key] = previousAvrg[key];
 									}
 								}
 							}
@@ -308,7 +308,7 @@ module.exports = function (pHomebridge) {
 				case TYPE_ROOM:
 					this.accessoryType116 = "04 0102 0202 0402 0f03";
 					this.accessoryType117 = "0f";
-					if(!this.disableTimer) {
+					if (!this.disableTimer) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
 							var backLog = params.backLog || [];
 							var previousAvrg = params.previousAvrg || {};
@@ -331,7 +331,7 @@ module.exports = function (pHomebridge) {
 												calc.num[key] = 0;
 											calc.sum[key] += backLog[h][key];
 											calc.num[key]++;
-											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key],2);
+											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
 										}
 									}
 								}
@@ -340,15 +340,15 @@ module.exports = function (pHomebridge) {
 
 							for (let key in previousAvrg) { // each record of previous average
 								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-									if(	!backLog.length ||//calc.avrg[key] == 0 || // zero value
+									if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
 										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
 									{
-										calc.avrg[key]=previousAvrg[key];
+										calc.avrg[key] = previousAvrg[key];
 									}
 								}
 							}
 
-							if(Object.keys(calc.avrg).length > 1) {
+							if (Object.keys(calc.avrg).length > 1) {
 								fakegato._addEntry(calc.avrg);
 								timer.emptyData(fakegato);
 							}
@@ -359,16 +359,16 @@ module.exports = function (pHomebridge) {
 				case TYPE_DOOR:
 					this.accessoryType116 = "01 0601";
 					this.accessoryType117 = "01";
-					if(!this.disableTimer) {
+					if (!this.disableTimer) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
 							var backLog = params.backLog || [];
 							var immediate = params.immediate;
 
 							var fakegato = this.service;
-							var actualEntry={};
+							var actualEntry = {};
 
-							if(backLog.length) {
-								if(!immediate) {
+							if (backLog.length) {
+								if (!immediate) {
 									actualEntry.time = moment().unix();
 									actualEntry.status = backLog[0].status;
 								}
@@ -376,7 +376,7 @@ module.exports = function (pHomebridge) {
 									actualEntry.time = backLog[0].time;
 									actualEntry.status = backLog[0].status;
 								}
-								fakegato.log.debug('**Fakegato-timer callbackDoor: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
+								fakegato.log.debug('**Fakegato-timer callbackDoor: ', fakegato.accessoryName, ', immediate: ', immediate, ', entry: ', actualEntry);
 
 								fakegato._addEntry(actualEntry);
 							}
@@ -386,16 +386,16 @@ module.exports = function (pHomebridge) {
 				case TYPE_MOTION:
 					this.accessoryType116 = "02 1301 1c01";
 					this.accessoryType117 = "02";
-					if(!this.disableTimer) {
+					if (!this.disableTimer) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
 							var backLog = params.backLog || [];
 							var immediate = params.immediate;
 
 							var fakegato = this.service;
-							var actualEntry={};
+							var actualEntry = {};
 
-							if(backLog.length) {
-								if(!immediate) {
+							if (backLog.length) {
+								if (!immediate) {
 									actualEntry.time = moment().unix();
 									actualEntry.status = backLog[0].status;
 								}
@@ -403,7 +403,7 @@ module.exports = function (pHomebridge) {
 									actualEntry.time = backLog[0].time;
 									actualEntry.status = backLog[0].status;
 								}
-								fakegato.log.debug('**Fakegato-timer callbackMotion: ', fakegato.accessoryName, ', immediate: ',immediate,', entry: ',actualEntry);
+								fakegato.log.debug('**Fakegato-timer callbackMotion: ', fakegato.accessoryName, ', immediate: ', immediate, ', entry: ', actualEntry);
 
 								fakegato._addEntry(actualEntry);
 							}
@@ -430,19 +430,19 @@ module.exports = function (pHomebridge) {
 			this.memoryAddress = 0;
 			this.dataStream = '';
 
-			this.saving=false;
+			this.saving = false;
 
 			this.registerEvents();
-			if(this.storage === undefined) {
-				this.loaded=true;
+			if (this.storage === undefined) {
+				this.loaded = true;
 			}
 		}
 
 		registerEvents() {
-			this.log.debug('Registring Events',thisAccessory.displayName);
-			if ( typeof thisAccessory.getService === "function" ) {
+			this.log.debug('Registring Events', thisAccessory.displayName);
+			if (typeof thisAccessory.getService === "function") {
 				// Platform API
-				this.log.debug('Platform',thisAccessory.displayName);
+				this.log.debug('Platform', thisAccessory.displayName);
 
 				this.service = thisAccessory.getService(FakeGatoHistoryService);
 				if (this.service === undefined) {
@@ -461,7 +461,7 @@ module.exports = function (pHomebridge) {
 			}
 			else {
 				// Accessory API
-				this.log.debug('Accessory',thisAccessory.displayName);
+				this.log.debug('Accessory', thisAccessory.displayName);
 
 				this.addCharacteristic(S2R1Characteristic);
 
@@ -489,28 +489,28 @@ module.exports = function (pHomebridge) {
 			switch (this.accessoryType) {
 				case TYPE_DOOR:
 				case TYPE_MOTION:
-					if(!this.disableTimer)
-						homebridge.globalFakeGatoTimer.addData({entry: entry, service: this, immediateCallback: true});
+					if (!this.disableTimer)
+						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this, immediateCallback: true });
 					else
-						this._addEntry({time: entry.time, status: entry.status});
+						this._addEntry({ time: entry.time, status: entry.status });
 					break;
 				case TYPE_WEATHER:
-					if(!this.disableTimer)
-						homebridge.globalFakeGatoTimer.addData({entry: entry, service: this});
+					if (!this.disableTimer)
+						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
 					else
-						this._addEntry({time: entry.time, temp: entry.temp, humidity: entry.humidity, pressure: entry.pressure});
+						this._addEntry({ time: entry.time, temp: entry.temp, humidity: entry.humidity, pressure: entry.pressure });
 					break;
 				case TYPE_ROOM:
-					if(!this.disableTimer)
-						homebridge.globalFakeGatoTimer.addData({entry: entry, service: this});
+					if (!this.disableTimer)
+						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
 					else
-						this._addEntry({time: entry.time, temp: entry.temp, humidity: entry.humidity, ppm: entry.ppm});
+						this._addEntry({ time: entry.time, temp: entry.temp, humidity: entry.humidity, ppm: entry.ppm });
 					break;
 				case TYPE_ENERGY:
-					if(!this.disableTimer)
-						homebridge.globalFakeGatoTimer.addData({entry: entry, service: this});
+					if (!this.disableTimer)
+						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
 					else
-						this._addEntry({time: entry.time, power: entry.power});
+						this._addEntry({ time: entry.time, power: entry.power });
 					break;
 				default:
 					this._addEntry(entry);
@@ -520,11 +520,11 @@ module.exports = function (pHomebridge) {
 
 		//in order to be consistent with Eve, entry address start from 1
 		_addEntry(entry) {
-			if(this.loaded) {
+			if (this.loaded) {
 				var entry2address = function (val) {
 					return val % this.memorySize;
 				}
-				.bind(this);
+					.bind(this);
 
 				var val;
 
@@ -552,11 +552,11 @@ module.exports = function (pHomebridge) {
 						time: entry.time,
 						setRefTime: 1
 					};
-					this.initialTime=entry.time;
+					this.initialTime = entry.time;
 					this.lastEntry++;
 					this.usedMemory++;
 				}
-				
+
 				this.history[entry2address(this.lastEntry)] = (entry);
 
 				if (this.usedMemory < this.memorySize) {
@@ -565,7 +565,7 @@ module.exports = function (pHomebridge) {
 						numToHex(swap32(entry.time - this.refTime - EPOCH_OFFSET), 8),
 						numToHex(swap32(this.refTime), 8),
 						this.accessoryType116,
-						numToHex(swap16(this.usedMemory+1), 4),
+						numToHex(swap16(this.usedMemory + 1), 4),
 						numToHex(swap16(this.memorySize), 4),
 						numToHex(swap32(this.firstEntry), 8));
 				} else {
@@ -576,7 +576,7 @@ module.exports = function (pHomebridge) {
 						this.accessoryType116,
 						numToHex(swap16(this.usedMemory), 4),
 						numToHex(swap16(this.memorySize), 4),
-						numToHex(swap32(this.firstEntry+1), 8));
+						numToHex(swap32(this.firstEntry + 1), 8));
 				}
 
 				if (this.service === undefined) { // Accessory API
@@ -591,11 +591,11 @@ module.exports = function (pHomebridge) {
 				this.log.debug("Used memory %s: %s", this.accessoryName, this.usedMemory.toString(16));
 				this.log.debug("116 %s: %s", this.accessoryName, val);
 
-				if(this.storage !== undefined) this.save();
+				if (this.storage !== undefined) this.save();
 			} else {
-				setTimeout(function(){ // retry in 100ms
+				setTimeout(function () { // retry in 100ms
 					this._addEntry(entry);
-				}.bind(this),100);
+				}.bind(this), 100);
 			}
 		}
 		getInitialTime() {
@@ -615,57 +615,57 @@ module.exports = function (pHomebridge) {
 		}
 
 		save() {
-			if(this.loaded) {
+			if (this.loaded) {
 
 				let data = {
-						firstEntry:this.firstEntry,
-						lastEntry :this.lastEntry,
-						usedMemory:this.usedMemory,
-						refTime   :this.refTime,
-						initialTime:this.initialTime,
-						history   :this.history,
-						extra     :this.extra
-					};
+					firstEntry: this.firstEntry,
+					lastEntry: this.lastEntry,
+					usedMemory: this.usedMemory,
+					refTime: this.refTime,
+					initialTime: this.initialTime,
+					history: this.history,
+					extra: this.extra
+				};
 
 
 				homebridge.globalFakeGatoStorage.write({
 					service: this,
-					data:typeof(data) === "object" ? JSON.stringify(data) : data
+					data: typeof (data) === "object" ? JSON.stringify(data) : data
 				});
 
 			} else {
-				setTimeout(function(){ // retry in 100ms
+				setTimeout(function () { // retry in 100ms
 					this.save();
-				}.bind(this),100);
+				}.bind(this), 100);
 			}
 		}
 		load(cb) {
 			this.log.debug("Loading...");
 			homebridge.globalFakeGatoStorage.read({
 				service: this,
-				callback: function(err,data){
-					if(!err) {
-						if(data) {
+				callback: function (err, data) {
+					if (!err) {
+						if (data) {
 							try {
-								this.log.debug("read data from",this.accessoryName,":",data);
-								let jsonFile = typeof(data) === "object" ? data : JSON.parse(data);
+								this.log.debug("read data from", this.accessoryName, ":", data);
+								let jsonFile = typeof (data) === "object" ? data : JSON.parse(data);
 
 								this.firstEntry = jsonFile.firstEntry;
-								this.lastEntry  = jsonFile.lastEntry;
+								this.lastEntry = jsonFile.lastEntry;
 								this.usedMemory = jsonFile.usedMemory;
-								this.refTime    = jsonFile.refTime;
-								this.initialTime= jsonFile.initialTime;
-								this.history	= jsonFile.history;
-								this.extra	    = jsonFile.extra;
+								this.refTime = jsonFile.refTime;
+								this.initialTime = jsonFile.initialTime;
+								this.history = jsonFile.history;
+								this.extra = jsonFile.extra;
 							} catch (e) {
-								this.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**",e);
-								cb(e,false);
+								this.log.debug("**ERROR fetching persisting data restart from zero - invalid JSON**", e);
+								cb(e, false);
 							}
-							cb(null,true);
+							cb(null, true);
 						}
 					} else {
 						// file don't exists
-						cb(null,false);
+						cb(null, false);
 					}
 				}.bind(this)
 			});
@@ -678,7 +678,7 @@ module.exports = function (pHomebridge) {
 		}
 
 		getCurrentS2R2(callback) {
-			var entry2address = function(val) {
+			var entry2address = function (val) {
 				return val % this.memorySize;
 			}.bind(this);
 
@@ -686,7 +686,7 @@ module.exports = function (pHomebridge) {
 				this.memoryAddress = entry2address(this.currentEntry);
 				for (var i = 0; i < 11; i++) {
 					if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true) ||
-						(this.currentEntry == this.firstEntry+1)) {
+						(this.currentEntry == this.firstEntry + 1)) {
 						this.dataStream += Format(
 							" 15%s 0100 0000 81%s0000 0000 00 0000",
 							numToHex(swap32(this.currentEntry), 8),
@@ -696,53 +696,53 @@ module.exports = function (pHomebridge) {
 					else {
 						this.log.debug("%s Entry: %s, Address: %s", this.accessoryName, this.currentEntry, this.memoryAddress);
 						switch (this.accessoryType) {
-						case TYPE_WEATHER:
-							this.dataStream += Format(
-							" 10 %s%s%s%s%s%s",
-							numToHex(swap32(this.currentEntry), 8),
-							numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-							this.accessoryType117,
-							numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
-							numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
-							numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
-							break;
-						case TYPE_ENERGY:
-							this.dataStream += Format(
-							" 14 %s%s%s0000 0000%s0000 0000",
-							numToHex(swap32(this.currentEntry), 8),
-							numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-							this.accessoryType117,
-							numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
-							break;
-						case TYPE_ROOM:
-							this.dataStream += Format(
-							" 13 %s%s%s%s%s%s0000 00",
-							numToHex(swap32(this.currentEntry), 8),
-							numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-							this.accessoryType117,
-							numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
-							numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
-							numToHex(swap16(this.history[this.memoryAddress].ppm), 4));
-							break;
-						case TYPE_DOOR:
-						case TYPE_MOTION:
-							this.dataStream += Format(
-							" 0b %s%s%s%s",
-							numToHex(swap32(this.currentEntry), 8),
-							numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-							this.accessoryType117,
-							numToHex(this.history[this.memoryAddress].status, 2));
-							break;
-						case TYPE_THERMO:
-							this.dataStream += Format(
-							" 11 %s%s%s%s%s%s 0000",
-							numToHex(swap32(this.currentEntry), 8),
-							numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-							this.accessoryType117,
-							numToHex(swap16(this.history[this.memoryAddress].currentTemp * 100), 4),
-							numToHex(swap16(this.history[this.memoryAddress].setTemp * 100), 4),
-							numToHex(this.history[this.memoryAddress].valvePosition, 2));
-							break;
+							case TYPE_WEATHER:
+								this.dataStream += Format(
+									" 10 %s%s%s%s%s%s",
+									numToHex(swap32(this.currentEntry), 8),
+									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+									this.accessoryType117,
+									numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
+									numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
+									numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
+								break;
+							case TYPE_ENERGY:
+								this.dataStream += Format(
+									" 14 %s%s%s0000 0000%s0000 0000",
+									numToHex(swap32(this.currentEntry), 8),
+									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+									this.accessoryType117,
+									numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
+								break;
+							case TYPE_ROOM:
+								this.dataStream += Format(
+									" 13 %s%s%s%s%s%s0000 00",
+									numToHex(swap32(this.currentEntry), 8),
+									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+									this.accessoryType117,
+									numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
+									numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
+									numToHex(swap16(this.history[this.memoryAddress].ppm), 4));
+								break;
+							case TYPE_DOOR:
+							case TYPE_MOTION:
+								this.dataStream += Format(
+									" 0b %s%s%s%s",
+									numToHex(swap32(this.currentEntry), 8),
+									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+									this.accessoryType117,
+									numToHex(this.history[this.memoryAddress].status, 2));
+								break;
+							case TYPE_THERMO:
+								this.dataStream += Format(
+									" 11 %s%s%s%s%s%s 0000",
+									numToHex(swap32(this.currentEntry), 8),
+									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+									this.accessoryType117,
+									numToHex(swap16(this.history[this.memoryAddress].currentTemp * 100), 4),
+									numToHex(swap16(this.history[this.memoryAddress].setTemp * 100), 4),
+									numToHex(this.history[this.memoryAddress].valvePosition, 2));
+								break;
 						}
 					}
 					this.currentEntry++;
