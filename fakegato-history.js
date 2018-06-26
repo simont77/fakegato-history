@@ -13,7 +13,8 @@ const TYPE_ENERGY = 'energy',
 	TYPE_WEATHER = 'weather',
 	TYPE_DOOR = 'door',
 	TYPE_MOTION = 'motion',
-	TYPE_THERMO = 'thermo';
+	TYPE_THERMO = 'thermo',
+	TYPE_AQUA = 'aqua';
 
 var homebridge;
 var Characteristic, Service;
@@ -410,6 +411,36 @@ module.exports = function (pHomebridge) {
 						});
 					}
 					break;
+				case TYPE_AQUA:
+					this.accessoryType116 = "03 1f01 2a08 2302";
+					this.accessoryType117 = "05";
+					this.accessoryType117bis = "07";
+					if (!this.disableTimer) {
+						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
+							var backLog = params.backLog || [];
+							var immediate = params.immediate;
+
+							var fakegato = this.service;
+							var actualEntry = {};
+
+							if (backLog.length) {
+								if (!immediate) {
+									actualEntry.time = moment().unix();
+									actualEntry.status = backLog[0].status;
+									actualEntry.waterAmount = backLog[0].waterAmount;
+								}
+								else {
+									actualEntry.time = backLog[0].time;
+									actualEntry.status = backLog[0].status;
+									actualEntry.waterAmount = backLog[0].waterAmount;
+								}
+								fakegato.log.debug('**Fakegato-timer callbackAqua: ', fakegato.accessoryName, ', immediate: ', immediate, ', entry: ', actualEntry);
+
+								fakegato._addEntry(actualEntry);
+							}
+						});
+					}
+					break;
 				case TYPE_THERMO:
 					this.accessoryType116 = "05 0102 1102 1001 1201 1d01";
 					this.accessoryType117 = "1f";
@@ -493,6 +524,12 @@ module.exports = function (pHomebridge) {
 						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this, immediateCallback: true });
 					else
 						this._addEntry({ time: entry.time, status: entry.status });
+					break;
+				case TYPE_AQUA:
+					if (!this.disableTimer)
+						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this, immediateCallback: true });
+					else
+						this._addEntry({ time: entry.time, status: entry.status, waterAmount: entry.waterAmount });
 					break;
 				case TYPE_WEATHER:
 					if (!this.disableTimer)
@@ -732,6 +769,23 @@ module.exports = function (pHomebridge) {
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
 									numToHex(this.history[this.memoryAddress].status, 2));
+								break;
+							case TYPE_AQUA:
+								if (this.history[this.memoryAddress].status == true)
+									this.dataStream += Format(
+										" 0d %s%s%s%s 300c",
+										numToHex(swap32(this.currentEntry), 8),
+										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+										this.accessoryType117,
+										numToHex(this.history[this.memoryAddress].status, 2));
+								else
+									this.dataStream += Format(
+										" 15 %s%s%s%s%s 00000000 300c",
+										numToHex(swap32(this.currentEntry), 8),
+										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+										this.accessoryType117bis,
+										numToHex(this.history[this.memoryAddress].status, 2),
+										numToHex(swap32(this.history[this.memoryAddress].waterAmount), 8));
 								break;
 							case TYPE_THERMO:
 								this.dataStream += Format(
