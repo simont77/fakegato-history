@@ -88,7 +88,7 @@ For Energy and Door accessories it is also worth to add the custom characteristi
 
 For Door and Motion you may want to add characteristic E863F11A for setting the time of last activation. Value is the number of second from reset of fakegato-history. You can get this time using the function *getInitialTime()*
 
-For Aqua you need to add E863F131 and E863F11D characteristics in order to make Eve recognize the accessory, and to set last activation, total water consumption and flux (see wiki).
+For Aqua you need to add E863F131 and E863F11D characteristics in order to make Eve recognize the accessory, and to set last activation, total water consumption and flux (see wiki). You MUST also set a proper value in E863F131, even if your plugin does not actively set these quantities, otherwise Eve will not communicate properly. See wiki for an example proper value.
 
 If your "weather" or "room" plugin don't send addEntry for a short time (supposedly less than 1h - need feedback), the graph will draw a straight line from the last data received to the new data received. Instead, if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours - need feedback), the graph will show "no data for the period". Take this in consideration if your sensor does not send entries if the difference from the previous one is small, you will end up with holes in the history. This is not currently addresses by fakegato, you should add extra entries if needed. Note that if you do not send a new entry at least every 10 minutes, the average will be 0, and you will a zero entry. This will be fixed soon.
 
