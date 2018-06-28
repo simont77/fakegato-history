@@ -415,31 +415,6 @@ module.exports = function (pHomebridge) {
 					this.accessoryType116 = "03 1f01 2a08 2302";
 					this.accessoryType117 = "05";
 					this.accessoryType117bis = "07";
-					if (!this.disableTimer) {
-						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-							var backLog = params.backLog || [];
-							var immediate = params.immediate;
-
-							var fakegato = this.service;
-							var actualEntry = {};
-
-							if (backLog.length) {
-								if (!immediate) {
-									actualEntry.time = moment().unix();
-									actualEntry.status = backLog[0].status;
-									actualEntry.waterAmount = backLog[0].waterAmount;
-								}
-								else {
-									actualEntry.time = backLog[0].time;
-									actualEntry.status = backLog[0].status;
-									actualEntry.waterAmount = backLog[0].waterAmount;
-								}
-								fakegato.log.debug('**Fakegato-timer callbackAqua: ', fakegato.accessoryName, ', immediate: ', immediate, ', entry: ', actualEntry);
-
-								fakegato._addEntry(actualEntry);
-							}
-						});
-					}
 					break;
 				case TYPE_THERMO:
 					this.accessoryType116 = "05 0102 1102 1001 1201 1d01";
@@ -526,10 +501,7 @@ module.exports = function (pHomebridge) {
 						this._addEntry({ time: entry.time, status: entry.status });
 					break;
 				case TYPE_AQUA:
-					if (!this.disableTimer)
-						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this, immediateCallback: true });
-					else
-						this._addEntry({ time: entry.time, status: entry.status, waterAmount: entry.waterAmount });
+					this._addEntry({ time: entry.time, status: entry.status, waterAmount: entry.waterAmount });
 					break;
 				case TYPE_WEATHER:
 					if (!this.disableTimer)
