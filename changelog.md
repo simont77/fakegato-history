@@ -1,3 +1,6 @@
+### v0.5.2
+- Initial support for Aqua accessory type
+
 ### v0.5.1
 - Improves reliability when a new iDevice starts downloading an existing history that has already rolled up.
 - Added isHistoryLoaded() function
