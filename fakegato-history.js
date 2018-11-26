@@ -155,6 +155,7 @@ module.exports = function (pHomebridge) {
 				this.path = optionalParams.path || optionalParams.folder || (this.storage == 'fs' ? homebridge.user.storagePath() : undefined);
 				this.filename = optionalParams.filename;
 				this.disableTimer = optionalParams.disableTimer || false;
+				this.disableRepeatLastData = optionalParams.disableRepeatLastData || false;
 			} else {
 				this.size = 4032;
 				this.minutes = 10;
@@ -238,13 +239,15 @@ module.exports = function (pHomebridge) {
 								}
 							}
 							calc.avrg.time = moment().unix(); // set the time of the avrg
-
-							for (let key in previousAvrg) { // each record of previous average
-								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-									if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
-										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-									{
-										calc.avrg[key] = previousAvrg[key];
+							
+							if(!this.disableRepeatLastData) {
+								for (let key in previousAvrg) { // each record of previous average
+									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
+										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
+											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
+										{
+											calc.avrg[key] = previousAvrg[key];
+										}
 									}
 								}
 							}
@@ -290,16 +293,18 @@ module.exports = function (pHomebridge) {
 							}
 							calc.avrg.time = moment().unix(); // set the time of the avrg
 
-							for (let key in previousAvrg) { // each record of previous average
-								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-									if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
-										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-									{
+							if(!this.disableRepeatLastData) {
+								for (let key in previousAvrg) { // each record of previous average
+									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
+										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
+											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
+										{
 										calc.avrg[key] = previousAvrg[key];
+										}
 									}
 								}
 							}
-
+								
 							fakegato._addEntry(calc.avrg);
 							timer.emptyData(fakegato);
 							return calc.avrg;
@@ -339,12 +344,14 @@ module.exports = function (pHomebridge) {
 							}
 							calc.avrg.time = moment().unix(); // set the time of the avrg
 
-							for (let key in previousAvrg) { // each record of previous average
-								if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-									if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
-										calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-									{
-										calc.avrg[key] = previousAvrg[key];
+							if(!this.disableRepeatLastData) {
+								for (let key in previousAvrg) { // each record of previous average
+									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
+										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
+											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
+										{
+											calc.avrg[key] = previousAvrg[key];
+										}
 									}
 								}
 							}
