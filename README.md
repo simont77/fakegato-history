@@ -40,6 +40,11 @@ Eve.app requires at least an entry every 10 minutes to avoid holes in the histor
 ```
 then you'll have to addEntry yourself data every 10min.
 
+By default, if you don't addEntry during the 10 minutes timer, to avoid gaps (and fill data for lazy sensors), the timer repeat the last data. To avoid this behaviour, add the `disableRepeatLastData` param :
+```
+	this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {size:length,disableRepeatLastData:true});
+```
+
 Depending on your accessory type:
 
 * Add entries to history of accessory emulating **Eve Weather** (TempSensor Service) using something like this:
