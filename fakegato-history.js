@@ -240,7 +240,7 @@ module.exports = function (pHomebridge) {
 							}
 							calc.avrg.time = moment().unix(); // set the time of the avrg
 							
-							if(!this.disableRepeatLastData) {
+							if(!fakegato.disableRepeatLastData) {
 								for (let key in previousAvrg) { // each record of previous average
 									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
 										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
@@ -293,7 +293,7 @@ module.exports = function (pHomebridge) {
 							}
 							calc.avrg.time = moment().unix(); // set the time of the avrg
 
-							if(!this.disableRepeatLastData) {
+							if(!fakegato.disableRepeatLastData) {
 								for (let key in previousAvrg) { // each record of previous average
 									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
 										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
@@ -344,7 +344,7 @@ module.exports = function (pHomebridge) {
 							}
 							calc.avrg.time = moment().unix(); // set the time of the avrg
 
-							if(!this.disableRepeatLastData) {
+							if(!fakegato.disableRepeatLastData) {
 								for (let key in previousAvrg) { // each record of previous average
 									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
 										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
