@@ -1,3 +1,6 @@
+### v0.5.4
+- Fix GoogleDrive issue
+
 ### v0.5.3
 - Added an optional parameter to disable the automatic repetition of the last entry every 10 minutes
 
