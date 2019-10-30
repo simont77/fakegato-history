@@ -13,7 +13,7 @@ const TYPE_ENERGY = 'energy',
 	TYPE_WEATHER = 'weather',
 	TYPE_DOOR = 'door',
 	TYPE_MOTION = 'motion',
-    TYPE_SWITCH = 'switch',
+	TYPE_SWITCH = 'switch',
 	TYPE_THERMO = 'thermo',
 	TYPE_AQUA = 'aqua';
 
@@ -421,7 +421,7 @@ module.exports = function (pHomebridge) {
 					break;
 				case TYPE_SWITCH:
 					this.accessoryType116 = "01 0e01";
-                    this.accessoryType117 = "01";
+					this.accessoryType117 = "01";
 					if (!this.disableTimer) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
 							var backLog = params.backLog || [];
