@@ -13,7 +13,7 @@ const TYPE_ENERGY = 'energy',
 	TYPE_WEATHER = 'weather',
 	TYPE_DOOR = 'door',
 	TYPE_MOTION = 'motion',
-        TYPE_SWITCH = 'switch',
+    TYPE_SWITCH = 'switch',
 	TYPE_THERMO = 'thermo',
 	TYPE_AQUA = 'aqua';
 
@@ -421,7 +421,7 @@ module.exports = function (pHomebridge) {
 					break;
 				case TYPE_SWITCH:
 					this.accessoryType116 = "01 0e01";
-                                        this.accessoryType117 = "01";
+                    this.accessoryType117 = "01";
 					if (!this.disableTimer) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
 							var backLog = params.backLog || [];
@@ -439,7 +439,7 @@ module.exports = function (pHomebridge) {
 									actualEntry.time = backLog[0].time;
 									actualEntry.status = backLog[0].status;
 								}
-								fakegato.log.debug('**Fakegato-timer callbackMotion: ', fakegato.accessoryName, ', immediate: ', immediate, ', entry: ', actualEntry);
+								fakegato.log.debug('**Fakegato-timer callbackSwitch: ', fakegato.accessoryName, ', immediate: ', immediate, ', entry: ', actualEntry);
 
 								fakegato._addEntry(actualEntry);
 							}
@@ -530,6 +530,7 @@ module.exports = function (pHomebridge) {
 			switch (this.accessoryType) {
 				case TYPE_DOOR:
 				case TYPE_MOTION:
+				case TYPE_SWITCH:
 					if (!this.disableTimer)
 						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this, immediateCallback: true });
 					else
@@ -770,6 +771,7 @@ module.exports = function (pHomebridge) {
 								break;
 							case TYPE_DOOR:
 							case TYPE_MOTION:
+							case TYPE_SWITCH:
 								this.dataStream += Format(
 									" 0b %s%s%s%s",
 									numToHex(swap32(this.currentEntry), 8),
