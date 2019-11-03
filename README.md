@@ -28,7 +28,7 @@ And if your plugin is using V2 of the platform API, also add the above to your c
 
 where
 
-- accessoryType can be "weather", "energy", "room", "door", motion", "thermo" or "aqua"
+- accessoryType can be "weather", "energy", "room", "door", motion", "switch", "thermo" or "aqua"
 - Accessory should be the accessory using the service, in order to correctly set the service name and pass the log to the parent object. Your Accessory should have a `this.log` variable pointing to the homebridge logger passed to the plugin constructor (add a line `this.log=log;` to your plugin). Debug messages will be shown if homebridge is launched with -D option.
 - length is the history length; if no value is given length is set to 4032 samples
 
@@ -76,6 +76,12 @@ Depending on your accessory type:
 		this.loggingService.addEntry({time: moment().unix(), status: this.status});
 
 	Status can be 1 for ‘detected’ or 0 for ‘cleared’. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
+
+* Add entries to history of accessory emulating **Eve Light Switch** (Switch service) using something like this on every status change:
+
+		this.loggingService.addEntry({time: moment().unix(), status: this.status});
+
+	Status can be 1 for ‘On’ or 0 for ‘Off’. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
 
 * Add entries to history of accessory emulating **Eve Thermo** (Thermostat service) using something like this every 10 minutes:
 
