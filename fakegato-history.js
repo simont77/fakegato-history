@@ -4,6 +4,7 @@
 const Format = require('util').format;
 const FakeGatoTimer = require('./fakegato-timer').FakeGatoTimer;
 const FakeGatoStorage = require('./fakegato-storage').FakeGatoStorage;
+const FakeGatoSchedule = require('./fakegato-schedule');
 const moment = require('moment');
 
 const EPOCH_OFFSET = 978307200;
@@ -19,15 +20,17 @@ const TYPE_ENERGY = 'energy',
 
 var homebridge;
 var Characteristic, Service;
-var FakeGatoSchedule;
 
 
-module.exports = function (pHomebridge) {
+module.exports = createFakeGatoHistory;  // default export
+module.exports.Schedule = FakeGatoSchedule;
+
+
+function createFakeGatoHistory(pHomebridge) {
 	if (pHomebridge && !homebridge) {
 		homebridge = pHomebridge;
 		Characteristic = homebridge.hap.Characteristic;
 		Service = homebridge.hap.Service;
-		FakeGatoSchedule = require('./fakegato-schedule')(homebridge);
 	}
 
 
@@ -844,12 +847,6 @@ module.exports = function (pHomebridge) {
 		setCurrentS2W2(val, callback) {
 			this.log.debug("Clock adjust %s: %s", this.accessoryName, base64ToHex(val));
 			callback(null, val);
-		}
-
-		addThermoSchedule(service) {
-			let scheduler = new FakeGatoSchedule('thermo', this.log);
-			scheduler.registerScheduleEvents(service);
-			return scheduler;
 		}
 
 	}

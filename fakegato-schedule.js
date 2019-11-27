@@ -74,8 +74,6 @@ module.exports = function (pHomebridge) {
     for (let i = 0; i < 3; i++) {
       let str = buf.readUInt8(ofs);
       let end = buf.readUInt8(ofs+1);
-      //let str = parseInt(hexVal.substring(ofs, ofs+2), 16);
-      //let end = parseInt(hexVal.substring(ofs+2, ofs+4), 16);
       if (str != 0xFF) {
         str = str * 10;
         end = end * 10;
@@ -143,7 +141,7 @@ module.exports = function (pHomebridge) {
   
   class FakeGatoSchedule {
     constructor(type, logger) {
-      this.scheduleModeType = type || 'unknown';
+      this.scheduleType = type || 'unknown';
       this.log = logger || {};
       if (!this.log.debug) {
         this.log.debug = DEBUG ? console.log : () => {};
@@ -187,7 +185,7 @@ module.exports = function (pHomebridge) {
         return;
       }
 
-      if (this.scheduleModeType === 'thermo') {
+      if (this.scheduleType === 'thermo') {
         service.addCharacteristic(ProgramData)
           .on('get', this.cb_getProgramData.bind(this));
 
@@ -454,7 +452,7 @@ module.exports = function (pHomebridge) {
         }
       }
 
-      if (setVacationMode != null) {
+      if (setVacationMode !== null) {
         this.setVacationMode(setVacationMode);
       }
       else if (setEnableSchedule === true) {

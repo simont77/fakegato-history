@@ -142,10 +142,17 @@ For the setup of Google Drive, please follow the Google Drive Quickstart for Nod
 * Pay attention so that your plugin does not issue multiple addEntry calls for the same accessory at the same time (this may results in improper behaviour of Google Drive to the its asynchronous nature)
 
 ### Schedules
-For Eve Thermo you can also enable the schedule feature. You must pass your Thermostat service to the `addThermoSchedule` function:
+For Eve Thermo you can also enable the schedule feature. You must pass your Thermostat service to the `registerScheduleEvents` function:
 ```
-this.loggingService = new FakeGatoHistoryService('thermo', accessoryObject, historyOptions);
-let thermoScheduler = this.loggingService.addThermoSchedule(this.thermostatService);
+// in your includes:
+var fakegatoHistory = require('fakegato-history');
+...
+// in your module.exports:
+Schedule = fakegatoHistory.Schedule(homebridge);
+...
+// in your code:
+let thermoScheduler = new Schedule('thermo', log);
+thermoScheduler.registerScheduleEvents(thermostatService);
 ```
 This will add the custom characteristics `E863F12F` (ProgramData), `E863F12C` (ProgramCommand) and `E863F11E`(FirmwareInfo) to your Termostat service. The schedule is executed in the background and will fire set calls to TargetTemperature and TargetHeatingCoolingState at the specified times.
 You does not have to return the 'thermoScheduler' instance, but you can play around with vacation mode and open window mode from your plugin:
