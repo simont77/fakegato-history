@@ -2,6 +2,7 @@
 'use strict';
 
 const Format = require('util').format;
+var scheduler = require('node-schedule');
 
 var homebridge;
 var Characteristic, Service;
@@ -467,19 +468,63 @@ module.exports = function (pHomebridge) {
     }
 
     disableAllSchedules() {
+      this.jobs.forEach((j) => {
+        j.cancel();
+      });
+      this.jobs = [];
+
       this.scheduleMode = false;
       this.log.debug('Schedule disabled');
     }
     
     enableAllSchedules(tempNow) {
+      this.jobs.forEach((j) => {
+        j.cancel();
+      });
+      this.jobs = [];
+
       if (tempNow) {
         // set HomeKit characteristic "TargetTemperature" to new temperature
         this.charac_targetTemp.setValue(tempNow, null, 'schedule enabled');
         // set HomeKit characteristic "TargetHeatingCoolingState" to HEAT
         this.charac_targetState.setValue(Characteristic.TargetHeatingCoolingState.HEAT, null, 'schedule enabled');
       }
+
+      this.enableSchedule(this.program1, 1); // MO
+      this.enableSchedule(this.program2, 2); // TU
+      this.enableSchedule(this.program3, 3); // WE
+      this.enableSchedule(this.program4, 4); // TH
+      this.enableSchedule(this.program5, 5); // FR
+      this.enableSchedule(this.program6, 6); // SA
+      this.enableSchedule(this.program7, 7); // SU
+
       this.scheduleMode = true;
       this.log.debug('Schedule enabled');
+    }
+
+    enableSchedule(program, day) {
+      const setTempHiFunc = () => {
+        // set HomeKit characteristic "TargetTemperature" to high temperature
+        this.charac_targetTemp.setValue(this.tempHi, null, 'schedule');
+        // set HomeKit characteristic "TargetHeatingCoolingState" to HEAT
+        this.charac_targetState.setValue(Characteristic.TargetHeatingCoolingState.HEAT, null, 'schedule');
+        this.log.debug('Schedule event: Start of heating period (set to %d°C)', this.tempHi);
+      };
+      const setTempLoFunc = () => {
+        // set HomeKit characteristic "TargetTemperature" to low temperature
+        this.charac_targetTemp.setValue(this.tempLo, null, 'schedule');
+        // set HomeKit characteristic "TargetHeatingCoolingState" to HEAT
+        this.charac_targetState.setValue(Characteristic.TargetHeatingCoolingState.HEAT, null, 'schedule');
+        this.log.debug('Schedule event: End of heating period (set to %d°C)', this.tempLo);
+      };
+
+      if (!Array.isArray(program.periods)) {
+        return;
+      }
+      program.periods.forEach((period) => {
+        this.jobs.push( scheduler.scheduleJob(Format('%d %d * * %d', period.strMinute, period.strHour, day), setTempHiFunc) );
+        this.jobs.push( scheduler.scheduleJob(Format('%d %d * * %d', period.endMinute, period.endHour, day), setTempLoFunc) );
+      });
     }
 
     setVacationMode(enable, temperature) {
