@@ -141,6 +141,29 @@ For the setup of Google Drive, please follow the Google Drive Quickstart for Nod
 ##### Additional notes for Google Drive
 * Pay attention so that your plugin does not issue multiple addEntry calls for the same accessory at the same time (this may results in improper behaviour of Google Drive to the its asynchronous nature)
 
+### Schedules
+For Eve Thermo you can also enable the schedule feature. You must pass your Thermostat service to the `registerScheduleEvents` function:
+```
+// in your includes:
+var fakegatoHistory = require('fakegato-history');
+...
+// in your module.exports:
+Schedule = fakegatoHistory.Schedule(homebridge);
+...
+// in your code:
+let thermoScheduler = new Schedule('thermo', log);
+thermoScheduler.registerScheduleEvents(thermostatService);
+```
+This will add the custom characteristics `E863F12F` (ProgramData), `E863F12C` (ProgramCommand) and `E863F11E`(FirmwareInfo) to your Termostat service. The schedule is executed in the background and will fire set calls to TargetTemperature and TargetHeatingCoolingState at the specified times.
+You does not have to return the 'thermoScheduler' instance, but you can play around with vacation mode and open window mode from your plugin:
+```
+thermoScheduler.setVacationMode(true, 16);  // (enable, temp[°C])
+thermoScheduler.setVacationMode(false);     // (disable)
+thermoScheduler.setOpenWindow(true);  	    // (enable open window mode)
+thermoScheduler.setOpenWindow(false); 	    // (disable open window mode)
+```
+You can also use these features from the Eve app. Vacation mode will disable the schedule and set the target temperature to a fixed value. Open window mode will stop heating (and temporary disables schedule) and will remain heating after a timeout of 30min.
+
 ## TODO
 
 - [x] Support for rolling-over of the history

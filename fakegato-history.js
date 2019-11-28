@@ -4,6 +4,7 @@
 const Format = require('util').format;
 const FakeGatoTimer = require('./fakegato-timer').FakeGatoTimer;
 const FakeGatoStorage = require('./fakegato-storage').FakeGatoStorage;
+const FakeGatoSchedule = require('./fakegato-schedule');
 const moment = require('moment');
 
 const EPOCH_OFFSET = 978307200;
@@ -20,7 +21,12 @@ const TYPE_ENERGY = 'energy',
 var homebridge;
 var Characteristic, Service;
 
-module.exports = function (pHomebridge) {
+
+module.exports = createFakeGatoHistory;  // default export
+module.exports.Schedule = FakeGatoSchedule;
+
+
+function createFakeGatoHistory(pHomebridge) {
 	if (pHomebridge && !homebridge) {
 		homebridge = pHomebridge;
 		Characteristic = homebridge.hap.Characteristic;
