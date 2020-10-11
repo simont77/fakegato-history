@@ -240,7 +240,7 @@ module.exports = function (pHomebridge) {
 								}
 							}
 							calc.avrg.time = moment().unix(); // set the time of the avrg
-							
+
 							if(!fakegato.disableRepeatLastData) {
 								for (let key in previousAvrg) { // each record of previous average
 									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
@@ -305,7 +305,7 @@ module.exports = function (pHomebridge) {
 									}
 								}
 							}
-								
+
 							fakegato._addEntry(calc.avrg);
 							timer.emptyData(fakegato);
 							return calc.avrg;
@@ -445,7 +445,7 @@ module.exports = function (pHomebridge) {
 							}
 						});
 					}
-					break;	
+					break;
 				case TYPE_AQUA:
 					this.accessoryType116 = "03 1f01 2a08 2302";
 					this.accessoryType117 = "05";
@@ -553,7 +553,11 @@ module.exports = function (pHomebridge) {
 					break;
 				case TYPE_ENERGY:
 					if (!this.disableTimer)
-						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
+						if(entry.power !== undefined) {	// allow on / to be added to the data stream
+							homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
+						} else {
+							homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this, immediateCallback: true });
+						}
 					else
 						this._addEntry({ time: entry.time, power: entry.power });
 					break;
@@ -752,12 +756,21 @@ module.exports = function (pHomebridge) {
 									numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
 								break;
 							case TYPE_ENERGY:
-								this.dataStream += Format(
-									" 14 %s%s%s0000 0000%s0000 0000",
-									numToHex(swap32(this.currentEntry), 8),
-									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-									this.accessoryType117,
-									numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
+								if(this.history[this.memoryAddress].power !== undefined) {
+									this.dataStream += Format(
+										" 14 %s%s%s0000 0000%s0000 0000",
+										numToHex(swap32(this.currentEntry), 8),
+										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+										this.accessoryType117,
+										numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
+									} else {
+										this.dataStream += Format(
+											" 0b %s%s10%s",
+											numToHex(swap32(this.currentEntry), 8),
+											numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+											// this.accessoryType117, hardcoded an override
+											numToHex(this.history[this.memoryAddress].status, 2));
+									}
 								break;
 							case TYPE_ROOM:
 								this.dataStream += Format(
