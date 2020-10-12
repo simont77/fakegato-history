@@ -262,8 +262,8 @@ module.exports = function (pHomebridge) {
 					}
 					break;
 				case TYPE_ENERGY:
-					this.accessoryType116 = "04 0102 0202 0702 0f03";
-					this.accessoryType117 = "1f";
+					this.accessoryType116 = "05 0b02 0c02 0d02 0702 0e01";   // Updated values from issue #97
+					this.accessoryType117 = "0f";
 					if (!this.disableTimer) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
 							var backLog = params.backLog || [];
@@ -758,12 +758,12 @@ module.exports = function (pHomebridge) {
 							case TYPE_ENERGY:
 								if(this.history[this.memoryAddress].power !== undefined) {
 									this.dataStream += Format(
-										" 14 %s%s%s0000 0000%s0000 0000",
+										" 12 %s%s%s 0000 0000 0000 %s",   // Maximum value is 6.5 Kwh
 										numToHex(swap32(this.currentEntry), 8),
 										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 										this.accessoryType117,
 										numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
-									} else {
+									} else if (this.history[this.memoryAddress].status !== undefined) {
 										this.dataStream += Format(
 											" 0b %s%s10%s",
 											numToHex(swap32(this.currentEntry), 8),
