@@ -59,6 +59,15 @@ Depending on your accessory type:
 
 	Power is in Watt. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. To have good accuracy, your entries should be in any case periodic, in order to avoid error with the average.
 
+* Add entries to history of accessory emulating **Eve Energy** (Switch service) using something like this:
+
+  	this.loggingService.addEntry({time: moment().unix(), power: this.power});      // Power
+    this.loggingService.addEntry({time: moment().unix(), status: this.status});    // On / Off
+
+  	Power is in Watt. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. To have good accuracy, your entries should be in any case periodic, in order to avoid error with the average.
+
+    Status can be 1 for ‘On’ or 0 for ‘Off’. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
+
 * Add entries to history of accessory emulating **Eve Room** (TempSensor, HumiditySensor and AirQuality Services) using something like this:
 
 		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, humidity:this.humidity, ppm:this.ppm});
@@ -88,7 +97,7 @@ Depending on your accessory type:
 		this.loggingService.addEntry({time: moment().unix(), currentTemp:this.currentTemp, setTemp:this.setTemp, valvePosition:this.valvePosition});
 
 	currentTemp and setTemp in Celsius, valvePosition in %. Fakegato does not use the internal timer for Thermo, entries are added to the history as received from the plugin (Thermo accessory is under development). For setTemp to show, you have to add all the 3 extra thermo characteristics (see gist), and enable set temperature visualization under accessory options in Eve.app.
-	
+
 * Add entries to history of accessory emulating **Eve Aqua** (Valve service set to Irrigation Type) using something like this on every status change:
 
 		this.LoggingService.addEntry({ time: moment().unix(), status: this.power, waterAmount:this.waterAmount });
