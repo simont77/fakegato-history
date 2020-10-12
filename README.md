@@ -112,6 +112,31 @@ For Aqua you need to add E863F131 and E863F11D characteristics in order to make 
 
 If your "weather" or "room" plugin don't send addEntry for a short time (supposedly less than 1h - need feedback), the graph will draw a straight line from the last data received to the new data received. Instead, if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours - need feedback), the graph will show "no data for the period". Take this in consideration if your sensor does not send entries if the difference from the previous one is small, you will end up with holes in the history. This is not currently addresses by fakegato, you should add extra entries if needed. Note that if you do not send a new entry at least every 10 minutes, the average will be 0, and you will a zero entry. This will be fixed soon.
 
+### Advanced Options
+
+* Usage in a Typescript based Plugin
+
+```
+import fakegato from 'fakegato-history';
+.
+.
+.
+export class yourPlatform implements DynamicPlatformPlugin {
+  private FakeGatoHistoryService;     <-- You need a platform level reference to the service
+.
+.
+.
+constructor ()  <-- This is your Platform constructor
+{
+this.FakeGatoHistoryService = fakegato(this.api);
+.
+.
+. For each accessory
+element.fakegatoService = new this.FakeGatoHistoryService(element.type, accessory, {
+  log: this.log,        <--  Required as typescript does not allow adding the log variable to the Accessory object.
+});
+```
+
 ### History Persistence
 
 It is possible to persist data to disk or to Google Drive to avoid loosing part of the history not yet downloaded by Eve on restart or system crash. Data is saved every 10min for "weather" and "room", on every event and every 10 minutes for "door" and "motion", on every event for other types.

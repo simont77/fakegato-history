@@ -29,12 +29,12 @@ module.exports = function (pHomebridge) {
 
 
 	var hexToBase64 = function (val) {
-		return new Buffer(('' + val).replace(/[^0-9A-F]/ig, ''), 'hex').toString('base64');
+		return Buffer.from(('' + val).replace(/[^0-9A-F]/ig, ''), 'hex').toString('base64');
 	},
 		base64ToHex = function (val) {
 			if (!val)
 				return val;
-			return new Buffer(val, 'base64').toString('hex');
+			return Buffer.from(val, 'base64').toString('hex');
 		},
 		swap16 = function (val) {
 			return ((val & 0xFF) << 8)
@@ -149,6 +149,9 @@ module.exports = function (pHomebridge) {
 				return temp;
 			}.bind(this);
 
+			thisAccessory = accessory;
+			this.accessoryName = thisAccessory.displayName;
+
 			if (typeof (optionalParams) === 'object') {
 				this.size = optionalParams.size || 4032;
 				this.minutes = optionalParams.minutes || 10; // Optional timer length
@@ -157,15 +160,13 @@ module.exports = function (pHomebridge) {
 				this.filename = optionalParams.filename;
 				this.disableTimer = optionalParams.disableTimer || false;
 				this.disableRepeatLastData = optionalParams.disableRepeatLastData || false;
+				this.log = optionalParams.log || thisAccessory.log || {};		// workaround for typescript blocking of changing of accessory object definition
 			} else {
 				this.size = 4032;
 				this.minutes = 10;
 				this.disableTimer = false;
+				this.log = thisAccessory.log || {};
 			}
-
-			thisAccessory = accessory;
-			this.accessoryName = thisAccessory.displayName;
-			this.log = thisAccessory.log || {};
 
 			if (!this.log.debug) {
 				this.log.debug = function () { };
