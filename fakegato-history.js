@@ -15,7 +15,8 @@ const TYPE_ENERGY = 'energy',
 	TYPE_MOTION = 'motion',
 	TYPE_SWITCH = 'switch',
 	TYPE_THERMO = 'thermo',
-	TYPE_AQUA = 'aqua';
+	TYPE_AQUA = 'aqua',
+	TYPE_ENERGY2 = 'energy2';
 
 var homebridge;
 var Characteristic, Service;
@@ -263,7 +264,58 @@ module.exports = function (pHomebridge) {
 					}
 					break;
 				case TYPE_ENERGY:
-					this.accessoryType116 = "05 0b02 0c02 0d02 0702 0e01";   // Updated values from issue #97
+					this.accessoryType116 = "04 0102 0202 0702 0f03";
+					this.accessoryType117 = "1f";
+					if (!this.disableTimer) {
+						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
+							var backLog = params.backLog || [];
+							var previousAvrg = params.previousAvrg || {};
+							var timer = params.timer;
+
+							var fakegato = this.service;
+							var calc = {
+								sum: {},
+								num: {},
+								avrg: {}
+							};
+
+							for (var h in backLog) {
+								if (backLog.hasOwnProperty(h)) { // only valid keys
+									for (let key in backLog[h]) { // each record
+										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
+											if (!calc.sum[key])
+												calc.sum[key] = 0;
+											if (!calc.num[key])
+												calc.num[key] = 0;
+											calc.sum[key] += backLog[h][key];
+											calc.num[key]++;
+											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
+										}
+									}
+								}
+							}
+							calc.avrg.time = moment().unix(); // set the time of the avrg
+
+							if(!fakegato.disableRepeatLastData) {
+								for (let key in previousAvrg) { // each record of previous average
+									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
+										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
+											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
+										{
+										calc.avrg[key] = previousAvrg[key];
+										}
+									}
+								}
+							}
+
+							fakegato._addEntry(calc.avrg);
+							timer.emptyData(fakegato);
+							return calc.avrg;
+						});
+					}
+					break;
+				case TYPE_ENERGY2:
+					this.accessoryType116 = "05 0b02 0c02 0d02 0702 0e01";  // Updated values from issue #97
 					this.accessoryType117 = "0f";
 					if (!this.disableTimer) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
@@ -554,10 +606,16 @@ module.exports = function (pHomebridge) {
 					break;
 				case TYPE_ENERGY:
 					if (!this.disableTimer)
+						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
+					else
+						this._addEntry({ time: entry.time, power: entry.power });
+					break;
+				case TYPE_ENERGY2:
+					if (!this.disableTimer)
 						if(entry.power !== undefined) {	// allow on / to be added to the data stream
 							homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
 						} else {
-							homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this, immediateCallback: true });
+							this._addEntry({ time: entry.time, status: entry.status });
 						}
 					else
 						if(entry.power !== undefined) {	// allow on / to be added to the data stream
@@ -761,6 +819,14 @@ module.exports = function (pHomebridge) {
 									numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
 								break;
 							case TYPE_ENERGY:
+								this.dataStream += Format(
+									" 14 %s%s%s0000 0000%s0000 0000",   // Maximum value is 6.5 Kwh
+									numToHex(swap32(this.currentEntry), 8),
+									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+									this.accessoryType117,
+									numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
+								break;
+							case TYPE_ENERGY2:
 								if(this.history[this.memoryAddress].power !== undefined) {
 									this.dataStream += Format(
 										" 12 %s%s%s 0000 0000 0000 %s",   // Maximum value is 6.5 Kwh
