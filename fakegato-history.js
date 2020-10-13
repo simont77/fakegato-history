@@ -820,7 +820,7 @@ module.exports = function (pHomebridge) {
 								break;
 							case TYPE_ENERGY:
 								this.dataStream += Format(
-									" 14 %s%s%s0000 0000%s0000 0000",   // Maximum value is 6.5 Kwh
+									" 14 %s%s%s0000 0000%s0000 0000",
 									numToHex(swap32(this.currentEntry), 8),
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
@@ -829,7 +829,7 @@ module.exports = function (pHomebridge) {
 							case TYPE_ENERGY2:
 								if(this.history[this.memoryAddress].power !== undefined) {
 									this.dataStream += Format(
-										" 12 %s%s%s 0000 0000 0000 %s",   // Maximum value is 6.5 Kwh
+										" 12 %s%s%s 0000 0000 0000 %s", // Maximum value is 6.5 Kwh
 										numToHex(swap32(this.currentEntry), 8),
 										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 										this.accessoryType117,

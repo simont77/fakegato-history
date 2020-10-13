@@ -59,7 +59,7 @@ Depending on your accessory type:
 
 	Power is in Watt. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. To have good accuracy, your entries should be in any case periodic, in order to avoid error with the average.
 
-* Add entries to history of accessory emulating **Eve Energy2** (Switch service) using something like this:
+* Add entries to history of accessory emulating **Eve Energy 2** (Switch service) using something like this:
 
   	this.loggingService.addEntry({time: moment().unix(), power: this.power});      // Power
     this.loggingService.addEntry({time: moment().unix(), status: this.status});    // On / Off
