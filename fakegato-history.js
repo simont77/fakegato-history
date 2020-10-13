@@ -560,7 +560,11 @@ module.exports = function (pHomebridge) {
 							homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this, immediateCallback: true });
 						}
 					else
-						this._addEntry({ time: entry.time, power: entry.power });
+						if(entry.power !== undefined) {	// allow on / to be added to the data stream
+							this._addEntry({ time: entry.time, power: entry.power });
+						} else {
+							this._addEntry({ time: entry.time, status: entry.status });
+						}
 					break;
 				default:
 					this._addEntry(entry);
