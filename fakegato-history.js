@@ -308,8 +308,10 @@ module.exports = function (pHomebridge) {
 								}
 							}
 
-							fakegato._addEntry(calc.avrg);
-							timer.emptyData(fakegato);
+							if (Object.keys(calc.avrg).length > 1) {
+								fakegato._addEntry(calc.avrg);
+								timer.emptyData(fakegato);
+							}
 							return calc.avrg;
 						});
 					}
@@ -358,9 +360,11 @@ module.exports = function (pHomebridge) {
 									}
 								}
 							}
-
-							fakegato._addEntry(calc.avrg);
-							timer.emptyData(fakegato);
+							console.log('_addEntry', calc.avrg);
+							if (Object.keys(calc.avrg).length > 1) {
+								fakegato._addEntry(calc.avrg);
+								timer.emptyData(fakegato);
+							}
 							return calc.avrg;
 						});
 					}
