@@ -360,7 +360,6 @@ module.exports = function (pHomebridge) {
 									}
 								}
 							}
-							console.log('_addEntry', calc.avrg);
 							if (Object.keys(calc.avrg).length > 1) {
 								fakegato._addEntry(calc.avrg);
 								timer.emptyData(fakegato);
