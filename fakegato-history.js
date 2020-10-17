@@ -16,6 +16,7 @@ const TYPE_ENERGY = 'energy',
 	TYPE_SWITCH = 'switch',
 	TYPE_THERMO = 'thermo',
 	TYPE_AQUA = 'aqua',
+	TYPE_WEATHER2 = 'weather2',
 	TYPE_ENERGY2 = 'energy2';
 
 var homebridge;
@@ -212,6 +213,59 @@ module.exports = function (pHomebridge) {
 			switch (accessoryType) {
 				case TYPE_WEATHER:
 					this.accessoryType116 = "03 0102 0202 0302";
+					this.accessoryType117 = "07";
+					if (!this.disableTimer) {
+						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
+							var backLog = params.backLog || [];
+							var previousAvrg = params.previousAvrg || {};
+							var timer = params.timer;
+
+							var fakegato = this.service;
+							var calc = {
+								sum: {},
+								num: {},
+								avrg: {}
+							};
+
+							for (var h in backLog) {
+								if (backLog.hasOwnProperty(h)) { // only valid keys
+									for (let key in backLog[h]) { // each record
+										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
+											if (!calc.sum[key])
+												calc.sum[key] = 0;
+											if (!calc.num[key])
+												calc.num[key] = 0;
+											calc.sum[key] += backLog[h][key];
+											calc.num[key]++;
+											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
+										}
+									}
+								}
+							}
+							calc.avrg.time = moment().unix(); // set the time of the avrg
+
+							if(!fakegato.disableRepeatLastData) {
+								for (let key in previousAvrg) { // each record of previous average
+									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
+										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
+											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
+										{
+											calc.avrg[key] = previousAvrg[key];
+										}
+									}
+								}
+							}
+
+							if (Object.keys(calc.avrg).length > 1) {
+								fakegato._addEntry(calc.avrg);
+								timer.emptyData(fakegato);
+							}
+							return calc.avrg;
+						});
+					}
+					break;
+				case TYPE_WEATHER2:
+					this.accessoryType116 = "04 0102 0202 0302 1c01"; // temp, humidity, air pre2sure and motion
 					this.accessoryType117 = "07";
 					if (!this.disableTimer) {
 						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
@@ -601,6 +655,19 @@ module.exports = function (pHomebridge) {
 					else
 						this._addEntry({ time: entry.time, temp: entry.temp, humidity: entry.humidity, pressure: entry.pressure });
 					break;
+				case TYPE_WEATHER2:
+					if (!this.disableTimer)
+						if(entry.temp !== undefined) {	// allow on / to be added to the data stream
+							homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
+						} else {
+							this._addEntry({ time: entry.time, status: entry.status });
+						}
+					else
+						if(entry.power !== undefined) {	// allow on / to be added to the data stream
+							this._addEntry({ time: entry.time, temp: entry.temp, humidity: entry.humidity, pressure: entry.pressure });
+						} else {
+							this._addEntry({ time: entry.time, status: entry.status });
+						}
 				case TYPE_ROOM:
 					if (!this.disableTimer)
 						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
@@ -803,7 +870,7 @@ module.exports = function (pHomebridge) {
 					if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true) ||
 						(this.currentEntry == this.firstEntry + 1)) {
 						this.dataStream += Format(
-							" 15%s 0100 0000 81%s0000 0000 00 0000",
+							",15%s 0100 0000 81%s0000 0000 00 0000",
 							numToHex(swap32(this.currentEntry), 8),
 							numToHex(swap32(this.refTime), 8));
 						this.setTime = false;
@@ -813,7 +880,7 @@ module.exports = function (pHomebridge) {
 						switch (this.accessoryType) {
 							case TYPE_WEATHER:
 								this.dataStream += Format(
-									" 10 %s%s%s%s%s%s",
+									",10 %s%s-%s:%s %s %s",
 									numToHex(swap32(this.currentEntry), 8),
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
@@ -821,9 +888,28 @@ module.exports = function (pHomebridge) {
 									numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
 									numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
 								break;
+							case TYPE_WEATHER2:
+							if(this.history[this.memoryAddress].temp !== undefined) {
+								this.dataStream += Format(
+									",10 %s%s-%s:%s %s %s",
+									numToHex(swap32(this.currentEntry), 8),
+									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+									this.accessoryType117,
+									numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
+									numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
+									numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
+								} else if (this.history[this.memoryAddress].status !== undefined) {
+									this.dataStream += Format(
+										",0b %s%s-08:%s",
+										numToHex(swap32(this.currentEntry), 8),
+										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+										// this.accessoryType117, hardcoded an override
+										numToHex(this.history[this.memoryAddress].status, 2));
+								}
+								break;
 							case TYPE_ENERGY:
 								this.dataStream += Format(
-									" 14 %s%s%s0000 0000%s0000 0000",
+									",14 %s%s-%s:0000 0000 %s 0000 0000",
 									numToHex(swap32(this.currentEntry), 8),
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
@@ -832,14 +918,15 @@ module.exports = function (pHomebridge) {
 							case TYPE_ENERGY2:
 								if(this.history[this.memoryAddress].power !== undefined) {
 									this.dataStream += Format(
-										" 12 %s%s%s 0000 0000 0000 %s", // Maximum value is 6.5 Kwh
+										",12 %s%s-%s:0100 %s 0200 %s", // Maximum value is 6.5 Kwh
 										numToHex(swap32(this.currentEntry), 8),
 										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 										this.accessoryType117,
+										numToHex(swap16(this.history[this.memoryAddress].volts * 10), 4),
 										numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
 									} else if (this.history[this.memoryAddress].status !== undefined) {
 										this.dataStream += Format(
-											" 0b %s%s10%s",
+											",0b %s%s-10:%s",
 											numToHex(swap32(this.currentEntry), 8),
 											numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 											// this.accessoryType117, hardcoded an override
@@ -848,7 +935,7 @@ module.exports = function (pHomebridge) {
 								break;
 							case TYPE_ROOM:
 								this.dataStream += Format(
-									" 13 %s%s%s%s%s%s0000 00",
+									",13 %s%s%s%s%s%s0000 00",
 									numToHex(swap32(this.currentEntry), 8),
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
@@ -860,7 +947,7 @@ module.exports = function (pHomebridge) {
 							case TYPE_MOTION:
 							case TYPE_SWITCH:
 								this.dataStream += Format(
-									" 0b %s%s%s%s",
+									",0b %s%s%s%s",
 									numToHex(swap32(this.currentEntry), 8),
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
@@ -869,14 +956,14 @@ module.exports = function (pHomebridge) {
 							case TYPE_AQUA:
 								if (this.history[this.memoryAddress].status == true)
 									this.dataStream += Format(
-										" 0d %s%s%s%s 300c",
+										",0d %s%s%s%s 300c",
 										numToHex(swap32(this.currentEntry), 8),
 										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 										this.accessoryType117,
 										numToHex(this.history[this.memoryAddress].status, 2));
 								else
 									this.dataStream += Format(
-										" 15 %s%s%s%s%s 00000000 300c",
+										",15 %s%s%s%s%s 00000000 300c",
 										numToHex(swap32(this.currentEntry), 8),
 										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 										this.accessoryType117bis,
@@ -885,7 +972,7 @@ module.exports = function (pHomebridge) {
 								break;
 							case TYPE_THERMO:
 								this.dataStream += Format(
-									" 11 %s%s%s%s%s%s 0000",
+									",11 %s%s%s%s%s%s 0000",
 									numToHex(swap32(this.currentEntry), 8),
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
