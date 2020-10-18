@@ -663,7 +663,7 @@ module.exports = function (pHomebridge) {
 							this._addEntry({ time: entry.time, status: entry.status });
 						}
 					else
-						if(entry.power !== undefined) {	// allow on / to be added to the data stream
+						if(entry.temp !== undefined) {	// allow on / to be added to the data stream
 							this._addEntry({ time: entry.time, temp: entry.temp, humidity: entry.humidity, pressure: entry.pressure });
 						} else {
 							this._addEntry({ time: entry.time, status: entry.status });
