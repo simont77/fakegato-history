@@ -4,7 +4,6 @@
 const Format = require('util').format;
 const FakeGatoTimer = require('./fakegato-timer').FakeGatoTimer;
 const FakeGatoStorage = require('./fakegato-storage').FakeGatoStorage;
-const moment = require('moment');
 
 const EPOCH_OFFSET = 978307200;
 
@@ -16,8 +15,7 @@ const TYPE_ENERGY = 'energy',
 	TYPE_SWITCH = 'switch',
 	TYPE_THERMO = 'thermo',
 	TYPE_AQUA = 'aqua',
-	TYPE_WEATHER2 = 'weather2',
-	TYPE_ENERGY2 = 'energy2';
+	TYPE_CUSTOM = 'custom';
 
 var homebridge;
 var Characteristic, Service;
@@ -153,6 +151,8 @@ module.exports = function (pHomebridge) {
 
 			thisAccessory = accessory;
 			this.accessoryName = thisAccessory.displayName;
+			this.signatures = [];
+			this.uuid = require('./lib/uuid.js');
 
 			if (typeof (optionalParams) === 'object') {
 				this.size = optionalParams.size || 4032;
@@ -242,60 +242,7 @@ module.exports = function (pHomebridge) {
 									}
 								}
 							}
-							calc.avrg.time = moment().unix(); // set the time of the avrg
-
-							if(!fakegato.disableRepeatLastData) {
-								for (let key in previousAvrg) { // each record of previous average
-									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
-											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-										{
-											calc.avrg[key] = previousAvrg[key];
-										}
-									}
-								}
-							}
-
-							if (Object.keys(calc.avrg).length > 1) {
-								fakegato._addEntry(calc.avrg);
-								timer.emptyData(fakegato);
-							}
-							return calc.avrg;
-						});
-					}
-					break;
-				case TYPE_WEATHER2:
-					this.accessoryType116 = "04 0102 0202 0302 1c01"; // temp, humidity, air pre2sure and motion
-					this.accessoryType117 = "07";
-					if (!this.disableTimer) {
-						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-							var backLog = params.backLog || [];
-							var previousAvrg = params.previousAvrg || {};
-							var timer = params.timer;
-
-							var fakegato = this.service;
-							var calc = {
-								sum: {},
-								num: {},
-								avrg: {}
-							};
-
-							for (var h in backLog) {
-								if (backLog.hasOwnProperty(h)) { // only valid keys
-									for (let key in backLog[h]) { // each record
-										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
-											if (!calc.sum[key])
-												calc.sum[key] = 0;
-											if (!calc.num[key])
-												calc.num[key] = 0;
-											calc.sum[key] += backLog[h][key];
-											calc.num[key]++;
-											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
-										}
-									}
-								}
-							}
-							calc.avrg.time = moment().unix(); // set the time of the avrg
+							calc.avrg.time = Math.round(new Date().valueOf() / 1000); // set the time of the avrg
 
 							if(!fakegato.disableRepeatLastData) {
 								for (let key in previousAvrg) { // each record of previous average
@@ -348,7 +295,7 @@ module.exports = function (pHomebridge) {
 									}
 								}
 							}
-							calc.avrg.time = moment().unix(); // set the time of the avrg
+							calc.avrg.time = Math.round(new Date().valueOf() / 1000); // set the time of the avrg
 
 							if(!fakegato.disableRepeatLastData) {
 								for (let key in previousAvrg) { // each record of previous average
@@ -362,58 +309,6 @@ module.exports = function (pHomebridge) {
 								}
 							}
 
-							if (Object.keys(calc.avrg).length > 1) {
-								fakegato._addEntry(calc.avrg);
-								timer.emptyData(fakegato);
-							}
-							return calc.avrg;
-						});
-					}
-					break;
-				case TYPE_ENERGY2:
-					this.accessoryType116 = "05 0b02 0c02 0d02 0702 0e01";  // Updated values from issue #97
-					this.accessoryType117 = "0f";
-					if (!this.disableTimer) {
-						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-							var backLog = params.backLog || [];
-							var previousAvrg = params.previousAvrg || {};
-							var timer = params.timer;
-
-							var fakegato = this.service;
-							var calc = {
-								sum: {},
-								num: {},
-								avrg: {}
-							};
-
-							for (var h in backLog) {
-								if (backLog.hasOwnProperty(h)) { // only valid keys
-									for (let key in backLog[h]) { // each record
-										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
-											if (!calc.sum[key])
-												calc.sum[key] = 0;
-											if (!calc.num[key])
-												calc.num[key] = 0;
-											calc.sum[key] += backLog[h][key];
-											calc.num[key]++;
-											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
-										}
-									}
-								}
-							}
-							calc.avrg.time = moment().unix(); // set the time of the avrg
-
-							if(!fakegato.disableRepeatLastData) {
-								for (let key in previousAvrg) { // each record of previous average
-									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
-											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-										{
-										calc.avrg[key] = previousAvrg[key];
-										}
-									}
-								}
-							}
 							if (Object.keys(calc.avrg).length > 1) {
 								fakegato._addEntry(calc.avrg);
 								timer.emptyData(fakegato);
@@ -453,7 +348,7 @@ module.exports = function (pHomebridge) {
 									}
 								}
 							}
-							calc.avrg.time = moment().unix(); // set the time of the avrg
+							calc.avrg.time = Math.round(new Date().valueOf() / 1000); // set the time of the avrg
 
 							if(!fakegato.disableRepeatLastData) {
 								for (let key in previousAvrg) { // each record of previous average
@@ -488,7 +383,7 @@ module.exports = function (pHomebridge) {
 
 							if (backLog.length) {
 								if (!immediate) {
-									actualEntry.time = moment().unix();
+									actualEntry.time = Math.round(new Date().valueOf() / 1000);
 									actualEntry.status = backLog[0].status;
 								}
 								else {
@@ -515,7 +410,7 @@ module.exports = function (pHomebridge) {
 
 							if (backLog.length) {
 								if (!immediate) {
-									actualEntry.time = moment().unix();
+									actualEntry.time = Math.round(new Date().valueOf() / 1000);
 									actualEntry.status = backLog[0].status;
 								}
 								else {
@@ -542,7 +437,7 @@ module.exports = function (pHomebridge) {
 
 							if (backLog.length) {
 								if (!immediate) {
-									actualEntry.time = moment().unix();
+									actualEntry.time = Math.round(new Date().valueOf() / 1000);
 									actualEntry.status = backLog[0].status;
 								}
 								else {
@@ -555,6 +450,41 @@ module.exports = function (pHomebridge) {
 							}
 						});
 					}
+					break;
+				case TYPE_CUSTOM:
+					thisAccessory.services.forEach((service, i) => {
+						service.characteristics.forEach((characteristic, i) => {
+							// console.log('  characteristics', characteristic.displayName, characteristic.UUID);
+							switch(this.uuid.toLongFormUUID(characteristic.UUID)) {
+								case Characteristic.CurrentTemperature.UUID: // Temperature
+									this.signatures.push({ signature: '0102', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 100 });
+									break;
+								case Characteristic.CurrentRelativeHumidity.UUID: // Humidity
+									this.signatures.push({ signature: '0202', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 100 });
+									break;
+								case 'E863F10F-079E-48FF-8F27-9C2605A29F52': // CustomCharacteristic.AtmosphericPressureLevel.UUID
+									this.signatures.push({ signature: '0302', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 10 });
+									break;
+								case 'missing': // PPM
+									this.signatures.push({ signature: '0702', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 10 });
+									break;
+								case 'missing1': // Open / Close
+									this.signatures.push({ signature: '0601', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1 });
+									break;
+								case 'E863F10D-079E-48FF-8F27-9C2605A29F52': // Power
+									this.signatures.push({ signature: '0702', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 10 });
+									break;
+								case Characteristic.On.UUID: // Switch On
+									this.signatures.push({ signature: '0e01', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1 });
+									break;
+								case Characteristic.MotionDetected.UUID: // Motion Detected
+									this.signatures.push({ signature: '1c01', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1 });
+									break;
+								}
+							});
+						});
+						// console.log('signatures', '0' + this.signatures.length.toString() + ' ' + this.signatures.sort((a, b) => (a.signature > b.signature) ? 1 : -1).map(a => a.signature).join(' '));
+						this.accessoryType116 = (' 0' + this.signatures.length.toString() + ' ' + this.signatures.sort((a, b) => (a.signature > b.signature) ? 1 : -1).map(a => a.signature).join(' ') + ' ');
 					break;
 				case TYPE_AQUA:
 					this.accessoryType116 = "03 1f01 2a08 2302";
@@ -655,19 +585,6 @@ module.exports = function (pHomebridge) {
 					else
 						this._addEntry({ time: entry.time, temp: entry.temp, humidity: entry.humidity, pressure: entry.pressure });
 					break;
-				case TYPE_WEATHER2:
-					if (!this.disableTimer)
-						if(entry.temp !== undefined) {	// allow on / to be added to the data stream
-							homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
-						} else {
-							this._addEntry({ time: entry.time, status: entry.status });
-						}
-					else
-						if(entry.temp !== undefined) {	// allow on / to be added to the data stream
-							this._addEntry({ time: entry.time, temp: entry.temp, humidity: entry.humidity, pressure: entry.pressure });
-						} else {
-							this._addEntry({ time: entry.time, status: entry.status });
-						}
 				case TYPE_ROOM:
 					if (!this.disableTimer)
 						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
@@ -679,20 +596,6 @@ module.exports = function (pHomebridge) {
 						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
 					else
 						this._addEntry({ time: entry.time, power: entry.power });
-					break;
-				case TYPE_ENERGY2:
-					if (!this.disableTimer)
-						if(entry.power !== undefined) {	// allow on / to be added to the data stream
-							homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
-						} else {
-							this._addEntry({ time: entry.time, status: entry.status });
-						}
-					else
-						if(entry.power !== undefined) {	// allow on / to be added to the data stream
-							this._addEntry({ time: entry.time, power: entry.power });
-						} else {
-							this._addEntry({ time: entry.time, status: entry.status });
-						}
 					break;
 				default:
 					this._addEntry(entry);
@@ -888,25 +791,6 @@ module.exports = function (pHomebridge) {
 									numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
 									numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
 								break;
-							case TYPE_WEATHER2:
-							if(this.history[this.memoryAddress].temp !== undefined) {
-								this.dataStream += Format(
-									",10 %s%s-%s:%s %s %s",
-									numToHex(swap32(this.currentEntry), 8),
-									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-									this.accessoryType117,
-									numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
-									numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
-									numToHex(swap16(this.history[this.memoryAddress].pressure * 10), 4));
-								} else if (this.history[this.memoryAddress].status !== undefined) {
-									this.dataStream += Format(
-										",0b %s%s-08:%s",
-										numToHex(swap32(this.currentEntry), 8),
-										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-										// this.accessoryType117, hardcoded an override
-										numToHex(this.history[this.memoryAddress].status, 2));
-								}
-								break;
 							case TYPE_ENERGY:
 								this.dataStream += Format(
 									",14 %s%s-%s:0000 0000 %s 0000 0000",
@@ -914,24 +798,6 @@ module.exports = function (pHomebridge) {
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
 									numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
-								break;
-							case TYPE_ENERGY2:
-								if(this.history[this.memoryAddress].power !== undefined) {
-									this.dataStream += Format(
-										",12 %s%s-%s:0100 %s 0200 %s", // Maximum value is 6.5 Kwh
-										numToHex(swap32(this.currentEntry), 8),
-										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-										this.accessoryType117,
-										numToHex(swap16(this.history[this.memoryAddress].volts * 10), 4),
-										numToHex(swap16(this.history[this.memoryAddress].power * 10), 4));
-									} else if (this.history[this.memoryAddress].status !== undefined) {
-										this.dataStream += Format(
-											",0b %s%s-10:%s",
-											numToHex(swap32(this.currentEntry), 8),
-											numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
-											// this.accessoryType117, hardcoded an override
-											numToHex(this.history[this.memoryAddress].status, 2));
-									}
 								break;
 							case TYPE_ROOM:
 								this.dataStream += Format(
@@ -980,6 +846,40 @@ module.exports = function (pHomebridge) {
 									numToHex(swap16(this.history[this.memoryAddress].setTemp * 100), 4),
 									numToHex(this.history[this.memoryAddress].valvePosition, 2));
 								break;
+							case TYPE_CUSTOM:
+								var result = [];
+								var bitmask = 0;
+								var dataStream = Format("%s%s",
+								numToHex(swap32(this.currentEntry), 8),
+								numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8));
+								for (const [key, value] of Object.entries(this.history[this.memoryAddress])) {
+									switch (key) {
+										case 'time':
+											break;
+										default:
+											for (var x = 0, iLen = this.signatures.length; x < iLen; x++) {
+												if (this.signatures[x].uuid === this.uuid.toShortFormUUID(key)) {
+													// console.log('key', key, this.signatures[x].uuid, value, this.signatures[x].factor);
+													switch(this.signatures[x].length) {
+														case 8:
+															result[x] = Format('%s', numToHex(swap32(value * this.signatures[x].factor), this.signatures[x].length));
+															break;
+														case 4:
+															result[x] = Format('%s', numToHex(swap16(value * this.signatures[x].factor), this.signatures[x].length));
+															break;
+														case 2:
+															result[x] = Format('%s', numToHex(value * this.signatures[x].factor, this.signatures[x].length));
+															break;
+												}
+													bitmask += Math.pow(2, x);
+												}
+											}
+									}
+								}
+							var results = dataStream + ' ' + numToHex(bitmask, 2) + ' ' + result.map(a => a).join(' ');
+							// console.log('results', numToHex((results.replace(/[^0-9A-F]/ig, '').length) / 2 + 1) + ' ' + results);
+							this.dataStream += (' ' + numToHex((results.replace(/[^0-9A-F]/ig, '').length) / 2 + 1) + ' ' + results + ',');
+							break;
 						}
 					}
 					this.currentEntry++;
