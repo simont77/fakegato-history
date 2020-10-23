@@ -457,28 +457,28 @@ module.exports = function (pHomebridge) {
 							// console.log('  characteristics', characteristic.displayName, characteristic.UUID);
 							switch(this.uuid.toLongFormUUID(characteristic.UUID)) {
 								case Characteristic.CurrentTemperature.UUID: // Temperature
-									this.signatures.push({ signature: '0102', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 100 });
+									this.signatures.push({ signature: '0102', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 100, entry: "temp" });
 									break;
 								case Characteristic.CurrentRelativeHumidity.UUID: // Humidity
-									this.signatures.push({ signature: '0202', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 100 });
+									this.signatures.push({ signature: '0202', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 100, entry: "humidity" });
 									break;
 								case 'E863F10F-079E-48FF-8F27-9C2605A29F52': // CustomCharacteristic.AtmosphericPressureLevel.UUID
-									this.signatures.push({ signature: '0302', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 10 });
+									this.signatures.push({ signature: '0302', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 10, entry: "pressure" });
 									break;
-								case 'missing': // PPM
-									this.signatures.push({ signature: '0702', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 10 });
+								case 'E863F10B-079E-48FF-8F27-9C2605A29F52': // PPM
+									this.signatures.push({ signature: '0702', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 10, entry: "ppm" });
 									break;
-								case 'missing1': // Open / Close
-									this.signatures.push({ signature: '0601', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1 });
+								case Characteristic.ContactSensorState.UUID: // Contact Sensor State
+									this.signatures.push({ signature: '0601', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "contact" });
 									break;
 								case 'E863F10D-079E-48FF-8F27-9C2605A29F52': // Power
-									this.signatures.push({ signature: '0702', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 10 });
+									this.signatures.push({ signature: '0702', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 10, entry: "power" });
 									break;
 								case Characteristic.On.UUID: // Switch On
-									this.signatures.push({ signature: '0e01', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1 });
+									this.signatures.push({ signature: '0e01', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "status" });
 									break;
 								case Characteristic.MotionDetected.UUID: // Motion Detected
-									this.signatures.push({ signature: '1c01', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1 });
+									this.signatures.push({ signature: '1c01', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "motion" });
 									break;
 								}
 							});
@@ -858,7 +858,7 @@ module.exports = function (pHomebridge) {
 											break;
 										default:
 											for (var x = 0, iLen = this.signatures.length; x < iLen; x++) {
-												if (this.signatures[x].uuid === this.uuid.toShortFormUUID(key)) {
+												if (this.signatures[x].entry === key) {
 													// console.log('key', key, this.signatures[x].uuid, value, this.signatures[x].factor);
 													switch(this.signatures[x].length) {
 														case 8:
