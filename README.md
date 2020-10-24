@@ -102,7 +102,7 @@ Depending on your accessory type:
     this.LoggingService.addEntry({ time: Math.round(new Date().valueOf() / 1000), status:this.On });
 ```
 
-    This is a sample power / switch device.  For best results send power and on/off status seperately.  Power on a regular interval and on/off when the device status changes.
+    This is a sample power / switch device, and in the sample I'm sending the current power usage then updating the on/off status of the device.  For best results send power and on/off status separately.  Power on a regular interval and on/off when the device status changes.
 
     Temperature, Humidity, Pressure and Power entries are averaged over the history interval.  Contact, Status and Motion are directly added to history records.
 
