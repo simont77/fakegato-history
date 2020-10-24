@@ -112,7 +112,6 @@ Depending on your accessory type:
   power | Current usage in watts ( value averaged over 10 minutes )
   ppm | Parts per million
   contact | contact sensor state ( 0 / 1 )
-
   status | switch status ( 0 / 1 )
   motion | motion sensor state ( 0 / 1 )
 
