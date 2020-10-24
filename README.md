@@ -99,20 +99,20 @@ Depending on your accessory type:
 
     this.LoggingService.addEntry({ time: moment().unix(), power: this.power, status:this.On });
 
-This is a sample power / switch device.  For best results send power and on/off status seperately.  Power on a regular interval and on/off when the device status changes.
+    This is a sample power / switch device.  For best results send power and on/off status seperately.  Power on a regular interval and on/off when the device status changes.
 
-Temperature, Humidity, Pressure and Power entries are averaged over the history interval.  Contact, Status and Motion are directly added to history records.
+    Temperature, Humidity, Pressure and Power entries are averaged over the history interval.  Contact, Status and Motion are directly added to history records.
 
-valid entry | Characteristic
---- | ---
-temp | Temperature in celcius ( value averaged over history interval )
-humidity | humidity in percentage ( value averaged over history interval )
-pressure | pressure ( value averaged over history interval )
-ppm | Parts per million
-contact | contact sensor state ( 0 / 1 )
-power | Current usage in watts ( value averaged over history interval )
-status | switch status ( 0 / 1 )
-motion | motion sensor state ( 0 / 1 )
+    valid entry | Characteristic
+    --- | ---
+    temp | Temperature in celcius ( value averaged over history interval )
+    humidity | humidity in percentage ( value averaged over history interval )
+    pressure | pressure ( value averaged over history interval )
+    ppm | Parts per million
+    contact | contact sensor state ( 0 / 1 )
+    power | Current usage in watts ( value averaged over history interval )
+    status | switch status ( 0 / 1 )
+    motion | motion sensor state ( 0 / 1 )
 
 For Energy and Door accessories it is also worth to add the custom characteristic E863F112 for resetting, respectively, the Total Consumption accumulated value or the Aperture Counter (not the history). See Wiki. The value of this characteristic is changed whenever the reset button is tapped on Eve, so it can be used to reset the locally stored value. The value seems to be the number of seconds from 1.1.2001. I left this characteristics out of fakegato-history because it is not part of the common  history service.
 

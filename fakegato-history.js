@@ -511,11 +511,11 @@ module.exports = function (pHomebridge) {
 					break;
 				case TYPE_CUSTOM:
 					if (!this.disableTimer)
-						if ('power' in entry || 'temp' in entry) {
+						if ('power' in entry || 'temp' in entry) { // Only put power or temperature thru averager
 							homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
-					} else {
-						this._addEntry(entry);
-					}
+						} else {
+							this._addEntry(entry);
+						}
 					else
 						this._addEntry(entry);
 					break;
