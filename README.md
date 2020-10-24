@@ -49,55 +49,58 @@ Depending on your accessory type:
 
 * Add entries to history of accessory emulating **Eve Weather** (TempSensor Service) using something like this:
 
-		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, pressure:this.airPressure, humidity:this.humidity});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), temp:this.temperature, pressure:this.airPressure, humidity:this.humidity});
 
 	AirPressure is in mbar, Temperature in Celsius, Humidity in %. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. Your entries should be in any case periodic, in order to avoid error with the average. Average is done independently on each quantity (i.e. you may different periods, and entries with only one or two quantities)
 
 * Add entries to history of accessory emulating **Eve Energy** (Outlet service) using something like this:
 
-		this.loggingService.addEntry({time: moment().unix(), power: this.power});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), power: this.power});
 
 	Power is in Watt. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. To have good accuracy, your entries should be in any case periodic, in order to avoid error with the average.
 
 * Add entries to history of accessory emulating **Eve Room** (TempSensor, HumiditySensor and AirQuality Services) using something like this:
 
-		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, humidity:this.humidity, ppm:this.ppm});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), temp:this.temperature, humidity:this.humidity, ppm:this.ppm});
 
 	Temperature in Celsius, Humidity in %. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. Your entries should be in any case periodic, in order to avoid error with the average. Average is done independently on each quantity (i.e. you may different periods, and entries with only one or two quantities)
 
 * Add entries to history of accessory emulating **Eve Door** (ContactSensor service) using something like this on every status change:
 
-		this.loggingService.addEntry({time: moment().unix(), status: this.status});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), status: this.status});
 
 	Status can be 1 for ‘open’ or 0 for ‘close’. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
 
 * Add entries to history of accessory emulating **Eve Motion** (MotionSensor service) using something like this on every status change:
 
-		this.loggingService.addEntry({time: moment().unix(), status: this.status});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), status: this.status});
 
 	Status can be 1 for ‘detected’ or 0 for ‘cleared’. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
 
 * Add entries to history of accessory emulating **Eve Light Switch** (Switch service) using something like this on every status change:
 
-		this.loggingService.addEntry({time: moment().unix(), status: this.status});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), status: this.status});
 
 	Status can be 1 for ‘On’ or 0 for ‘Off’. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
 
 * Add entries to history of accessory emulating **Eve Thermo** (Thermostat service) using something like this every 10 minutes:
 
-		this.loggingService.addEntry({time: moment().unix(), currentTemp:this.currentTemp, setTemp:this.setTemp, valvePosition:this.valvePosition});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), currentTemp:this.currentTemp, setTemp:this.setTemp, valvePosition:this.valvePosition});
 
 	currentTemp and setTemp in Celsius, valvePosition in %. Fakegato does not use the internal timer for Thermo, entries are added to the history as received from the plugin (Thermo accessory is under development). For setTemp to show, you have to add all the 3 extra thermo characteristics (see gist), and enable set temperature visualization under accessory options in Eve.app.
 
 * Add entries to history of accessory emulating **Eve Aqua** (Valve service set to Irrigation Type) using something like this on every status change:
 
-		this.LoggingService.addEntry({ time: moment().unix(), status: this.power, waterAmount:this.waterAmount });
+		this.LoggingService.addEntry({ time: Math.round(new Date().valueOf() / 1000), status: this.power, waterAmount:this.waterAmount });
 
 	Status can be 1 for ‘open’ or 0 for ‘close’. WaterAmount is meaningful (and needed) only when Status is close, and corresponds to the amount of water used during the just elapsed irrigation period in ml. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
 
 * Add entries to history of an accessory of a **custom** design or configuration.  Configurations validated include combination energy and switch device ( history of power and on/off ) and motion and temperature device ( history of motion and temperature ).
 
-    this.LoggingService.addEntry({ time: moment().unix(), power: this.power, status:this.On });
+```
+    this.LoggingService.addEntry({ time: Math.round(new Date().valueOf() / 1000), power: this.power });
+    this.LoggingService.addEntry({ time: Math.round(new Date().valueOf() / 1000), status:this.On });
+```
 
     This is a sample power / switch device.  For best results send power and on/off status seperately.  Power on a regular interval and on/off when the device status changes.
 
