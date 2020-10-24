@@ -95,20 +95,22 @@ Depending on your accessory type:
 
 	Status can be 1 for ‘open’ or 0 for ‘close’. WaterAmount is meaningful (and needed) only when Status is close, and corresponds to the amount of water used during the just elapsed irrigation period in ml. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
 
-* Add entries to history of accessory of a **custom** design or configuration.  Configurations tried include combination energy and switch device ( history of power and on/off ) and motion and temperature device ( history of motion and temperature ).
+* Add entries to history of an accessory of a **custom** design or configuration.  Configurations validated include combination energy and switch device ( history of power and on/off ) and motion and temperature device ( history of motion and temperature ).
 
     this.LoggingService.addEntry({ time: moment().unix(), power: this.power, status:this.On });
 
-Entries must be sent on a regular interval for power devices with amount consumed during interval. Temperature and other types should also be sent on a regular interval.  Real time events like motion, contact and on/off events should be sent when the event occurs.
+This is a sample power / switch device.  For best results send power and on/off status seperately.  Power on a regular interval and on/off when the device status changes.
+
+Temperature, Humidity, Pressure and Power entries are averaged over the history interval.  Contact, Status and Motion are directly added to history records.
 
 valid entry | Characteristic
 --- | ---
-temp | Temperature in celcius
-humidity | humidity in percentage
-pressure | pressure
+temp | Temperature in celcius ( value averaged over history interval )
+humidity | humidity in percentage ( value averaged over history interval )
+pressure | pressure ( value averaged over history interval )
 ppm | Parts per million
 contact | contact sensor state ( 0 / 1 )
-power | usage since last reading in watts
+power | Current usage in watts ( value averaged over history interval )
 status | switch status ( 0 / 1 )
 motion | motion sensor state ( 0 / 1 )
 

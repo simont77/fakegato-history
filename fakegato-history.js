@@ -215,159 +215,21 @@ module.exports = function (pHomebridge) {
 					this.accessoryType116 = "03 0102 0202 0302";
 					this.accessoryType117 = "07";
 					if (!this.disableTimer) {
-						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-							var backLog = params.backLog || [];
-							var previousAvrg = params.previousAvrg || {};
-							var timer = params.timer;
-
-							var fakegato = this.service;
-							var calc = {
-								sum: {},
-								num: {},
-								avrg: {}
-							};
-
-							for (var h in backLog) {
-								if (backLog.hasOwnProperty(h)) { // only valid keys
-									for (let key in backLog[h]) { // each record
-										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
-											if (!calc.sum[key])
-												calc.sum[key] = 0;
-											if (!calc.num[key])
-												calc.num[key] = 0;
-											calc.sum[key] += backLog[h][key];
-											calc.num[key]++;
-											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
-										}
-									}
-								}
-							}
-							calc.avrg.time = Math.round(new Date().valueOf() / 1000); // set the time of the avrg
-
-							if(!fakegato.disableRepeatLastData) {
-								for (let key in previousAvrg) { // each record of previous average
-									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
-											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-										{
-											calc.avrg[key] = previousAvrg[key];
-										}
-									}
-								}
-							}
-
-							if (Object.keys(calc.avrg).length > 1) {
-								fakegato._addEntry(calc.avrg);
-								timer.emptyData(fakegato);
-							}
-							return calc.avrg;
-						});
+						homebridge.globalFakeGatoTimer.subscribe(this, this.calculateAverage);
 					}
 					break;
 				case TYPE_ENERGY:
 					this.accessoryType116 = "04 0102 0202 0702 0f03";
 					this.accessoryType117 = "1f";
 					if (!this.disableTimer) {
-						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-							var backLog = params.backLog || [];
-							var previousAvrg = params.previousAvrg || {};
-							var timer = params.timer;
-
-							var fakegato = this.service;
-							var calc = {
-								sum: {},
-								num: {},
-								avrg: {}
-							};
-
-							for (var h in backLog) {
-								if (backLog.hasOwnProperty(h)) { // only valid keys
-									for (let key in backLog[h]) { // each record
-										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
-											if (!calc.sum[key])
-												calc.sum[key] = 0;
-											if (!calc.num[key])
-												calc.num[key] = 0;
-											calc.sum[key] += backLog[h][key];
-											calc.num[key]++;
-											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
-										}
-									}
-								}
-							}
-							calc.avrg.time = Math.round(new Date().valueOf() / 1000); // set the time of the avrg
-
-							if(!fakegato.disableRepeatLastData) {
-								for (let key in previousAvrg) { // each record of previous average
-									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
-											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-										{
-										calc.avrg[key] = previousAvrg[key];
-										}
-									}
-								}
-							}
-
-							if (Object.keys(calc.avrg).length > 1) {
-								fakegato._addEntry(calc.avrg);
-								timer.emptyData(fakegato);
-							}
-							return calc.avrg;
-						});
+						homebridge.globalFakeGatoTimer.subscribe(this, this.calculateAverage);
 					}
 					break;
 				case TYPE_ROOM:
 					this.accessoryType116 = "04 0102 0202 0402 0f03";
 					this.accessoryType117 = "0f";
 					if (!this.disableTimer) {
-						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-							var backLog = params.backLog || [];
-							var previousAvrg = params.previousAvrg || {};
-							var timer = params.timer;
-
-							var fakegato = this.service;
-							var calc = {
-								sum: {},
-								num: {},
-								avrg: {}
-							};
-
-							for (var h in backLog) {
-								if (backLog.hasOwnProperty(h)) { // only valid keys
-									for (let key in backLog[h]) { // each record
-										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
-											if (!calc.sum[key])
-												calc.sum[key] = 0;
-											if (!calc.num[key])
-												calc.num[key] = 0;
-											calc.sum[key] += backLog[h][key];
-											calc.num[key]++;
-											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
-										}
-									}
-								}
-							}
-							calc.avrg.time = Math.round(new Date().valueOf() / 1000); // set the time of the avrg
-
-							if(!fakegato.disableRepeatLastData) {
-								for (let key in previousAvrg) { // each record of previous average
-									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
-											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-										{
-											calc.avrg[key] = previousAvrg[key];
-										}
-									}
-								}
-							}
-
-							if (Object.keys(calc.avrg).length > 1) {
-								fakegato._addEntry(calc.avrg);
-								timer.emptyData(fakegato);
-							}
-							return calc.avrg;
-						});
+						homebridge.globalFakeGatoTimer.subscribe(this, this.calculateAverage);
 					}
 					break;
 				case TYPE_DOOR:
@@ -483,8 +345,10 @@ module.exports = function (pHomebridge) {
 								}
 							});
 						});
-						// console.log('signatures', '0' + this.signatures.length.toString() + ' ' + this.signatures.sort((a, b) => (a.signature > b.signature) ? 1 : -1).map(a => a.signature).join(' '));
 						this.accessoryType116 = (' 0' + this.signatures.length.toString() + ' ' + this.signatures.sort((a, b) => (a.signature > b.signature) ? 1 : -1).map(a => a.signature).join(' ') + ' ');
+						if (!this.disableTimer) {
+							homebridge.globalFakeGatoTimer.subscribe(this, this.calculateAverage);
+						}
 					break;
 				case TYPE_AQUA:
 					this.accessoryType116 = "03 1f01 2a08 2302";
@@ -517,6 +381,54 @@ module.exports = function (pHomebridge) {
 			if (this.storage === undefined) {
 				this.loaded = true;
 			}
+		}
+
+		calculateAverage(params) { // callback
+			var backLog = params.backLog || [];
+			var previousAvrg = params.previousAvrg || {};
+			var timer = params.timer;
+
+			var fakegato = this.service;
+			var calc = {
+				sum: {},
+				num: {},
+				avrg: {}
+			};
+
+			for (var h in backLog) {
+				if (backLog.hasOwnProperty(h)) { // only valid keys
+					for (let key in backLog[h]) { // each record
+						if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
+							if (!calc.sum[key])
+								calc.sum[key] = 0;
+							if (!calc.num[key])
+								calc.num[key] = 0;
+							calc.sum[key] += backLog[h][key];
+							calc.num[key]++;
+							calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
+						}
+					}
+				}
+			}
+			calc.avrg.time = Math.round(new Date().valueOf() / 1000); // set the time of the avrg
+
+			if(!fakegato.disableRepeatLastData) {
+				for (let key in previousAvrg) { // each record of previous average
+					if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
+						if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
+							calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
+						{
+						calc.avrg[key] = previousAvrg[key];
+						}
+					}
+				}
+			}
+
+			if (Object.keys(calc.avrg).length > 1) {
+				fakegato._addEntry(calc.avrg);
+				timer.emptyData(fakegato);
+			}
+			return calc.avrg;
 		}
 
 		registerEvents() {
@@ -596,6 +508,16 @@ module.exports = function (pHomebridge) {
 						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
 					else
 						this._addEntry({ time: entry.time, power: entry.power });
+					break;
+				case TYPE_CUSTOM:
+					if (!this.disableTimer)
+						if ('power' in entry || 'temp' in entry) {
+							homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
+					} else {
+						this._addEntry(entry);
+					}
+					else
+						this._addEntry(entry);
 					break;
 				default:
 					this._addEntry(entry);
