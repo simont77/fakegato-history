@@ -28,7 +28,7 @@ And if your plugin is using V2 of the platform API, also add the above to your c
 
 where
 
-- accessoryType can be "weather", "energy", "room", "door", motion", "switch", "thermo" or "aqua"
+- accessoryType can be "weather", "energy", "room", "door", motion", "switch", "thermo", "aqua", or "custom"
 - Accessory should be the accessory using the service, in order to correctly set the service name and pass the log to the parent object. Your Accessory should have a `this.log` variable pointing to the homebridge logger passed to the plugin constructor (add a line `this.log=log;` to your plugin). Debug messages will be shown if homebridge is launched with -D option.
 - length is the history length; if no value is given length is set to 4032 samples
 
@@ -49,51 +49,71 @@ Depending on your accessory type:
 
 * Add entries to history of accessory emulating **Eve Weather** (TempSensor Service) using something like this:
 
-		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, pressure:this.airPressure, humidity:this.humidity});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), temp: this.temperature, pressure: this.airPressure, humidity: this.humidity});
 
 	AirPressure is in mbar, Temperature in Celsius, Humidity in %. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. Your entries should be in any case periodic, in order to avoid error with the average. Average is done independently on each quantity (i.e. you may different periods, and entries with only one or two quantities)
 
 * Add entries to history of accessory emulating **Eve Energy** (Outlet service) using something like this:
 
-		this.loggingService.addEntry({time: moment().unix(), power: this.power});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), power: this.power});
 
 	Power is in Watt. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. To have good accuracy, your entries should be in any case periodic, in order to avoid error with the average.
 
 * Add entries to history of accessory emulating **Eve Room** (TempSensor, HumiditySensor and AirQuality Services) using something like this:
 
-		this.loggingService.addEntry({time: moment().unix(), temp:this.temperature, humidity:this.humidity, ppm:this.ppm});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), temp: this.temperature, humidity: this.humidity, ppm: this.ppm});
 
 	Temperature in Celsius, Humidity in %. Entries are internally averaged and sent every 10 minutes using the global fakegato timer. Your entries should be in any case periodic, in order to avoid error with the average. Average is done independently on each quantity (i.e. you may different periods, and entries with only one or two quantities)
 
 * Add entries to history of accessory emulating **Eve Door** (ContactSensor service) using something like this on every status change:
 
-		this.loggingService.addEntry({time: moment().unix(), status: this.status});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), status: this.status});
 
 	Status can be 1 for ‘open’ or 0 for ‘close’. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
 
 * Add entries to history of accessory emulating **Eve Motion** (MotionSensor service) using something like this on every status change:
 
-		this.loggingService.addEntry({time: moment().unix(), status: this.status});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), status: this.status});
 
 	Status can be 1 for ‘detected’ or 0 for ‘cleared’. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
 
 * Add entries to history of accessory emulating **Eve Light Switch** (Switch service) using something like this on every status change:
 
-		this.loggingService.addEntry({time: moment().unix(), status: this.status});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), status: this.status});
 
 	Status can be 1 for ‘On’ or 0 for ‘Off’. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
 
 * Add entries to history of accessory emulating **Eve Thermo** (Thermostat service) using something like this every 10 minutes:
 
-		this.loggingService.addEntry({time: moment().unix(), currentTemp:this.currentTemp, setTemp:this.setTemp, valvePosition:this.valvePosition});
+		this.loggingService.addEntry({time: Math.round(new Date().valueOf() / 1000), currentTemp: this.currentTemp, setTemp: this.setTemp, valvePosition: this.valvePosition});
 
 	currentTemp and setTemp in Celsius, valvePosition in %. Fakegato does not use the internal timer for Thermo, entries are added to the history as received from the plugin (Thermo accessory is under development). For setTemp to show, you have to add all the 3 extra thermo characteristics (see gist), and enable set temperature visualization under accessory options in Eve.app.
-	
+
 * Add entries to history of accessory emulating **Eve Aqua** (Valve service set to Irrigation Type) using something like this on every status change:
 
-		this.LoggingService.addEntry({ time: moment().unix(), status: this.power, waterAmount:this.waterAmount });
+		this.LoggingService.addEntry({ time: Math.round(new Date().valueOf() / 1000), status: this.power, waterAmount: this.waterAmount });
 
 	Status can be 1 for ‘open’ or 0 for ‘close’. WaterAmount is meaningful (and needed) only when Status is close, and corresponds to the amount of water used during the just elapsed irrigation period in ml. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
+
+* Add entries to history of an accessory of a **custom** design or configuration.  Configurations validated include combination energy and switch device ( history of power and on/off ) and motion and temperature device ( history of motion and temperature ).
+
+		this.LoggingService.addEntry({ time: Math.round(new Date().valueOf() / 1000), power: this.power });
+		this.LoggingService.addEntry({ time: Math.round(new Date().valueOf() / 1000), status: this.On });
+
+  This is a sample power / switch device, and in the sample I'm sending the current power usage then updating the on/off status of the device.  For best results send power and on/off status separately.  Power on a regular interval and on/off when the device status changes.
+
+	Temperature, Humidity, Pressure and Power entries are averaged over the history interval.  Contact, Status and Motion are directly added to history records.
+
+  valid entry | Characteristic
+  --- | ---
+  temp | Temperature in celcius ( value averaged over 10 minutes )
+  humidity | humidity in percentage ( value averaged over 10 minutes )
+  pressure | pressure ( value averaged over 10 minutes )
+  power | Current usage in watts ( value averaged over 10 minutes )
+  ppm | Parts per million
+  contact | contact sensor state ( 0 / 1 )
+  status | switch status ( 0 / 1 )
+  motion | motion sensor state ( 0 / 1 )
 
 For Energy and Door accessories it is also worth to add the custom characteristic E863F112 for resetting, respectively, the Total Consumption accumulated value or the Aperture Counter (not the history). See Wiki. The value of this characteristic is changed whenever the reset button is tapped on Eve, so it can be used to reset the locally stored value. The value seems to be the number of seconds from 1.1.2001. I left this characteristics out of fakegato-history because it is not part of the common  history service.
 
@@ -102,6 +122,31 @@ For Door and Motion you may want to add characteristic E863F11A for setting the 
 For Aqua you need to add E863F131 and E863F11D characteristics in order to make Eve recognize the accessory, and to set last activation, total water consumption and flux (see wiki). You MUST also set a proper value in E863F131, even if your plugin does not actively set these quantities, otherwise Eve will not communicate properly. See wiki for an example proper value.
 
 If your "weather" or "room" plugin don't send addEntry for a short time (supposedly less than 1h - need feedback), the graph will draw a straight line from the last data received to the new data received. Instead, if your plugin don't send addEntry for "weather" and "room" for a long time (supposedly more than few hours - need feedback), the graph will show "no data for the period". Take this in consideration if your sensor does not send entries if the difference from the previous one is small, you will end up with holes in the history. This is not currently addresses by fakegato, you should add extra entries if needed. Note that if you do not send a new entry at least every 10 minutes, the average will be 0, and you will a zero entry. This will be fixed soon.
+
+### Advanced Options
+
+* Usage in a Typescript based Plugin
+
+```
+import fakegato from 'fakegato-history';
+.
+.
+.
+export class yourPlatform implements DynamicPlatformPlugin {
+  private FakeGatoHistoryService;     <-- You need a platform level reference to the service
+.
+.
+.
+constructor ()  <-- This is your Platform constructor
+{
+this.FakeGatoHistoryService = fakegato(this.api);
+.
+.
+. For each accessory
+element.fakegatoService = new this.FakeGatoHistoryService(element.type, accessory, {
+  log: this.log,        <--  Required as typescript does not allow adding the log variable to the Accessory object.
+});
+```
 
 ### History Persistence
 

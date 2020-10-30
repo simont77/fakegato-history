@@ -2,7 +2,6 @@
 'use strict';
 
 const DEBUG = true;
-var debug = require('debug')('FakeGatoTimer');
 
 class FakeGatoTimer {
 	constructor(params) {

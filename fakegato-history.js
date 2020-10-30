@@ -4,7 +4,6 @@
 const Format = require('util').format;
 const FakeGatoTimer = require('./fakegato-timer').FakeGatoTimer;
 const FakeGatoStorage = require('./fakegato-storage').FakeGatoStorage;
-const moment = require('moment');
 
 const EPOCH_OFFSET = 978307200;
 
@@ -15,7 +14,8 @@ const TYPE_ENERGY = 'energy',
 	TYPE_MOTION = 'motion',
 	TYPE_SWITCH = 'switch',
 	TYPE_THERMO = 'thermo',
-	TYPE_AQUA = 'aqua';
+	TYPE_AQUA = 'aqua',
+	TYPE_CUSTOM = 'custom';
 
 var homebridge;
 var Characteristic, Service;
@@ -29,12 +29,12 @@ module.exports = function (pHomebridge) {
 
 
 	var hexToBase64 = function (val) {
-		return new Buffer(('' + val).replace(/[^0-9A-F]/ig, ''), 'hex').toString('base64');
+		return Buffer.from(('' + val).replace(/[^0-9A-F]/ig, ''), 'hex').toString('base64');
 	},
 		base64ToHex = function (val) {
 			if (!val)
 				return val;
-			return new Buffer(val, 'base64').toString('hex');
+			return Buffer.from(val, 'base64').toString('hex');
 		},
 		swap16 = function (val) {
 			return ((val & 0xFF) << 8)
@@ -149,6 +149,11 @@ module.exports = function (pHomebridge) {
 				return temp;
 			}.bind(this);
 
+			thisAccessory = accessory;
+			this.accessoryName = thisAccessory.displayName;
+			this.signatures = [];
+			this.uuid = require('./lib/uuid.js');
+
 			if (typeof (optionalParams) === 'object') {
 				this.size = optionalParams.size || 4032;
 				this.minutes = optionalParams.minutes || 10; // Optional timer length
@@ -157,15 +162,13 @@ module.exports = function (pHomebridge) {
 				this.filename = optionalParams.filename;
 				this.disableTimer = optionalParams.disableTimer || false;
 				this.disableRepeatLastData = optionalParams.disableRepeatLastData || false;
+				this.log = optionalParams.log || thisAccessory.log || {};		// workaround for typescript blocking of changing of accessory object definition
 			} else {
 				this.size = 4032;
 				this.minutes = 10;
 				this.disableTimer = false;
+				this.log = thisAccessory.log || {};
 			}
-
-			thisAccessory = accessory;
-			this.accessoryName = thisAccessory.displayName;
-			this.log = thisAccessory.log || {};
 
 			if (!this.log.debug) {
 				this.log.debug = function () { };
@@ -212,157 +215,21 @@ module.exports = function (pHomebridge) {
 					this.accessoryType116 = "03 0102 0202 0302";
 					this.accessoryType117 = "07";
 					if (!this.disableTimer) {
-						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-							var backLog = params.backLog || [];
-							var previousAvrg = params.previousAvrg || {};
-							var timer = params.timer;
-
-							var fakegato = this.service;
-							var calc = {
-								sum: {},
-								num: {},
-								avrg: {}
-							};
-
-							for (var h in backLog) {
-								if (backLog.hasOwnProperty(h)) { // only valid keys
-									for (let key in backLog[h]) { // each record
-										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
-											if (!calc.sum[key])
-												calc.sum[key] = 0;
-											if (!calc.num[key])
-												calc.num[key] = 0;
-											calc.sum[key] += backLog[h][key];
-											calc.num[key]++;
-											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
-										}
-									}
-								}
-							}
-							calc.avrg.time = moment().unix(); // set the time of the avrg
-							
-							if(!fakegato.disableRepeatLastData) {
-								for (let key in previousAvrg) { // each record of previous average
-									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
-											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-										{
-											calc.avrg[key] = previousAvrg[key];
-										}
-									}
-								}
-							}
-
-							if (Object.keys(calc.avrg).length > 1) {
-								fakegato._addEntry(calc.avrg);
-								timer.emptyData(fakegato);
-							}
-							return calc.avrg;
-						});
+						homebridge.globalFakeGatoTimer.subscribe(this, this.calculateAverage);
 					}
 					break;
 				case TYPE_ENERGY:
 					this.accessoryType116 = "04 0102 0202 0702 0f03";
 					this.accessoryType117 = "1f";
 					if (!this.disableTimer) {
-						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-							var backLog = params.backLog || [];
-							var previousAvrg = params.previousAvrg || {};
-							var timer = params.timer;
-
-							var fakegato = this.service;
-							var calc = {
-								sum: {},
-								num: {},
-								avrg: {}
-							};
-
-							for (var h in backLog) {
-								if (backLog.hasOwnProperty(h)) { // only valid keys
-									for (let key in backLog[h]) { // each record
-										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
-											if (!calc.sum[key])
-												calc.sum[key] = 0;
-											if (!calc.num[key])
-												calc.num[key] = 0;
-											calc.sum[key] += backLog[h][key];
-											calc.num[key]++;
-											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
-										}
-									}
-								}
-							}
-							calc.avrg.time = moment().unix(); // set the time of the avrg
-
-							if(!fakegato.disableRepeatLastData) {
-								for (let key in previousAvrg) { // each record of previous average
-									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
-											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-										{
-										calc.avrg[key] = previousAvrg[key];
-										}
-									}
-								}
-							}
-								
-							fakegato._addEntry(calc.avrg);
-							timer.emptyData(fakegato);
-							return calc.avrg;
-						});
+						homebridge.globalFakeGatoTimer.subscribe(this, this.calculateAverage);
 					}
 					break;
 				case TYPE_ROOM:
 					this.accessoryType116 = "04 0102 0202 0402 0f03";
 					this.accessoryType117 = "0f";
 					if (!this.disableTimer) {
-						homebridge.globalFakeGatoTimer.subscribe(this, function (params) { // callback
-							var backLog = params.backLog || [];
-							var previousAvrg = params.previousAvrg || {};
-							var timer = params.timer;
-
-							var fakegato = this.service;
-							var calc = {
-								sum: {},
-								num: {},
-								avrg: {}
-							};
-
-							for (var h in backLog) {
-								if (backLog.hasOwnProperty(h)) { // only valid keys
-									for (let key in backLog[h]) { // each record
-										if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
-											if (!calc.sum[key])
-												calc.sum[key] = 0;
-											if (!calc.num[key])
-												calc.num[key] = 0;
-											calc.sum[key] += backLog[h][key];
-											calc.num[key]++;
-											calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
-										}
-									}
-								}
-							}
-							calc.avrg.time = moment().unix(); // set the time of the avrg
-
-							if(!fakegato.disableRepeatLastData) {
-								for (let key in previousAvrg) { // each record of previous average
-									if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
-										if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
-											calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
-										{
-											calc.avrg[key] = previousAvrg[key];
-										}
-									}
-								}
-							}
-
-							if (Object.keys(calc.avrg).length > 1) {
-								fakegato._addEntry(calc.avrg);
-								timer.emptyData(fakegato);
-							}
-							return calc.avrg;
-						});
+						homebridge.globalFakeGatoTimer.subscribe(this, this.calculateAverage);
 					}
 					break;
 				case TYPE_DOOR:
@@ -378,7 +245,7 @@ module.exports = function (pHomebridge) {
 
 							if (backLog.length) {
 								if (!immediate) {
-									actualEntry.time = moment().unix();
+									actualEntry.time = Math.round(new Date().valueOf() / 1000);
 									actualEntry.status = backLog[0].status;
 								}
 								else {
@@ -405,7 +272,7 @@ module.exports = function (pHomebridge) {
 
 							if (backLog.length) {
 								if (!immediate) {
-									actualEntry.time = moment().unix();
+									actualEntry.time = Math.round(new Date().valueOf() / 1000);
 									actualEntry.status = backLog[0].status;
 								}
 								else {
@@ -432,7 +299,7 @@ module.exports = function (pHomebridge) {
 
 							if (backLog.length) {
 								if (!immediate) {
-									actualEntry.time = moment().unix();
+									actualEntry.time = Math.round(new Date().valueOf() / 1000);
 									actualEntry.status = backLog[0].status;
 								}
 								else {
@@ -445,7 +312,44 @@ module.exports = function (pHomebridge) {
 							}
 						});
 					}
-					break;	
+					break;
+				case TYPE_CUSTOM:
+					thisAccessory.services.forEach((service, i) => {
+						service.characteristics.forEach((characteristic, i) => {
+							// console.log('  characteristics', characteristic.displayName, characteristic.UUID);
+							switch(this.uuid.toLongFormUUID(characteristic.UUID)) {
+								case Characteristic.CurrentTemperature.UUID: // Temperature
+									this.signatures.push({ signature: '0102', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 100, entry: "temp" });
+									break;
+								case Characteristic.CurrentRelativeHumidity.UUID: // Humidity
+									this.signatures.push({ signature: '0202', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 100, entry: "humidity" });
+									break;
+								case 'E863F10F-079E-48FF-8F27-9C2605A29F52': // CustomCharacteristic.AtmosphericPressureLevel.UUID
+									this.signatures.push({ signature: '0302', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 10, entry: "pressure" });
+									break;
+								case 'E863F10B-079E-48FF-8F27-9C2605A29F52': // PPM
+									this.signatures.push({ signature: '0702', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 10, entry: "ppm" });
+									break;
+								case Characteristic.ContactSensorState.UUID: // Contact Sensor State
+									this.signatures.push({ signature: '0601', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "contact" });
+									break;
+								case 'E863F10D-079E-48FF-8F27-9C2605A29F52': // Power
+									this.signatures.push({ signature: '0702', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 10, entry: "power" });
+									break;
+								case Characteristic.On.UUID: // Switch On
+									this.signatures.push({ signature: '0e01', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "status" });
+									break;
+								case Characteristic.MotionDetected.UUID: // Motion Detected
+									this.signatures.push({ signature: '1c01', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "motion" });
+									break;
+								}
+							});
+						});
+						this.accessoryType116 = (' 0' + this.signatures.length.toString() + ' ' + this.signatures.sort((a, b) => (a.signature > b.signature) ? 1 : -1).map(a => a.signature).join(' ') + ' ');
+						if (!this.disableTimer) {
+							homebridge.globalFakeGatoTimer.subscribe(this, this.calculateAverage);
+						}
+					break;
 				case TYPE_AQUA:
 					this.accessoryType116 = "03 1f01 2a08 2302";
 					this.accessoryType117 = "05";
@@ -477,6 +381,54 @@ module.exports = function (pHomebridge) {
 			if (this.storage === undefined) {
 				this.loaded = true;
 			}
+		}
+
+		calculateAverage(params) { // callback
+			var backLog = params.backLog || [];
+			var previousAvrg = params.previousAvrg || {};
+			var timer = params.timer;
+
+			var fakegato = this.service;
+			var calc = {
+				sum: {},
+				num: {},
+				avrg: {}
+			};
+
+			for (var h in backLog) {
+				if (backLog.hasOwnProperty(h)) { // only valid keys
+					for (let key in backLog[h]) { // each record
+						if (backLog[h].hasOwnProperty(key) && key != 'time') { // except time
+							if (!calc.sum[key])
+								calc.sum[key] = 0;
+							if (!calc.num[key])
+								calc.num[key] = 0;
+							calc.sum[key] += backLog[h][key];
+							calc.num[key]++;
+							calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
+						}
+					}
+				}
+			}
+			calc.avrg.time = Math.round(new Date().valueOf() / 1000); // set the time of the avrg
+
+			if(!fakegato.disableRepeatLastData) {
+				for (let key in previousAvrg) { // each record of previous average
+					if (previousAvrg.hasOwnProperty(key) && key != 'time') { // except time
+						if (!backLog.length ||//calc.avrg[key] == 0 || // zero value
+							calc.avrg[key] === undefined) // no key (meaning no value received for this key yet)
+						{
+						calc.avrg[key] = previousAvrg[key];
+						}
+					}
+				}
+			}
+
+			if (Object.keys(calc.avrg).length > 1) {
+				fakegato._addEntry(calc.avrg);
+				timer.emptyData(fakegato);
+			}
+			return calc.avrg;
 		}
 
 		registerEvents() {
@@ -556,6 +508,16 @@ module.exports = function (pHomebridge) {
 						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
 					else
 						this._addEntry({ time: entry.time, power: entry.power });
+					break;
+				case TYPE_CUSTOM:
+					if (!this.disableTimer)
+						if ('power' in entry || 'temp' in entry) { // Only put power or temperature thru averager
+							homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
+						} else {
+							this._addEntry(entry);
+						}
+					else
+						this._addEntry(entry);
 					break;
 				default:
 					this._addEntry(entry);
@@ -733,7 +695,7 @@ module.exports = function (pHomebridge) {
 					if ((this.history[this.memoryAddress].setRefTime == 1) || (this.setTime == true) ||
 						(this.currentEntry == this.firstEntry + 1)) {
 						this.dataStream += Format(
-							" 15%s 0100 0000 81%s0000 0000 00 0000",
+							",15%s 0100 0000 81%s0000 0000 00 0000",
 							numToHex(swap32(this.currentEntry), 8),
 							numToHex(swap32(this.refTime), 8));
 						this.setTime = false;
@@ -743,7 +705,7 @@ module.exports = function (pHomebridge) {
 						switch (this.accessoryType) {
 							case TYPE_WEATHER:
 								this.dataStream += Format(
-									" 10 %s%s%s%s%s%s",
+									",10 %s%s-%s:%s %s %s",
 									numToHex(swap32(this.currentEntry), 8),
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
@@ -753,7 +715,7 @@ module.exports = function (pHomebridge) {
 								break;
 							case TYPE_ENERGY:
 								this.dataStream += Format(
-									" 14 %s%s%s0000 0000%s0000 0000",
+									",14 %s%s-%s:0000 0000 %s 0000 0000",
 									numToHex(swap32(this.currentEntry), 8),
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
@@ -761,7 +723,7 @@ module.exports = function (pHomebridge) {
 								break;
 							case TYPE_ROOM:
 								this.dataStream += Format(
-									" 13 %s%s%s%s%s%s0000 00",
+									",13 %s%s%s%s%s%s0000 00",
 									numToHex(swap32(this.currentEntry), 8),
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
@@ -773,7 +735,7 @@ module.exports = function (pHomebridge) {
 							case TYPE_MOTION:
 							case TYPE_SWITCH:
 								this.dataStream += Format(
-									" 0b %s%s%s%s",
+									",0b %s%s%s%s",
 									numToHex(swap32(this.currentEntry), 8),
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
@@ -782,14 +744,14 @@ module.exports = function (pHomebridge) {
 							case TYPE_AQUA:
 								if (this.history[this.memoryAddress].status == true)
 									this.dataStream += Format(
-										" 0d %s%s%s%s 300c",
+										",0d %s%s%s%s 300c",
 										numToHex(swap32(this.currentEntry), 8),
 										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 										this.accessoryType117,
 										numToHex(this.history[this.memoryAddress].status, 2));
 								else
 									this.dataStream += Format(
-										" 15 %s%s%s%s%s 00000000 300c",
+										",15 %s%s%s%s%s 00000000 300c",
 										numToHex(swap32(this.currentEntry), 8),
 										numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 										this.accessoryType117bis,
@@ -798,7 +760,7 @@ module.exports = function (pHomebridge) {
 								break;
 							case TYPE_THERMO:
 								this.dataStream += Format(
-									" 11 %s%s%s%s%s%s 0000",
+									",11 %s%s%s%s%s%s 0000",
 									numToHex(swap32(this.currentEntry), 8),
 									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
 									this.accessoryType117,
@@ -806,6 +768,40 @@ module.exports = function (pHomebridge) {
 									numToHex(swap16(this.history[this.memoryAddress].setTemp * 100), 4),
 									numToHex(this.history[this.memoryAddress].valvePosition, 2));
 								break;
+							case TYPE_CUSTOM:
+								var result = [];
+								var bitmask = 0;
+								var dataStream = Format("%s%s",
+								numToHex(swap32(this.currentEntry), 8),
+								numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8));
+								for (const [key, value] of Object.entries(this.history[this.memoryAddress])) {
+									switch (key) {
+										case 'time':
+											break;
+										default:
+											for (var x = 0, iLen = this.signatures.length; x < iLen; x++) {
+												if (this.signatures[x].entry === key) {
+													// console.log('key', key, this.signatures[x].uuid, value, this.signatures[x].factor);
+													switch(this.signatures[x].length) {
+														case 8:
+															result[x] = Format('%s', numToHex(swap32(value * this.signatures[x].factor), this.signatures[x].length));
+															break;
+														case 4:
+															result[x] = Format('%s', numToHex(swap16(value * this.signatures[x].factor), this.signatures[x].length));
+															break;
+														case 2:
+															result[x] = Format('%s', numToHex(value * this.signatures[x].factor, this.signatures[x].length));
+															break;
+												}
+													bitmask += Math.pow(2, x);
+												}
+											}
+									}
+								}
+							var results = dataStream + ' ' + numToHex(bitmask, 2) + ' ' + result.map(a => a).join(' ');
+							// console.log('results', numToHex((results.replace(/[^0-9A-F]/ig, '').length) / 2 + 1) + ' ' + results);
+							this.dataStream += (' ' + numToHex((results.replace(/[^0-9A-F]/ig, '').length) / 2 + 1) + ' ' + results + ',');
+							break;
 						}
 					}
 					this.currentEntry++;
