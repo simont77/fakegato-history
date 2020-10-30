@@ -1,3 +1,8 @@
+### v0.6.0
+- Added support for custom accessory types which allow combo devices like a power sensor and switch or motion and temperature
+- Removed dependancy on moment package
+- Resolved Deprecation Warning with Buffer
+
 ### v0.5.6
 - Add type Switch
 
