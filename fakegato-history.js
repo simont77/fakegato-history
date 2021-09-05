@@ -9,6 +9,7 @@ const EPOCH_OFFSET = 978307200;
 
 const TYPE_ENERGY = 'energy',
 	TYPE_ROOM = 'room',
+	TYPE_ROOM2 = 'room2',
 	TYPE_WEATHER = 'weather',
 	TYPE_DOOR = 'door',
 	TYPE_MOTION = 'motion',
@@ -232,6 +233,13 @@ module.exports = function (pHomebridge) {
 						homebridge.globalFakeGatoTimer.subscribe(this, this.calculateAverage);
 					}
 					break;
+				case TYPE_ROOM2:
+					this.accessoryType116 = "07 0102 0202 2202 2901 2501 2302 2801";
+					this.accessoryType117 = "7f";
+					if (!this.disableTimer) {
+						homebridge.globalFakeGatoTimer.subscribe(this, this.calculateAverage);
+					}
+					break;
 				case TYPE_DOOR:
 					this.accessoryType116 = "01 0601";
 					this.accessoryType117 = "01";
@@ -321,6 +329,9 @@ module.exports = function (pHomebridge) {
 								case Characteristic.CurrentTemperature.UUID: // Temperature
 									this.signatures.push({ signature: '0102', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 100, entry: "temp" });
 									break;
+								case Characteristic.VOCDensity.UUID: // VOC Density
+									this.signatures.push({ signature: '2202', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "voc" });
+									break;
 								case Characteristic.CurrentRelativeHumidity.UUID: // Humidity
 									this.signatures.push({ signature: '0202', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 100, entry: "humidity" });
 									break;
@@ -406,6 +417,8 @@ module.exports = function (pHomebridge) {
 							calc.sum[key] += backLog[h][key];
 							calc.num[key]++;
 							calc.avrg[key] = precisionRound(calc.sum[key] / calc.num[key], 2);
+							if (key == 'voc') // VOC expects integers
+								calc.avrg[key] = Math.round(calc.avrg[key]);
 						}
 					}
 				}
@@ -502,6 +515,12 @@ module.exports = function (pHomebridge) {
 						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
 					else
 						this._addEntry({ time: entry.time, temp: entry.temp, humidity: entry.humidity, ppm: entry.ppm });
+					break;
+				case TYPE_ROOM2:
+					if (!this.disableTimer)
+						homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
+					else
+						this._addEntry({ time: entry.time, temp: entry.temp, humidity: entry.humidity, voc: entry.voc });
 					break;
 				case TYPE_ENERGY:
 					if (!this.disableTimer)
@@ -730,6 +749,16 @@ module.exports = function (pHomebridge) {
 									numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
 									numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
 									numToHex(swap16(this.history[this.memoryAddress].ppm), 4));
+								break;
+							case TYPE_ROOM2:
+								this.dataStream += Format(
+									",15 %s%s%s%s%s%s0054 a80f01",
+									numToHex(swap32(this.currentEntry), 8),
+									numToHex(swap32(this.history[this.memoryAddress].time - this.refTime - EPOCH_OFFSET), 8),
+									this.accessoryType117,
+									numToHex(swap16(this.history[this.memoryAddress].temp * 100), 4),
+									numToHex(swap16(this.history[this.memoryAddress].humidity * 100), 4),
+									numToHex(swap16(this.history[this.memoryAddress].voc), 4));
 								break;
 							case TYPE_DOOR:
 							case TYPE_MOTION:
