@@ -11,7 +11,7 @@ Module to emulate Elgato Eve history service in Homebridge accessories, so that 
 More details on communication protocol and custom Characteristics in the Wiki.
 
 Your plugin should expose the corresponding custom Elgato services and characteristics in order for the history to be seen in Eve.app. For a weather example see https://github.com/simont77/homebridge-weather-station-eve, for an energy example see https://github.com/simont77/homebridge-myhome/blob/master/index.js (MHPowerMeter class). For other types see the Wiki.
-Avoid the use of "/" in characteristics of the Information Service (e.g. serial number, manufacturer, etc.), since this may cause data to not appear in the history. Note that if your Eve.app is controlling more than one accessory for each type, the serial number should be unique, otherwise Eve.app will merge the histories. Adding hostname is recommended as well, for running multiple copies of the same plugin on different machines (i.e. production and development), i.e.:
+Avoid the use of "/" in characteristics of the Information Service (e.g. model, serial number, manufacturer, etc.), since this may cause data to not appear in the history. Note that if your Eve.app is controlling more than one accessory for each type, the serial number should be unique, otherwise Eve.app will merge the histories. Adding hostname is recommended as well, for running multiple copies of the same plugin on different machines (i.e. production and development), i.e.:
 
     .setCharacteristic(Characteristic.SerialNumber, hostname + "-" + this.deviceID)
 
