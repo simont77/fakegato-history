@@ -121,6 +121,8 @@ Depending on your accessory type:
   status | switch status ( 0 / 1 )
   motion | motion sensor state ( 0 / 1 )
   voc | µg/m3
+  setTemp | Temperature in celcius
+  valvePosition | valvePosition in percentage
 
 For Energy and Door accessories it is also worth to add the custom characteristic E863F112 for resetting, respectively, the Total Consumption accumulated value or the Aperture Counter (not the history). See Wiki. The value of this characteristic is changed whenever the reset button is tapped on Eve, so it can be used to reset the locally stored value. The value seems to be the number of seconds from 1.1.2001. I left this characteristics out of fakegato-history because it is not part of the common  history service.
 
