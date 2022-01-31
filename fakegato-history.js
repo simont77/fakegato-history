@@ -353,6 +353,12 @@ module.exports = function (pHomebridge) {
 								case Characteristic.MotionDetected.UUID: // Motion Detected
 									this.signatures.push({ signature: '1c01', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "motion" });
 									break;
+								case Characteristic.TargetTemperature.UUID: // Target Temperature
+									this.signatures.push({ signature: '1102', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 100, entry: "setTemp" });
+									break;
+								case 'E863F12E-079E-48FF-8F27-9C2605A29F52': // Valve Position
+									this.signatures.push({ signature: '1001', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "valvePosition" });
+									break;
 								}
 							});
 						});
