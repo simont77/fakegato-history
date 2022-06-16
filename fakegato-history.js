@@ -359,7 +359,7 @@ module.exports = function (pHomebridge) {
 								case 'E863F12E-079E-48FF-8F27-9C2605A29F52': // Valve Position
 									this.signatures.push({ signature: '1001', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "valvePosition" });
 									break;
-								case Characteristic.CurrentAmbiantLightLevel.UUID: // CurrentAmbiantLightLevel
+								case '0000006B-0000-1000-8000-0026BB765291': // CurrentAmbiantLightLevel
 									this.signatures.push({ signature: '3002', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "lux" });
 									break;
 								}
