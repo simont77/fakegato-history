@@ -187,10 +187,11 @@ this.loggingService = new FakeGatoHistoryService(accessoryType, Accessory, {
 	keyPath:'/place/to/store/my/keys/' 	// where to find client_secret.json, if empty it will be used the -U homebridge option if present or .homebridge
 });
 ```
-For the setup of Google Drive, please follow the Google Drive Quickstart for Node.js instructions from https://developers.google.com/drive/v3/web/quickstart/nodejs, except for these changes:
-* In Step 1-h the working directory should be the .homebridge directory
-* Skip Step 2 and 3
-* In step 4, use the quickstartGoogleDrive.js included with this module. You need to run the command from fakegato-history directory. Then just follow steps a to c.
+For the setup of Google Drive, please follow the Google Drive Quickstart for Node.js instructions from https://developers.google.com/drive/api/quickstart/nodejs, except for these changes:
+* In Step 7 of "Authorize credentials for a desktop application" rename the downloaded file to "client_secret.json" and put it in fakegato-history directory.
+* Skip "Setup the sample"
+* Run the quickstartGoogleDrive.js included with this module. You need to run the command from fakegato-history directory. After authoeizing the app onto Google website a file "drive-nodejs-quickstart.json" is created in the same directory
+* Copy files "client_secret.json" and "drive-nodejs-quickstart.json in your keyPath
 
 ##### Additional notes for Google Drive
 * Pay attention so that your plugin does not issue multiple addEntry calls for the same accessory at the same time (this may results in improper behaviour of Google Drive to the its asynchronous nature)
