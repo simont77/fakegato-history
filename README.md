@@ -101,14 +101,14 @@ Depending on your accessory type:
 
 	Status can be 1 for ‘open’ or 0 for ‘close’. WaterAmount is meaningful (and needed) only when Status is close, and corresponds to the amount of water used during the just elapsed irrigation period in ml. Entries are of type "event", so entries received from the plugin will be added to the history as is. In addition to that, fakegato will add extra entries every 10 minutes repeating the last known state, in order to avoid the appearance of holes in the history.
 
-* Add entries to history of an accessory of a **custom** design or configuration.  Configurations validated include combination energy and switch device ( history of power and on/off ), motion and temperature device ( history of motion and temperature ) and room and thermo device (history of temperature/humidity and setTemp/valvePosition).
+* Add entries to history of an accessory of a **custom** design or configuration.  Configurations validated include combination energy and switch device ( history of power and on/off ), motion and temperature device ( history of motion and temperature ), room and thermo device (history of temperature/humidity and setTemp/valvePosition), and motion and light sensor device ( history of motion and light level).
 
 		this.LoggingService.addEntry({ time: Math.round(new Date().valueOf() / 1000), power: this.power });
 		this.LoggingService.addEntry({ time: Math.round(new Date().valueOf() / 1000), status: this.On });
 
   This is a sample power / switch device, and in the sample I'm sending the current power usage then updating the on/off status of the device.  For best results send power and on/off status separately.  Power on a regular interval and on/off when the device status changes.
 
-	Temperature, Humidity, Pressure and Power entries are averaged over the history interval.  Contact, Status, Motion, setTemp and valvePosition are directly added to history records.
+	Temperature, Humidity, Pressure, Power and lux entries are averaged over the history interval.  Contact, Status, Motion, setTemp and valvePosition are directly added to history records.
 
   valid entry | Characteristic
   --- | ---
@@ -123,6 +123,7 @@ Depending on your accessory type:
   voc | µg/m3
   setTemp | Temperature in celcius
   valvePosition | valvePosition in percentage
+  lux | light level in lux
 
 For Energy and Door accessories it is also worth to add the custom characteristic E863F112 for resetting, respectively, the Total Consumption accumulated value or the Aperture Counter (not the history). See Wiki. The value of this characteristic is changed whenever the reset button is tapped on Eve, so it can be used to reset the locally stored value. The value seems to be the number of seconds from 1.1.2001. I left this characteristics out of fakegato-history because it is not part of the common  history service.
 
