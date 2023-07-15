@@ -359,6 +359,9 @@ module.exports = function (pHomebridge) {
 								case 'E863F12E-079E-48FF-8F27-9C2605A29F52': // Valve Position
 									this.signatures.push({ signature: '1001', length: 2, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "valvePosition" });
 									break;
+								case '0000006B-0000-1000-8000-0026BB765291': // CurrentAmbiantLightLevel
+									this.signatures.push({ signature: '3002', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 1, entry: "lux" });
+									break;
 								}
 							});
 						});
@@ -536,7 +539,7 @@ module.exports = function (pHomebridge) {
 					break;
 				case TYPE_CUSTOM:
 					if (!this.disableTimer)
-						if ('power' in entry || 'temp' in entry) { // Only put power or temperature thru averager
+					    if ('power' in entry || 'temp' in entry || 'lux' in entry) { // Only put power, temperature or lux thru averager
 							homebridge.globalFakeGatoTimer.addData({ entry: entry, service: this });
 						} else {
 							this._addEntry(entry);
