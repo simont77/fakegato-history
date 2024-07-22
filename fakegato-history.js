@@ -26,6 +26,8 @@ module.exports = function (pHomebridge) {
 		homebridge = pHomebridge;
 		Characteristic = homebridge.hap.Characteristic;
 		Service = homebridge.hap.Service;
+		Formats = homebridge.hap.Formats;
+		Perms = homebridge.hap.Perms;
 	}
 
 
@@ -75,9 +77,9 @@ module.exports = function (pHomebridge) {
 		constructor() {
 			super('S2R1', S2R1Characteristic.UUID);
 			this.setProps({
-				format: Characteristic.Formats.DATA,
+				format: Formats.DATA,
 				perms: [
-					Characteristic.Perms.READ, Characteristic.Perms.NOTIFY, Characteristic.Perms.HIDDEN
+					Perms.READ, Perms.NOTIFY, Perms.HIDDEN
 				]
 			});
 		}
@@ -89,9 +91,9 @@ module.exports = function (pHomebridge) {
 		constructor() {
 			super('S2R2', S2R2Characteristic.UUID);
 			this.setProps({
-				format: Characteristic.Formats.DATA,
+				format: Formats.DATA,
 				perms: [
-					Characteristic.Perms.READ, Characteristic.Perms.NOTIFY, Characteristic.Perms.HIDDEN
+					Perms.READ, Perms.NOTIFY, Perms.HIDDEN
 				]
 			});
 		}
@@ -103,9 +105,9 @@ module.exports = function (pHomebridge) {
 		constructor() {
 			super('S2W1', S2W1Characteristic.UUID);
 			this.setProps({
-				format: Characteristic.Formats.DATA,
+				format: Formats.DATA,
 				perms: [
-					Characteristic.Perms.WRITE, Characteristic.Perms.HIDDEN
+					Perms.WRITE, Perms.HIDDEN
 				]
 			});
 		}
@@ -117,9 +119,9 @@ module.exports = function (pHomebridge) {
 		constructor() {
 			super('S2W2', S2W2Characteristic.UUID);
 			this.setProps({
-				format: Characteristic.Formats.DATA,
+				format: Formats.DATA,
 				perms: [
-					Characteristic.Perms.WRITE, Characteristic.Perms.HIDDEN
+					Perms.WRITE, Perms.HIDDEN
 				]
 			});
 		}
