@@ -19,7 +19,7 @@ const TYPE_ENERGY = 'energy',
 	TYPE_CUSTOM = 'custom';
 
 var homebridge;
-var Characteristic, Service;
+var Characteristic, Service, Formats, Perms;
 
 module.exports = function (pHomebridge) {
 	if (pHomebridge && !homebridge) {
