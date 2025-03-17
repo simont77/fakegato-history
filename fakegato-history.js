@@ -79,7 +79,7 @@ module.exports = function (pHomebridge) {
 			this.setProps({
 				format: Formats.DATA,
 				perms: [
-					Perms.READ, Perms.NOTIFY, Perms.HIDDEN
+					Perms.PAIRED_READ, Perms.NOTIFY, Perms.HIDDEN
 				]
 			});
 		}
@@ -93,7 +93,7 @@ module.exports = function (pHomebridge) {
 			this.setProps({
 				format: Formats.DATA,
 				perms: [
-					Perms.READ, Perms.NOTIFY, Perms.HIDDEN
+					Perms.PAIRED_READ, Perms.NOTIFY, Perms.HIDDEN
 				]
 			});
 		}
@@ -107,7 +107,7 @@ module.exports = function (pHomebridge) {
 			this.setProps({
 				format: Formats.DATA,
 				perms: [
-					Perms.WRITE, Perms.HIDDEN
+					Perms.PAIRED_WRITE, Perms.HIDDEN
 				]
 			});
 		}
@@ -121,7 +121,7 @@ module.exports = function (pHomebridge) {
 			this.setProps({
 				format: Formats.DATA,
 				perms: [
-					Perms.WRITE, Perms.HIDDEN
+					Perms.PAIRED_WRITE, Perms.HIDDEN
 				]
 			});
 		}
