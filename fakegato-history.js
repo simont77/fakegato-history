@@ -200,11 +200,11 @@ module.exports = function (pHomebridge) {
 					onReady: function () {
 
 						this.load(function (err, loaded) {
-							//this.log.debug("**Fakegato-timer  Loaded",loaded);
+							//this.log.debug("**Fakegato-history  Loaded",loaded);
 							//this.registerEvents();
-							if (err) this.log.debug('**Fakegato-timer  Load error :', err);
+							if (err) this.log.debug('**Fakegato-history  Load error :', err);
 							else {
-								if (loaded) this.log.debug('**Fakegato-timer  History Loaded from Persistant Storage');
+								if (loaded) this.log.debug('**Fakegato-history  History Loaded from Persistant Storage');
 								this.loaded = true;
 							}
 						}.bind(this));
@@ -326,7 +326,7 @@ module.exports = function (pHomebridge) {
 				case TYPE_CUSTOM:
 					thisAccessory.services.forEach((service, i) => {
 						service.characteristics.forEach((characteristic, i) => {
-							// console.log('**Fakegato-timer characteristics', characteristic.displayName, characteristic.UUID);
+							// console.log('**Fakegato-history characteristics', characteristic.displayName, characteristic.UUID);
 							switch(this.uuid.toLongFormUUID(characteristic.UUID)) {
 								case Characteristic.CurrentTemperature.UUID: // Temperature
 									this.signatures.push({ signature: '0102', length: 4, uuid: this.uuid.toShortFormUUID(characteristic.UUID), factor: 100, entry: "temp" });
@@ -456,10 +456,10 @@ module.exports = function (pHomebridge) {
 		}
 
 		registerEvents() {
-			this.log.debug('**Fakegato-timer  Registring Events', thisAccessory.displayName);
+			this.log.debug('**Fakegato-history  Registring Events', thisAccessory.displayName);
 			if (typeof thisAccessory.getService === "function") {
 				// Platform API
-				this.log.debug('**Fakegato-timer  Platform', thisAccessory.displayName);
+				this.log.debug('**Fakegato-history  Platform', thisAccessory.displayName);
 
 				this.service = thisAccessory.getService(FakeGatoHistoryService);
 				if (this.service === undefined) {
@@ -478,7 +478,7 @@ module.exports = function (pHomebridge) {
 			}
 			else {
 				// Accessory API
-				this.log.debug('**Fakegato-timer  Accessory', thisAccessory.displayName);
+				this.log.debug('**Fakegato-history  Accessory', thisAccessory.displayName);
 
 				this.addCharacteristic(S2R1Characteristic);
 
@@ -623,10 +623,10 @@ module.exports = function (pHomebridge) {
 					this.service.getCharacteristic(S2R1Characteristic).setValue(hexToBase64(val));
 				}
 
-				this.log.debug("**Fakegato-timer  First entry %s: %s", this.accessoryName, this.firstEntry.toString(16));
-				this.log.debug("**Fakegato-timer  Last entry %s: %s", this.accessoryName, this.lastEntry.toString(16));
-				this.log.debug("**Fakegato-timer  Used memory %s: %s", this.accessoryName, this.usedMemory.toString(16));
-				this.log.debug("**Fakegato-timer  Val 116 %s: %s", this.accessoryName, val);
+				this.log.debug("**Fakegato-history  First entry %s: %s", this.accessoryName, this.firstEntry.toString(16));
+				this.log.debug("**Fakegato-history  Last entry %s: %s", this.accessoryName, this.lastEntry.toString(16));
+				this.log.debug("**Fakegato-history  Used memory %s: %s", this.accessoryName, this.usedMemory.toString(16));
+				this.log.debug("**Fakegato-history  Val 116 %s: %s", this.accessoryName, val);
 
 				if (this.storage !== undefined) this.save();
 			} else {
@@ -677,14 +677,14 @@ module.exports = function (pHomebridge) {
 			}
 		}
 		load(cb) {
-			this.log.debug("**Fakegato-timer  Loading...");
+			this.log.debug("**Fakegato-history  Loading...");
 			homebridge.globalFakeGatoStorage.read({
 				service: this,
 				callback: function (err, data) {
 					if (!err) {
 						if (data) {
 							try {
-								this.log.debug("**Fakegato-timer  read data from", this.accessoryName, ":", data);
+								this.log.debug("**Fakegato-history  read data from", this.accessoryName, ":", data);
 								let jsonFile = typeof (data) === "object" ? data : JSON.parse(data);
 
 								this.firstEntry = jsonFile.firstEntry;
@@ -695,7 +695,7 @@ module.exports = function (pHomebridge) {
 								this.history = jsonFile.history;
 								this.extra = jsonFile.extra;
 							} catch (e) {
-								this.log.debug("**Fakegato-timer  ERROR fetching persisting data restart from zero - invalid JSON**", e);
+								this.log.debug("**Fakegato-history  ERROR fetching persisting data restart from zero - invalid JSON**", e);
 								cb(e, false);
 							}
 							cb(null, true);
@@ -708,7 +708,7 @@ module.exports = function (pHomebridge) {
 			});
 		}
 		cleanPersist() {
-			this.log.debug("**Fakegato-timer  Cleaning...");
+			this.log.debug("**Fakegato-history  Cleaning...");
 			homebridge.globalFakeGatoStorage.remove({
 				service: this
 			});
@@ -731,7 +731,7 @@ module.exports = function (pHomebridge) {
 						this.setTime = false;
 					}
 					else {
-						this.log.debug("**Fakegato-timer  %s Entry: %s, Address: %s", this.accessoryName, this.currentEntry, this.memoryAddress);
+						this.log.debug("**Fakegato-history  %s Entry: %s, Address: %s", this.accessoryName, this.currentEntry, this.memoryAddress);
 						switch (this.accessoryType) {
 							case TYPE_WEATHER:
 								this.dataStream += Format(
@@ -821,7 +821,7 @@ module.exports = function (pHomebridge) {
 										default:
 											for (var x = 0, iLen = this.signatures.length; x < iLen; x++) {
 												if (this.signatures[x].entry === key) {
-													// console.log('**Fakegato-timer  key', key, this.signatures[x].uuid, value, this.signatures[x].factor);
+													// console.log('**Fakegato-history  key', key, this.signatures[x].uuid, value, this.signatures[x].factor);
 													switch(this.signatures[x].length) {
 														case 8:
 															result[x] = Format('%s', numToHex(swap32(value * this.signatures[x].factor), this.signatures[x].length));
@@ -839,7 +839,7 @@ module.exports = function (pHomebridge) {
 									}
 								}
 							var results = dataStream + ' ' + numToHex(bitmask, 2) + ' ' + result.map(a => a).join(' ');
-							// console.log('**Fakegato-timer  results', numToHex((results.replace(/[^0-9A-F]/ig, '').length) / 2 + 1) + ' ' + results);
+							// console.log('**Fakegato-history  results', numToHex((results.replace(/[^0-9A-F]/ig, '').length) / 2 + 1) + ' ' + results);
 							this.dataStream += (' ' + numToHex((results.replace(/[^0-9A-F]/ig, '').length) / 2 + 1) + ' ' + results + ',');
 							break;
 						}
@@ -849,7 +849,7 @@ module.exports = function (pHomebridge) {
 					if (this.currentEntry > this.lastEntry)
 						break;
 				}
-				this.log.debug("**Fakegato-timer  Data %s: %s", this.accessoryName, this.dataStream);
+				this.log.debug("**Fakegato-history  Data %s: %s", this.accessoryName, this.dataStream);
 				callback(null, hexToBase64(this.dataStream));
 				this.dataStream = '';
 			}
@@ -862,20 +862,20 @@ module.exports = function (pHomebridge) {
 
 		setCurrentS2W1(val, callback) {
 			callback(null);
-			this.log.debug("**Fakegato-timer  Data request %s: %s", this.accessoryName, base64ToHex(val));
+			this.log.debug("**Fakegato-history  Data request %s: %s", this.accessoryName, base64ToHex(val));
 			var valHex = base64ToHex(val);
 			var substring = valHex.substring(4, 12);
 			var valInt = parseInt(substring, 16);
 			var address = swap32(valInt);
 			var hexAddress = address.toString('16');
 
-			this.log.debug("**Fakegato-timer  Address requested %s: %s", this.accessoryName, hexAddress);
+			this.log.debug("**Fakegato-history  Address requested %s: %s", this.accessoryName, hexAddress);
 			this.sendHistory(address);
 
 		}
 
 		setCurrentS2W2(val, callback) {
-			this.log.debug("**Fakegato-timer  Clock adjust %s: %s", this.accessoryName, base64ToHex(val));
+			this.log.debug("**Fakegato-history  Clock adjust %s: %s", this.accessoryName, base64ToHex(val));
 			callback(null);
 		}
 
